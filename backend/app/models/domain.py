@@ -327,3 +327,12 @@ class AuditLog(BaseModel):
     entity_id: Mapped[str] = mapped_column(String(255))
     changes: Mapped[dict] = mapped_column(JSONB, nullable=True)
     timestamp: Mapped[datetime] = mapped_column(server_default=func.now())
+
+class ThreatFeedSubscription(BaseModel):
+    __tablename__ = "threat_feed_subscriptions"
+    org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    name: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column(Text)
+    provider: Mapped[str] = mapped_column(String(100))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    last_synced: Mapped[datetime] = mapped_column(nullable=True)

@@ -96,64 +96,83 @@ async def list_threat_indicators(
         "offset": offset
     }
 
-class FeedSubscription(BaseModel):
-    id: str
-    name: str
-    description: str
-    provider: str
-    is_active: bool
-    last_synced: Optional[datetime] = None
+from app.db.session import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.crud import threat_feed as crud_threat_feed
+from app.schemas.threat_intel import ThreatFeedSubscriptionCreate, ThreatFeedSubscriptionResponse
 
 class UpdateFeedSubscriptionsRequest(BaseModel):
-    feed_ids: List[str] # List of feed IDs that should be active
+    feed_ids: List[str] # List of feed UUIDs that should be active
 
-# In-memory mock DB for feeds
-MOCK_FEEDS = [
-    {
-        "id": "feed-cisa-kev",
-        "name": "CISA KEV",
-        "description": "Known Exploited Vulnerabilities Catalog from CISA.",
-        "provider": "Gov",
-        "is_active": True,
-        "last_synced": datetime.now(timezone.utc).isoformat()
-    },
-    {
-        "id": "feed-fs-isac",
-        "name": "FS-ISAC",
-        "description": "Financial Services Information Sharing and Analysis Center.",
-        "provider": "ISAC",
-        "is_active": True,
-        "last_synced": datetime.now(timezone.utc).isoformat()
-    },
-    {
-        "id": "feed-crowdstrike",
-        "name": "CrowdStrike Falcon Intel",
-        "description": "Premium commercial threat intelligence signals.",
-        "provider": "Commercial",
-        "is_active": False,
-        "last_synced": None
-    },
-    {
-        "id": "feed-alienvault",
-        "name": "AlienVault OTX",
-        "description": "Open Threat Exchange community indicator feed.",
-        "provider": "Community",
-        "is_active": False,
-        "last_synced": None
-    }
-]
-
-@router.get("/feeds", response_model=List[FeedSubscription])
-async def get_threat_feeds(org_id: str):
+@router.get("/feeds", response_model=List[ThreatFeedSubscriptionResponse])
+async def get_threat_feeds(org_id: str, db: AsyncSession = Depends(get_db)):
     """Get the configuration and status of available threat intel feeds."""
-    return MOCK_FEEDS
+    try:
+        org_uuid = uuid.UUID(org_id)
+    except ValueError:
+        org_uuid = uuid.uuid4()
+        
+    feeds = await crud_threat_feed.get_by_org(db=db, org_id=org_uuid)
+    
+    if not feeds and org_id == "default":
+        # Seed defaults
+        defaults = [
+            ThreatFeedSubscriptionCreate(
+                org_id=org_uuid,
+                name="CISA KEV",
+                description="Known Exploited Vulnerabilities Catalog from CISA.",
+                provider="Gov",
+                is_active=True,
+                last_synced=datetime.now(timezone.utc)
+            ),
+            ThreatFeedSubscriptionCreate(
+                org_id=org_uuid,
+                name="FS-ISAC",
+                description="Financial Services Information Sharing and Analysis Center.",
+                provider="ISAC",
+                is_active=True,
+                last_synced=datetime.now(timezone.utc)
+            ),
+            ThreatFeedSubscriptionCreate(
+                org_id=org_uuid,
+                name="CrowdStrike Falcon Intel",
+                description="Premium commercial threat intelligence signals.",
+                provider="Commercial",
+                is_active=False,
+                last_synced=None
+            ),
+            ThreatFeedSubscriptionCreate(
+                org_id=org_uuid,
+                name="AlienVault OTX",
+                description="Open Threat Exchange community indicator feed.",
+                provider="Community",
+                is_active=False,
+                last_synced=None
+            )
+        ]
+        for d in defaults:
+            await crud_threat_feed.create(db=db, obj_in=d)
+        feeds = await crud_threat_feed.get_by_org(db=db, org_id=org_uuid)
+        
+    return feeds
 
 @router.put("/feeds")
-async def update_threat_feeds(request: UpdateFeedSubscriptionsRequest, org_id: str):
+async def update_threat_feeds(request: UpdateFeedSubscriptionsRequest, org_id: str, db: AsyncSession = Depends(get_db)):
     """Update which threat feeds are actively ingested."""
-    updated_feeds = []
-    for feed in MOCK_FEEDS:
-        feed["is_active"] = feed["id"] in request.feed_ids
-        updated_feeds.append(feed)
+    try:
+        org_uuid = uuid.UUID(org_id)
+    except ValueError:
+        org_uuid = uuid.uuid4()
+        
+    feeds = await crud_threat_feed.get_by_org(db=db, org_id=org_uuid)
+    
+    for feed in feeds:
+        is_now_active = str(feed.id) in request.feed_ids
+        if feed.is_active != is_now_active:
+            await crud_threat_feed.update(
+                db=db, 
+                db_obj=feed, 
+                obj_in={"is_active": is_now_active, "last_synced": datetime.now(timezone.utc) if is_now_active else None}
+            )
     
     return {"status": "success", "message": "Feed subscriptions updated successfully."}
