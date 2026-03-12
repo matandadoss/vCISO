@@ -44,14 +44,38 @@ async def list_findings(
 
 @router.get("/{finding_id}")
 async def get_finding(finding_id: str, org_id: str):
+    """Provides detailed information about a specific finding for the Investigate view."""
     return {
         "id": finding_id,
-        "title": "Unpatched Server",
-        "severity": Severity.high,
-        "risk_score": 82.5,
+        "title": "Unpatched Production Database Server",
+        "severity": Severity.critical,
+        "risk_score": 95.5,
         "status": "new",
-        "description": "Server is missing critical OS patches.",
-        "detected_at": datetime.utcnow().isoformat()
+        "description": "CVE-2023-44487 (HTTP/2 Rapid Reset) detected on public-facing ingress controllers.",
+        "detected_at": datetime.utcnow().isoformat(),
+        "workflow": "vulnerability",
+        "root_cause_analysis": "The Nginx ingress controller in the production GKE cluster is running version 1.23.0, which is vulnerable to the HTTP/2 Rapid Reset attack. This allows for potential Denial of Service (DoS) by an unauthenticated attacker.",
+        "affected_assets": [
+            {"id": "ingress-prod-1", "name": "nginx-ingress-controller-prod", "type": "Kubernetes Deployment", "criticality": "high"},
+            {"id": "lb-ext-1", "name": "ext-https-lb", "type": "GCP External Load Balancer", "criticality": "high"}
+        ],
+        "mitre_attack": [
+            {"id": "T1498", "name": "Network Denial of Service", "tactic": "Impact"},
+            {"id": "T1190", "name": "Exploit Public-Facing Application", "tactic": "Initial Access"}
+        ],
+        "remediation": {
+            "manual_steps": [
+                "1. Update the Nginx ingress controller image tag in deployment manifests to >=1.25.3.",
+                "2. Apply the updated manifests to the production cluster.",
+                "3. Monitor cluster metrics for unusual HTTP/2 stream reset rates."
+            ],
+            "automated_available": True,
+            "automated_description": "Auto-patch via GitOps: Generate PR to update Helm chart version in infrastructure repository."
+        },
+        "linked_items": [
+            {"id": "vuln-scan-102", "type": "Scan Report", "name": "Weekly External Exposure Scan"},
+            {"id": "ctrl-32", "type": "Compliance Control", "name": "SOC 2 CC7.1 - Vulnerability Management"}
+        ]
     }
 
 @router.patch("/{finding_id}/status")

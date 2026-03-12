@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { Search, Filter, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export default function FindingsPage() {
   const [findings, setFindings] = useState([]);
@@ -104,9 +105,9 @@ export default function FindingsPage() {
                     {formatDate(f.detected_at)}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="text-primary hover:text-blue-400 font-medium text-sm flex items-center justify-end w-full">
+                    <Link href={`/findings/${f.id}`} className="text-primary hover:text-blue-400 font-medium text-sm flex items-center justify-end w-full">
                       Investigate <ArrowRight className="h-4 w-4 ml-1" />
-                    </button>
+                    </Link>
                   </td>
                 </tr>
               ))}
