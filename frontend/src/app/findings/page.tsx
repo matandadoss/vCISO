@@ -4,14 +4,23 @@ import { useEffect, useState } from "react";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { Search, Filter, ArrowRight, Clock, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from 'next/navigation';
 
 export default function FindingsPage() {
   const [findings, setFindings] = useState([]);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     async function fetchFindings() {
       try {
-        const res = await fetch('http://localhost:8000/api/v1/findings?org_id=default');
+        const severity = searchParams?.get('severity');
+        const status = searchParams?.get('status');
+        
+        let url = 'http://localhost:8000/api/v1/findings?org_id=default';
+        if (severity) url += `&severity=${severity}`;
+        if (status) url += `&status=${status}`;
+
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           setFindings(data.items);
@@ -21,7 +30,7 @@ export default function FindingsPage() {
       }
     }
     fetchFindings();
-  }, []);
+  }, [searchParams]);
 
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">

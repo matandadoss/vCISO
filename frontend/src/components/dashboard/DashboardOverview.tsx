@@ -2,6 +2,7 @@
 
 import { Activity, ShieldAlert, Target, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export function DashboardOverview() {
   const [data, setData] = useState<any>(null);
@@ -21,7 +22,7 @@ export function DashboardOverview() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <div className="bg-card border border-border rounded-lg p-6 flex items-center justify-between">
+      <Link href="/findings" className="block bg-card border border-border rounded-lg p-6 flex items-center justify-between hover:shadow-md hover:border-primary/50 transition-all cursor-pointer">
         <div>
           <p className="text-sm font-medium text-muted-foreground mb-1">Overall Risk Score</p>
           <div className="flex items-baseline gap-2">
@@ -32,9 +33,9 @@ export function DashboardOverview() {
         <div className="p-3 bg-primary/10 rounded-full text-primary">
           <Activity className="w-6 h-6" />
         </div>
-      </div>
+      </Link>
       
-      <div className="bg-card border border-border rounded-lg p-6 flex items-center justify-between">
+      <Link href="/compliance" className="block bg-card border border-border rounded-lg p-6 flex items-center justify-between hover:shadow-md hover:border-primary/50 transition-all cursor-pointer">
         <div>
           <p className="text-sm font-medium text-muted-foreground mb-1">Compliance Posture</p>
           <div className="flex items-baseline gap-2">
@@ -44,9 +45,9 @@ export function DashboardOverview() {
         <div className="p-3 bg-primary/10 rounded-full text-primary">
           <ShieldAlert className="w-6 h-6" />
         </div>
-      </div>
+      </Link>
 
-      <div className="bg-card border border-destructive/20 rounded-lg p-6 flex items-center justify-between">
+      <Link href="/findings?severity=critical&status=new" className="block bg-card border border-destructive/20 rounded-lg p-6 flex items-center justify-between hover:shadow-md hover:border-destructive/50 transition-all cursor-pointer">
         <div>
           <p className="text-sm font-medium text-destructive mb-1">Critical Findings</p>
           <div className="flex items-baseline gap-2">
@@ -56,9 +57,9 @@ export function DashboardOverview() {
         <div className="p-3 bg-destructive/10 rounded-full text-destructive">
           <AlertTriangle className="w-6 h-6" />
         </div>
-      </div>
+      </Link>
 
-      <div className="bg-card border border-border rounded-lg p-6 flex items-center justify-between">
+      <Link href="/threat-intel" className="block bg-card border border-border rounded-lg p-6 flex items-center justify-between hover:shadow-md hover:border-primary/50 transition-all cursor-pointer">
         <div>
           <p className="text-sm font-medium text-muted-foreground mb-1">Threat Level</p>
           <div className="flex items-baseline gap-2">
@@ -68,7 +69,7 @@ export function DashboardOverview() {
         <div className="p-3 bg-orange-500/10 rounded-full text-orange-500">
           <Target className="w-6 h-6" />
         </div>
-      </div>
+      </Link>
     </div>
   );
 }

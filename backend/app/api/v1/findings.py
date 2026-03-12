@@ -25,36 +25,44 @@ async def list_findings(
     offset: int = 0
 ):
     # Stub: return mock data
+    all_items = [
+        {
+            "id": str(uuid.uuid4()),
+            "title": "Unpatched Server",
+            "severity": Severity.critical,
+            "risk_score": 92.5,
+            "status": "new",
+            "detected_at": (datetime.utcnow().replace(day=datetime.utcnow().day - 5)).isoformat(), # 5 days ago
+            "workflow": "vulnerability",
+            "affected_asset_ids": ["server-1"],
+            "sla_deadline": (datetime.utcnow().replace(day=datetime.utcnow().day - 4)).isoformat(), # Was due 4 days ago
+            "sla_status": "4 days overdue",
+            "sla_breached": True
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "title": "Exposed Storage Bucket containing PII",
+            "severity": Severity.high,
+            "risk_score": 82.0,
+            "status": "triaged",
+            "detected_at": (datetime.utcnow().replace(day=datetime.utcnow().day - 2)).isoformat(),
+            "workflow": "infrastructure",
+            "affected_asset_ids": ["bucket-1"],
+            "sla_deadline": (datetime.utcnow().replace(day=datetime.utcnow().day + 5)).isoformat(), # 7 day SLA for high
+            "sla_status": "5 days remaining",
+            "sla_breached": False
+        }
+    ]
+
+    filtered_items = all_items
+    if severity:
+        filtered_items = [item for item in filtered_items if item["severity"] == severity]
+    if status:
+        filtered_items = [item for item in filtered_items if item["status"] == status]
+
     return {
-        "items": [
-            {
-                "id": str(uuid.uuid4()),
-                "title": "Unpatched Server",
-                "severity": Severity.critical,
-                "risk_score": 92.5,
-                "status": "new",
-                "detected_at": (datetime.utcnow().replace(day=datetime.utcnow().day - 5)).isoformat(), # 5 days ago
-                "workflow": "vulnerability",
-                "affected_asset_ids": ["server-1"],
-                "sla_deadline": (datetime.utcnow().replace(day=datetime.utcnow().day - 4)).isoformat(), # Was due 4 days ago (1 day SLA for critical)
-                "sla_status": "4 days overdue",
-                "sla_breached": True
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "title": "Exposed Storage Bucket containing PII",
-                "severity": Severity.high,
-                "risk_score": 82.0,
-                "status": "triaged",
-                "detected_at": (datetime.utcnow().replace(day=datetime.utcnow().day - 2)).isoformat(),
-                "workflow": "infrastructure",
-                "affected_asset_ids": ["bucket-1"],
-                "sla_deadline": (datetime.utcnow().replace(day=datetime.utcnow().day + 5)).isoformat(), # 7 day SLA for high
-                "sla_status": "5 days remaining",
-                "sla_breached": False
-            }
-        ],
-        "total": 2,
+        "items": filtered_items,
+        "total": len(filtered_items),
         "limit": limit,
         "offset": offset
     }
