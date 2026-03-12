@@ -46,38 +46,48 @@ async def get_risk_trends(org_id: str, days: int = 30):
 
 @router.get("/attention")
 async def get_attention_items(org_id: str):
-    """Provides high-priority action items for the What Needs Attention widget."""
-    return [
+    """Provides high-priority action items for the What Needs Attention widget, prioritized by time sensitivity."""
+    items = [
         {
-            "id": "vuln-1",
+            "id": "vuln-critical-1",
             "type": "critical_vuln",
-            "title": "Zero-Day in Production Firewall",
-            "description": "CVE-2026-1045 detected on 3 edge nodes. Immediate patching required.",
-            "timeAgo": "2 hours ago",
+            "title": "New Critical Finding: Unauthenticated RCE",
+            "description": "CVE-2023-44487 (HTTP/2 Rapid Reset) detected on public-facing ingress controllers.",
+            "timeAgo": "1 hour ago",
             "isUrgent": True,
+            "severity": "high", # For sorting
         },
         {
-            "id": "threat-1",
-            "type": "threat_intel",
-            "title": "New Phishing Campaign Targeting Executives",
-            "description": "C2 infrastructure identified matching current threat actor profile.",
-            "timeAgo": "5 hours ago",
-            "isUrgent": True,
-        },
-        {
-            "id": "comp-1",
+            "id": "comp-overdue-1",
             "type": "compliance_gap",
-            "title": "SOC 2 Type II Evidence Required",
-            "description": "Quarterly access reviews are past due for 4 departments.",
-            "timeAgo": "1 day ago",
-            "isUrgent": False,
+            "title": "Overdue Control: IAM Access Review",
+            "description": "Quarterly access reviews for 'Production GKE Admins' are 3 days past due.",
+            "timeAgo": "3 days overdue",
+            "isUrgent": True,
+            "severity": "high",
         },
         {
-            "id": "pol-1",
-            "type": "expiring_policy",
-            "title": "Cloud IAM Policy Review",
-            "description": "Overly permissive service account keys detected in GCP.",
-            "timeAgo": "2 days ago",
+            "id": "threat-ioc-1",
+            "type": "threat_intel",
+            "title": "Expiring IoC: Malicious IPs List",
+            "description": "Custom blocklist for 'Scattered Spider' IPs expires in 12 hours.",
+            "timeAgo": "Expires in 12h",
+            "isUrgent": True,
+            "severity": "medium",
+        },
+        {
+            "id": "comp-upcoming-1",
+            "type": "compliance_gap",
+            "title": "Upcoming: SOC 2 Evidence Collection",
+            "description": "Automated evidence collection for CC6.1 failing. Due in 5 days.",
+            "timeAgo": "Due 5 days",
             "isUrgent": False,
+            "severity": "low",
         }
     ]
+    
+    # Sort by urgency (True first) then by severity (high > medium > low)
+    severity_rank = {"high": 1, "medium": 2, "low": 3}
+    items.sort(key=lambda x: (not x["isUrgent"], severity_rank.get(x.get("severity", "low"), 4)))
+    
+    return items

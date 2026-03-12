@@ -70,21 +70,50 @@ export function WhatNeedsAttention() {
       </div>
       
       <div className="flex-1 space-y-4 overflow-y-auto pr-2 min-h-[300px]">
-        {items.map((item) => (
-          <div 
-            key={item.id} 
-            className={`p-4 rounded-md border text-sm transition-colors hover:bg-accent/50 ${
-              item.isUrgent ? 'border-destructive/30 bg-destructive/5' : 'border-border bg-card'
-            }`}
-          >
-            <div className="flex items-start gap-3">
+        {items.map((item) => {
+          // Add custom styling checks for time sensitivity
+          const isOverdue = item.timeAgo.toLowerCase().includes('overdue');
+          const isExpiring = item.timeAgo.toLowerCase().includes('expire');
+          
+          return (
+            <div 
+              key={item.id} 
+              className={`p-4 rounded-md border text-sm transition-all hover:bg-accent/50 relative overflow-hidden ${
+                isOverdue ? 'border-destructive bg-destructive/10 ring-1 ring-destructive' :
+                item.isUrgent ? 'border-destructive/40 bg-destructive/5' : 
+                isExpiring ? 'border-orange-500/40 bg-orange-500/5' :
+                'border-border bg-card'
+              }`}
+            >
+              {isOverdue && (
+                <div className="absolute top-0 right-0 w-16 h-16 pointer-events-none overflow-hidden rounded-tr-md">
+                  <div className="absolute transform rotate-45 bg-destructive text-destructive-foreground text-[10px] font-bold py-0.5 right-[-20px] top-[14px] w-[80px] text-center shadow-sm">
+                    OVERDUE
+                  </div>
+                </div>
+              )}
+              <div className="flex items-start gap-3">
               <div className="mt-0.5 shrink-0">
                 {getIconForType(item.type)}
               </div>
               <div className="flex-1 space-y-1">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-foreground">{item.title}</span>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">{item.timeAgo}</span>
+                  <span className="font-semibold text-foreground flex items-center gap-2">
+                    {item.title}
+                    {item.type === 'critical_vuln' && (
+                      <span className="flex h-2 w-2 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
+                      </span>
+                    )}
+                  </span>
+                  <span className={`text-xs whitespace-nowrap font-medium ${
+                    isOverdue ? 'text-destructive' :
+                    isExpiring ? 'text-orange-500' :
+                    'text-muted-foreground'
+                  }`}>
+                    {item.timeAgo}
+                  </span>
                 </div>
                 <p className="text-muted-foreground leading-snug">
                   {item.description}
@@ -92,7 +121,7 @@ export function WhatNeedsAttention() {
               </div>
             </div>
           </div>
-        ))}
+        )})}
       </div>
       
       <button className="mt-4 w-full text-sm font-medium text-primary hover:text-primary/80 transition-colors py-2 border border-transparent hover:border-border rounded-md">
