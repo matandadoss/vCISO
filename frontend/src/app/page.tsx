@@ -1,4 +1,6 @@
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
+import { RiskChart } from "@/components/dashboard/RiskChart";
+import { WhatNeedsAttention } from "@/components/dashboard/WhatNeedsAttention";
 
 export default function Home() {
   return (
@@ -16,19 +18,12 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="col-span-2 bg-card border border-border rounded-lg p-6 min-h-[400px]">
             <h3 className="text-lg font-semibold mb-4">Risk Over Time</h3>
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-              [Chart Component Placeholder]
+            <div className="w-full h-full text-muted-foreground mt-4 pb-8">
+              <RiskChart />
             </div>
           </div>
-          <div className="col-span-1 bg-card border border-border rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Top AI Insights</h3>
-            <div className="space-y-4">
-              <div className="p-4 bg-primary/5 rounded-md border border-primary/20">
-                <p className="text-sm text-foreground">
-                  <span className="font-semibold">Contextual Correlation:</span> 3 critical vulnerabilities are exposed on assets that have administrative access to production GCP projects. It is recommended to sever this IAM link immediately.
-                </p>
-              </div>
-            </div>
+          <div className="col-span-1 min-h-[400px]">
+            <WhatNeedsAttention />
           </div>
         </div>
       </div>
