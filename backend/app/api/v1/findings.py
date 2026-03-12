@@ -78,6 +78,38 @@ async def get_finding(finding_id: str, org_id: str):
         ]
     }
 
-@router.patch("/{finding_id}/status")
-async def update_finding_status(finding_id: str, status: str, org_id: str):
-    return {"status": "success", "new_status": status}
+from pydantic import BaseModel
+
+class AssignRequest(BaseModel):
+    owner_id: str
+    notes: Optional[str] = None
+
+class AcceptRiskRequest(BaseModel):
+    justification: str
+    expiration_date: Optional[str] = None
+
+class CreateTicketRequest(BaseModel):
+    integration: str # e.g. "jira", "servicenow"
+    priority: str
+
+@router.post("/{finding_id}/assign")
+async def assign_finding(finding_id: str, request: AssignRequest, org_id: str):
+    """Assigns a finding to a specific user or team."""
+    return {"status": "success", "action": "assigned", "finding_id": finding_id, "owner": request.owner_id}
+
+@router.post("/{finding_id}/remediate")
+async def mark_remediated(finding_id: str, org_id: str):
+    """Marks a finding as fully remediated/resolved."""
+    return {"status": "success", "action": "remediated", "finding_id": finding_id, "new_status": "remediated"}
+
+@router.post("/{finding_id}/accept-risk")
+async def accept_risk(finding_id: str, request: AcceptRiskRequest, org_id: str):
+    """Accepts the risk of a finding, optionally until an expiration date."""
+    return {"status": "success", "action": "risk_accepted", "finding_id": finding_id, "new_status": "risk_accepted"}
+
+@router.post("/{finding_id}/ticket")
+async def create_ticket(finding_id: str, request: CreateTicketRequest, org_id: str):
+    """Creates an external ticket (Jira/ServiceNow) for the finding."""
+    # Mocking external integration
+    mock_ticket_id = f"{request.integration.upper()}-{str(uuid.uuid4())[:6]}"
+    return {"status": "success", "action": "ticket_created", "finding_id": finding_id, "ticket_id": mock_ticket_id}

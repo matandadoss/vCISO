@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { ArrowLeft, AlertCircle, ShieldAlert, Cpu, Link as LinkIcon, CheckCircle2, Server, Globe } from "lucide-react";
+import { ArrowLeft, AlertCircle, ShieldAlert, Cpu, Link as LinkIcon, CheckCircle2, Server, Globe, User, CheckCircle, Ticket, ShieldAlert as ShieldIcon } from "lucide-react";
 import Link from "next/link";
 import { formatDate, cn } from "@/lib/utils";
 
@@ -50,6 +50,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
   const unwrappedParams = use(params);
   const [finding, setFinding] = useState<FindingDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchFinding() {
@@ -67,6 +68,42 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
     
     fetchFinding();
   }, [unwrappedParams.id]);
+
+  const handleAction = async (action: "assign" | "remediate" | "accept-risk" | "ticket") => {
+    if (!finding) return;
+    
+    setActionLoading(action);
+    try {
+      let body: any = {};
+      if (action === "assign") body = { owner_id: "user-123", notes: "Please investigate this priority item." };
+      if (action === "accept-risk") body = { justification: "Mitigating controls in place via WAF.", expiration_date: "2024-12-31" };
+      if (action === "ticket") body = { integration: "jira", priority: "High" };
+
+      const res = await fetch(`http://localhost:8000/api/v1/findings/${finding.id}/${action}?org_id=default`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) throw new Error(`Failed to ${action}`);
+      const result = await res.json();
+      
+      // Optimistically update the local status if applicable
+      setFinding({
+        ...finding,
+        status: result.new_status || finding.status,
+      });
+      
+      // Could show a toast notification here
+      console.log(`Successfully completed action: ${action}`, result);
+    } catch (error) {
+      console.error(`Error executing action ${action}:`, error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -105,8 +142,8 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
         </Link>
 
         {/* Header Section */}
-        <div className="bg-card border border-border rounded-lg p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="space-y-2">
+        <div className="bg-card border border-border rounded-lg p-6 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
+          <div className="space-y-2 flex-1">
             <div className="flex items-center gap-3">
               <span className={cn(
                 "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
@@ -116,8 +153,13 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
               )}>
                 {finding.severity}
               </span>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-accent text-accent-foreground border border-border">
-                {finding.status}
+              <span className={cn(
+                "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                finding.status === "remediated" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
+                finding.status === "risk_accepted" ? "bg-muted text-muted-foreground border-border" :
+                "bg-accent text-accent-foreground border-border"
+              )}>
+                {finding.status.replace('_', ' ')}
               </span>
               <span className="text-sm text-muted-foreground font-medium">Risk Score: <span className="text-foreground">{finding.risk_score}</span></span>
             </div>
@@ -127,12 +169,38 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
             </p>
           </div>
           
-          <div className="flex gap-3 w-full md:w-auto">
-            <button className="flex-1 md:flex-none px-4 py-2 bg-card border border-border hover:bg-accent hover:text-accent-foreground text-sm font-medium rounded-md transition-colors">
-              Acknowledge
+          <div className="flex flex-wrap gap-2 w-full xl:w-auto mt-2 xl:mt-0">
+            <button 
+              onClick={() => handleAction('assign')}
+              disabled={actionLoading !== null}
+              className="px-3 py-2 bg-card border border-border hover:bg-accent text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50"
+            >
+              <User className="h-4 w-4" />
+              {actionLoading === 'assign' ? 'Assigning...' : 'Assign to Owner'}
             </button>
-            <button className="flex-1 md:flex-none px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium rounded-md transition-colors shadow-sm">
-              Start Remediation
+            <button 
+              onClick={() => handleAction('ticket')}
+              disabled={actionLoading !== null}
+              className="px-3 py-2 bg-card border border-border hover:bg-accent text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50"
+            >
+              <Ticket className="h-4 w-4" />
+              {actionLoading === 'ticket' ? 'Creating...' : 'Create Ticket'}
+            </button>
+            <button 
+              onClick={() => handleAction('accept-risk')}
+              disabled={actionLoading !== null}
+              className="px-3 py-2 bg-card border border-border hover:bg-accent text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50"
+            >
+              <ShieldIcon className="h-4 w-4" />
+              {actionLoading === 'accept-risk' ? 'Accepting...' : 'Accept Risk'}
+            </button>
+            <button 
+              onClick={() => handleAction('remediate')}
+              disabled={actionLoading !== null || finding.status === 'remediated'}
+              className="px-3 py-2 bg-emerald-600 text-white hover:bg-emerald-700 text-sm font-medium rounded-md transition-colors shadow-sm flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50"
+            >
+              <CheckCircle className="h-4 w-4" />
+              {actionLoading === 'remediate' ? 'Updating...' : finding.status === 'remediated' ? 'Remediated' : 'Mark Remediated'}
             </button>
           </div>
         </div>
