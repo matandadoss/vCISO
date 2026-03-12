@@ -20,7 +20,7 @@ const NAV_ITEMS = [
   { href: "/compliance", label: "Compliance", icon: Activity },
   { href: "/correlation", label: "Correlation Graph", icon: Network },
   { href: "/chat", label: "vCISO Chat", icon: MessageSquare },
-  { href: "/settings/ai", label: "AI & Budgets", icon: Settings },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function AppSidebar() {
