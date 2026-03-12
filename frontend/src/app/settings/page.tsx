@@ -23,28 +23,28 @@ const settingModules = [
     description: "Invite team members, assign roles, and manage access policies.",
     icon: <Users className="h-6 w-6 text-emerald-500" />,
     href: "/settings/users",
-    status: "Coming Soon"
+    status: "Active"
   },
   {
     title: "Integrations & API Keys",
     description: "Connect external SaaS platforms, cloud providers, and ticketing systems.",
     icon: <Key className="h-6 w-6 text-purple-500" />,
     href: "/settings/integrations",
-    status: "Coming Soon"
+    status: "Active"
   },
   {
     title: "Notifications & Alerts",
     description: "Set up Slack webhooks, email summaries, and PagerDuty escalations.",
     icon: <Bell className="h-6 w-6 text-amber-500" />,
     href: "/settings/notifications",
-    status: "Coming Soon"
+    status: "Active"
   },
   {
     title: "General Security",
     description: "Configure SSO, MFA enforcement, and session timeouts.",
     icon: <Shield className="h-6 w-6 text-red-500" />,
     href: "/settings/security",
-    status: "Coming Soon"
+    status: "Active"
   }
 ];
 
