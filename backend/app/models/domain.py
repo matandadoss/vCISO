@@ -1,0 +1,329 @@
+import uuid
+from datetime import datetime
+from typing import Optional, Any
+from sqlalchemy import Float, Integer, String, Boolean, ForeignKey, Text, Enum as SQLEnum, Index, func
+from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.models.base import BaseModel
+import enum
+
+class ThreatSophistication(str, enum.Enum):
+    nation_state = "nation_state"
+    organized_crime = "organized_crime"
+    advanced = "advanced"
+    intermediate = "intermediate"
+    basic = "basic"
+
+class IndicatorType(str, enum.Enum):
+    ip = "ip"
+    domain = "domain"
+    url = "url"
+    hash_md5 = "hash_md5"
+    hash_sha1 = "hash_sha1"
+    hash_sha256 = "hash_sha256"
+    email = "email"
+    cve = "cve"
+    mutex = "mutex"
+    registry_key = "registry_key"
+    user_agent = "user_agent"
+
+class Severity(str, enum.Enum):
+    critical = "critical"
+    high = "high"
+    medium = "medium"
+    low = "low"
+    informational = "informational"
+
+class FindingStatus(str, enum.Enum):
+    new = "new"
+    triaged = "triaged"
+    in_progress = "in_progress"
+    resolved = "resolved"
+    accepted = "accepted"
+    false_positive = "false_positive"
+
+class FindingType(str, enum.Enum):
+    vulnerability = "vulnerability"
+    misconfiguration = "misconfiguration"
+    threat_indicator = "threat_indicator"
+    credential_exposure = "credential_exposure"
+    access_sale = "access_sale"
+    data_leak = "data_leak"
+    control_gap = "control_gap"
+    compliance_gap = "compliance_gap"
+    supply_chain_risk = "supply_chain_risk"
+    osint_exposure = "osint_exposure"
+    dark_web_mention = "dark_web_mention"
+    correlation_result = "correlation_result"
+
+class WorkflowName(str, enum.Enum):
+    supply_chain = "supply_chain"
+    infrastructure = "infrastructure"
+    vulnerability = "vulnerability"
+    threat = "threat"
+    osint = "osint"
+    dark_web = "dark_web"
+    controls = "controls"
+    gap_analysis = "gap_analysis"
+    compliance = "compliance"
+    correlation_engine = "correlation_engine"
+
+class AssetType(str, enum.Enum):
+    server = "server"
+    endpoint = "endpoint"
+    container = "container"
+    cloud_resource = "cloud_resource"
+    application = "application"
+    network_segment = "network_segment"
+    saas_app = "saas_app"
+    database = "database"
+    identity = "identity"
+    vendor = "vendor"
+
+class Environment(str, enum.Enum):
+    production = "production"
+    staging = "staging"
+    development = "development"
+    shared_services = "shared_services"
+
+class ChatRole(str, enum.Enum):
+    user = "user"
+    assistant = "assistant"
+
+class Organization(BaseModel):
+    __tablename__ = "organizations"
+    name: Mapped[str] = mapped_column(String(255))
+    industry: Mapped[str] = mapped_column(String(255), nullable=True)
+    size: Mapped[str] = mapped_column(String(50), nullable=True)
+    gcp_project_id: Mapped[str] = mapped_column(String(255), nullable=True)
+
+class OrgAIBudget(BaseModel):
+    __tablename__ = "org_ai_budgets"
+    org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    daily_limit_usd: Mapped[float] = mapped_column(Float, default=10.00)
+    monthly_limit_usd: Mapped[float] = mapped_column(Float, default=200.00)
+    auto_downgrade_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    active_provider: Mapped[str] = mapped_column(String(50), default="anthropic_direct")
+    alert_webhook_url: Mapped[str] = mapped_column(String(2048), nullable=True)
+
+class Asset(BaseModel):
+    __tablename__ = "assets"
+    org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    asset_type: Mapped[AssetType] = mapped_column(SQLEnum(AssetType))
+    name: Mapped[str] = mapped_column(String(255))
+    identifier: Mapped[str] = mapped_column(String(512), unique=True)
+    environment: Mapped[Environment] = mapped_column(SQLEnum(Environment))
+    business_criticality: Mapped[str] = mapped_column(String(50))
+    data_classification: Mapped[str] = mapped_column(String(50))
+    owner: Mapped[str] = mapped_column(String(255), nullable=True)
+    business_unit: Mapped[str] = mapped_column(String(255), nullable=True)
+    regulatory_scope: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    cloud_provider: Mapped[str] = mapped_column(String(50), nullable=True)
+    cloud_region: Mapped[str] = mapped_column(String(50), nullable=True)
+    cloud_account_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    metadata_data: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    status: Mapped[str] = mapped_column(String(50), default="active")
+    first_seen: Mapped[datetime] = mapped_column(nullable=True)
+    last_seen: Mapped[datetime] = mapped_column(nullable=True)
+
+    __table_args__ = (
+        Index("ix_assets_composite", "org_id", "asset_type", "environment"),
+        Index("ix_assets_identifier", "identifier")
+    )
+
+class Vulnerability(BaseModel):
+    __tablename__ = "vulnerabilities"
+    org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    cve_id: Mapped[str] = mapped_column(String(50), nullable=True)
+    title: Mapped[str] = mapped_column(String(512))
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    source: Mapped[str] = mapped_column(String(100))
+    severity_source_score: Mapped[float] = mapped_column(Float, nullable=True)
+    cvss_base_score: Mapped[float] = mapped_column(Float, nullable=True)
+    epss_score: Mapped[float] = mapped_column(Float, nullable=True)
+    exploit_availability: Mapped[str] = mapped_column(String(50))
+    kev_listed: Mapped[bool] = mapped_column(Boolean, default=False)
+    affected_asset_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("assets.id"))
+    status: Mapped[FindingStatus] = mapped_column(SQLEnum(FindingStatus))
+    sla_deadline: Mapped[datetime] = mapped_column(nullable=True)
+    resolved_at: Mapped[datetime] = mapped_column(nullable=True)
+    remediation_owner: Mapped[str] = mapped_column(String(255), nullable=True)
+    scanner_finding_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    raw_data: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    first_detected: Mapped[datetime] = mapped_column(nullable=True)
+    last_detected: Mapped[datetime] = mapped_column(nullable=True)
+
+    __table_args__ = (
+        Index("ix_vuln_composite", "org_id", "status", "cvss_base_score"),
+        Index("ix_vuln_cve", "cve_id", "epss_score")
+    )
+
+class ThreatActor(BaseModel):
+    __tablename__ = "threat_actors"
+    org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    name: Mapped[str] = mapped_column(String(255))
+    aliases: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    motivation: Mapped[str] = mapped_column(String(100), nullable=True)
+    sophistication: Mapped[ThreatSophistication] = mapped_column(SQLEnum(ThreatSophistication))
+    target_industries: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    target_regions: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    first_seen: Mapped[datetime] = mapped_column(nullable=True)
+    last_updated: Mapped[datetime] = mapped_column(nullable=True)
+    source: Mapped[str] = mapped_column(String(100), nullable=True)
+    external_references: Mapped[dict] = mapped_column(JSONB, nullable=True)
+
+class ThreatIntelIndicator(BaseModel):
+    __tablename__ = "threat_intel_indicators"
+    org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    indicator_type: Mapped[IndicatorType] = mapped_column(SQLEnum(IndicatorType))
+    value: Mapped[str] = mapped_column(String(1024))
+    threat_actor_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("threat_actors.id"), nullable=True)
+    confidence: Mapped[int] = mapped_column(Integer, default=50) # 0-100
+    severity: Mapped[Severity] = mapped_column(SQLEnum(Severity))
+    tlp_marking: Mapped[str] = mapped_column(String(50))
+    valid_from: Mapped[datetime] = mapped_column(nullable=True)
+    valid_until: Mapped[datetime] = mapped_column(nullable=True)
+    source: Mapped[str] = mapped_column(String(100), nullable=True)
+    tags: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    raw_data: Mapped[dict] = mapped_column(JSONB, nullable=True)
+
+    __table_args__ = (
+        Index("ix_tii_composite", "indicator_type", "value"),
+    )
+
+class Vendor(BaseModel):
+    __tablename__ = "vendors"
+    org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    name: Mapped[str] = mapped_column(String(255))
+    vendor_type: Mapped[str] = mapped_column(String(100))
+    tier: Mapped[str] = mapped_column(String(50))
+    data_access_level: Mapped[str] = mapped_column(String(100))
+    risk_score: Mapped[int] = mapped_column(Integer, default=50)
+    assessment_status: Mapped[str] = mapped_column(String(100))
+    last_assessment_date: Mapped[datetime] = mapped_column(nullable=True)
+    next_assessment_due: Mapped[datetime] = mapped_column(nullable=True)
+    contract_expiry: Mapped[datetime] = mapped_column(nullable=True)
+    primary_contact: Mapped[str] = mapped_column(String(255), nullable=True)
+    metadata_data: Mapped[dict] = mapped_column(JSONB, nullable=True)
+
+class SecurityControl(BaseModel):
+    __tablename__ = "security_controls"
+    org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    name: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    control_type: Mapped[str] = mapped_column(String(100))
+    category: Mapped[str] = mapped_column(String(100))
+    tool_vendor: Mapped[str] = mapped_column(String(100), nullable=True)
+    tool_name: Mapped[str] = mapped_column(String(100), nullable=True)
+    deployment_coverage_pct: Mapped[float] = mapped_column(Float, default=0.0)
+    effectiveness_score: Mapped[float] = mapped_column(Float, default=0.0)
+    last_validated: Mapped[datetime] = mapped_column(nullable=True)
+    status: Mapped[str] = mapped_column(String(50))
+    mitre_techniques_covered: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    configuration_baseline: Mapped[dict] = mapped_column(JSONB, nullable=True)
+
+class ComplianceFramework(BaseModel):
+    __tablename__ = "compliance_frameworks"
+    org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    framework_name: Mapped[str] = mapped_column(String(255))
+    version: Mapped[str] = mapped_column(String(50), nullable=True)
+    applicable: Mapped[bool] = mapped_column(Boolean, default=True)
+    scope_description: Mapped[str] = mapped_column(Text, nullable=True)
+    overall_compliance_pct: Mapped[float] = mapped_column(Float, default=0.0)
+    last_assessed: Mapped[datetime] = mapped_column(nullable=True)
+    next_assessment_due: Mapped[datetime] = mapped_column(nullable=True)
+
+class ComplianceRequirement(BaseModel):
+    __tablename__ = "compliance_requirements"
+    framework_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("compliance_frameworks.id"))
+    requirement_id_code: Mapped[str] = mapped_column(String(100))
+    title: Mapped[str] = mapped_column(String(512))
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(50))
+    evidence_status: Mapped[str] = mapped_column(String(50))
+    mapped_control_ids: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    notes: Mapped[str] = mapped_column(Text, nullable=True)
+    last_reviewed: Mapped[datetime] = mapped_column(nullable=True)
+
+class Finding(BaseModel):
+    __tablename__ = "findings"
+    org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    finding_type: Mapped[FindingType] = mapped_column(SQLEnum(FindingType))
+    title: Mapped[str] = mapped_column(String(512))
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    severity: Mapped[Severity] = mapped_column(SQLEnum(Severity))
+    risk_score: Mapped[float] = mapped_column(Float, default=0.0)
+    source_workflow: Mapped[WorkflowName] = mapped_column(SQLEnum(WorkflowName))
+    source_finding_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    affected_asset_ids: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    affected_vendor_ids: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    related_threat_actor_ids: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    related_cve_ids: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    related_control_ids: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    mitre_techniques: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    status: Mapped[FindingStatus] = mapped_column(SQLEnum(FindingStatus))
+    assigned_to: Mapped[str] = mapped_column(String(255), nullable=True)
+    remediation_notes: Mapped[str] = mapped_column(Text, nullable=True)
+    correlated_finding_ids: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    correlation_explanation: Mapped[str] = mapped_column(Text, nullable=True)
+    evidence: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    raw_data: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    detected_at: Mapped[datetime] = mapped_column(nullable=True)
+    triaged_at: Mapped[datetime] = mapped_column(nullable=True)
+    resolved_at: Mapped[datetime] = mapped_column(nullable=True)
+    sla_deadline: Mapped[datetime] = mapped_column(nullable=True)
+
+    __table_args__ = (
+        Index("ix_finding_composite", "org_id", "source_workflow", "severity", "status"),
+        Index("ix_finding_risk_score", "risk_score", "detected_at")
+    )
+
+class CorrelationRule(BaseModel):
+    __tablename__ = "correlation_rules"
+    org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    name: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    rule_type: Mapped[str] = mapped_column(String(50))
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    severity_output: Mapped[Severity] = mapped_column(SQLEnum(Severity))
+    datasets_combined: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    rule_logic: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    graph_query: Mapped[str] = mapped_column(Text, nullable=True)
+    confidence_threshold: Mapped[float] = mapped_column(Float, default=0.8)
+    last_triggered: Mapped[datetime] = mapped_column(nullable=True)
+    trigger_count: Mapped[int] = mapped_column(Integer, default=0)
+    false_positive_count: Mapped[int] = mapped_column(Integer, default=0)
+
+class ChatSession(BaseModel):
+    __tablename__ = "chat_sessions"
+    org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    user_id: Mapped[str] = mapped_column(String(255))
+    title: Mapped[str] = mapped_column(String(255), nullable=True)
+
+class ChatMessage(BaseModel):
+    __tablename__ = "chat_messages"
+    session_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("chat_sessions.id"))
+    role: Mapped[ChatRole] = mapped_column(SQLEnum(ChatRole))
+    content: Mapped[str] = mapped_column(Text)
+    query_tier: Mapped[str] = mapped_column(String(50))
+    model_used: Mapped[str] = mapped_column(String(100), nullable=True)
+    cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
+    latency_ms: Mapped[int] = mapped_column(Integer, nullable=True)
+    sql_executed: Mapped[str] = mapped_column(Text, nullable=True)
+    routing_reason: Mapped[str] = mapped_column(Text, nullable=True)
+
+    __table_args__ = (
+        Index("ix_chat_message_session", "session_id", "created_at"),
+    )
+
+class AuditLog(BaseModel):
+    __tablename__ = "audit_logs"
+    org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    actor: Mapped[str] = mapped_column(String(255))
+    action: Mapped[str] = mapped_column(String(100))
+    entity_type: Mapped[str] = mapped_column(String(100))
+    entity_id: Mapped[str] = mapped_column(String(255))
+    changes: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(server_default=func.now())

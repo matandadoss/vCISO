@@ -1,0 +1,41 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.12, pytest-8.2.0, pluggy-1.6.0 -- C:\Users\matan\.gemini\antigravity\scratch\vCISO\backend\venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\matan\.gemini\antigravity\scratch\vCISO
+plugins: anyio-4.12.1, asyncio-0.23.6
+asyncio: mode=Mode.STRICT
+collecting ... collected 9 items
+
+tests/api/test_endpoints.py::test_get_dashboard_summary PASSED           [ 11%]
+tests/api/test_endpoints.py::test_get_findings PASSED                    [ 22%]
+tests/api/test_endpoints.py::test_ai_settings PASSED                     [ 33%]
+tests/core/test_ai_provider.py::test_ai_provider_routing PASSED          [ 44%]
+tests/core/test_ai_provider.py::test_ai_provider_cost_calculation PASSED [ 55%]
+tests/core/test_query_router.py::test_query_router_search_only PASSED    [ 66%]
+tests/core/test_query_router.py::test_query_router_deep PASSED           [ 77%]
+tests/core/test_query_router.py::test_query_router_fast_cheap PASSED     [ 88%]
+tests/core/test_query_router.py::test_query_router_balanced FAILED       [100%]
+
+================================== FAILURES ===================================
+_________________________ test_query_router_balanced __________________________
+tests\core\test_query_router.py:27: in test_query_router_balanced
+    assert classification.tier == ModelTier.BALANCED
+E   AssertionError: assert <ModelTier.FA... 'fast_cheap'> == <ModelTier.BA...D: 'balanced'>
+E     
+E     - balanced
+E     + fast_cheap
+============================== warnings summary ===============================
+tests/api/test_endpoints.py::test_get_dashboard_summary
+tests/api/test_endpoints.py::test_get_findings
+tests/api/test_endpoints.py::test_ai_settings
+  C:\Users\matan\.gemini\antigravity\scratch\vCISO\backend\venv\Lib\site-packages\httpx\_client.py:1426: DeprecationWarning: The 'app' shortcut is now deprecated. Use the explicit style 'transport=ASGITransport(app=...)' instead.
+    warnings.warn(message, DeprecationWarning)
+
+tests/api/test_endpoints.py::test_get_findings
+  C:\Users\matan\.gemini\antigravity\scratch\vCISO\backend\app\api\v1\findings.py:36: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat(),
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/core/test_query_router.py::test_query_router_balanced - Assertio...
+=================== 1 failed, 8 passed, 4 warnings in 1.64s ===================

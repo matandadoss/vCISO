@@ -1,0 +1,57 @@
+steps:
+  # 1. Run Tests
+  - name: 'python:3.12-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install -r backend/requirements.txt
+        pip install pytest pytest-asyncio
+        pytest tests/
+
+  # 2. Build Backend Container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/vciso-repo/backend:$COMMIT_SHA', './backend']
+
+  # 3. Push Backend Container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/vciso-repo/backend:$COMMIT_SHA']
+
+  # 4. Build Frontend Container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/vciso-repo/frontend:$COMMIT_SHA', './frontend']
+
+  # 5. Push Frontend Container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/vciso-repo/frontend:$COMMIT_SHA']
+
+  # 6. Deploy Backend to Cloud Run
+  - name: 'google/cloud-sdk:slim'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'vciso-backend'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/vciso-repo/backend:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--service-account'
+      - 'vciso-cloudrun-sa@$PROJECT_ID.iam.gserviceaccount.com'
+
+  # 7. Deploy Frontend to Cloud Run
+  - name: 'google/cloud-sdk:slim'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'vciso-frontend'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/vciso-repo/frontend:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--allow-unauthenticated'
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/vciso-repo/backend:$COMMIT_SHA'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/vciso-repo/frontend:$COMMIT_SHA'

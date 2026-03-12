@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (Cloud SQL representation)
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: vciso_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis (Memorystore representation)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Neo4j (Aura DB representation)
+  neo4j:
+    image: neo4j:5.23
+    environment:
+      NEO4J_AUTH: neo4j/password
+      # Allow APOC and GDS (Graph Data Science) depending on exact image
+      NEO4J_PLUGINS: '["apoc"]'
+    ports:
+      - "7474:7474" # HTTP UI
+      - "7687:7687" # Bolt protocol
+    volumes:
+      - neo4j_data:/data
+
+  # GCP Pub/Sub Emulator
+  pubsub:
+    image: gcr.io/google.com/cloudsdktool/cloud-sdk:emulators
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085
+    ports:
+      - "8085:8085"
+
+volumes:
+  postgres_data:
+  redis_data:
+  neo4j_data:
