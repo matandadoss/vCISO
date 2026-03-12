@@ -2,43 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
-import { Search, Filter, ArrowRight } from "lucide-react";
+import { Search, Filter, ArrowRight, Clock, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function FindingsPage() {
   const [findings, setFindings] = useState([]);
 
   useEffect(() => {
-    // Stub: Fetch from /api/v1/findings
-    setFindings([
-      {
-        id: "1",
-        title: "Unpatched Production Database Server",
-        severity: "critical",
-        risk_score: 95.5,
-        status: "new",
-        detected_at: "2023-10-24T10:00:00Z",
-        workflow: "vulnerability"
-      },
-      {
-        id: "2",
-        title: "Exposed Storage Bucket containing PII",
-        severity: "high",
-        risk_score: 82.0,
-        status: "triaged",
-        detected_at: "2023-10-23T14:30:00Z",
-        workflow: "infrastructure"
-      },
-      {
-        id: "3",
-        title: "Malicious IP Connection Detected",
-        severity: "critical",
-        risk_score: 98.2,
-        status: "new",
-        detected_at: "2023-10-25T02:15:00Z",
-        workflow: "threat"
+    async function fetchFindings() {
+      try {
+        const res = await fetch('http://localhost:8000/api/v1/findings?org_id=default');
+        if (res.ok) {
+          const data = await res.json();
+          setFindings(data.items);
+        }
+      } catch (err) {
+        console.error("Failed to fetch findings", err);
       }
-    ] as any);
+    }
+    fetchFindings();
   }, []);
 
   return (
@@ -75,6 +57,7 @@ export default function FindingsPage() {
                 <th className="px-6 py-4 font-medium uppercase tracking-wider">Risk Score</th>
                 <th className="px-6 py-4 font-medium uppercase tracking-wider">Status</th>
                 <th className="px-6 py-4 font-medium uppercase tracking-wider">Detected</th>
+                <th className="px-6 py-4 font-medium uppercase tracking-wider">SLA</th>
                 <th className="px-6 py-4 font-medium uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
@@ -103,6 +86,17 @@ export default function FindingsPage() {
                   </td>
                   <td className="px-6 py-4 text-muted-foreground">
                     {formatDate(f.detected_at)}
+                  </td>
+                  <td className="px-6 py-4">
+                    {f.sla_status && (
+                      <span className={cn(
+                        "inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium whitespace-nowrap",
+                        f.sla_breached ? "bg-destructive/10 text-destructive border border-destructive/20" : "bg-muted text-muted-foreground border border-border"
+                      )}>
+                        {f.sla_breached ? <AlertCircle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                        {f.sla_status}
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <Link href={`/findings/${f.id}`} className="text-primary hover:text-blue-400 font-medium text-sm flex items-center justify-end w-full">

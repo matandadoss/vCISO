@@ -30,14 +30,31 @@ async def list_findings(
             {
                 "id": str(uuid.uuid4()),
                 "title": "Unpatched Server",
-                "severity": Severity.high,
-                "risk_score": 82.5,
+                "severity": Severity.critical,
+                "risk_score": 92.5,
                 "status": "new",
-                "detected_at": datetime.utcnow().isoformat(),
-                "affected_asset_ids": ["server-1"]
+                "detected_at": (datetime.utcnow().replace(day=datetime.utcnow().day - 5)).isoformat(), # 5 days ago
+                "workflow": "vulnerability",
+                "affected_asset_ids": ["server-1"],
+                "sla_deadline": (datetime.utcnow().replace(day=datetime.utcnow().day - 4)).isoformat(), # Was due 4 days ago (1 day SLA for critical)
+                "sla_status": "4 days overdue",
+                "sla_breached": True
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "title": "Exposed Storage Bucket containing PII",
+                "severity": Severity.high,
+                "risk_score": 82.0,
+                "status": "triaged",
+                "detected_at": (datetime.utcnow().replace(day=datetime.utcnow().day - 2)).isoformat(),
+                "workflow": "infrastructure",
+                "affected_asset_ids": ["bucket-1"],
+                "sla_deadline": (datetime.utcnow().replace(day=datetime.utcnow().day + 5)).isoformat(), # 7 day SLA for high
+                "sla_status": "5 days remaining",
+                "sla_breached": False
             }
         ],
-        "total": 1,
+        "total": 2,
         "limit": limit,
         "offset": offset
     }
@@ -75,7 +92,10 @@ async def get_finding(finding_id: str, org_id: str):
         "linked_items": [
             {"id": "vuln-scan-102", "type": "Scan Report", "name": "Weekly External Exposure Scan"},
             {"id": "ctrl-32", "type": "Compliance Control", "name": "SOC 2 CC7.1 - Vulnerability Management"}
-        ]
+        ],
+        "sla_deadline": (datetime.utcnow().replace(day=datetime.utcnow().day - 3)).isoformat(), # Was due 3 days ago
+        "sla_status": "3 days overdue",
+        "sla_breached": True
     }
 
 from pydantic import BaseModel

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { ArrowLeft, AlertCircle, ShieldAlert, Cpu, Link as LinkIcon, CheckCircle2, Server, Globe, User, CheckCircle, Ticket, ShieldAlert as ShieldIcon } from "lucide-react";
+import { ArrowLeft, AlertCircle, ShieldAlert, Cpu, Link as LinkIcon, CheckCircle2, Server, Globe, User, CheckCircle, Ticket, Clock, ShieldAlert as ShieldIcon } from "lucide-react";
 import Link from "next/link";
 import { formatDate, cn } from "@/lib/utils";
 
@@ -44,6 +44,9 @@ interface FindingDetail {
   mitre_attack: MitreTactic[];
   remediation: Remediation;
   linked_items: LinkedItem[];
+  sla_deadline?: string;
+  sla_status?: string;
+  sla_breached?: boolean;
 }
 
 export default function FindingDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -144,7 +147,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
         {/* Header Section */}
         <div className="bg-card border border-border rounded-lg p-6 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
           <div className="space-y-2 flex-1">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <span className={cn(
                 "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
                 finding.severity === "critical" ? "bg-destructive/10 text-destructive border border-destructive/20" :
@@ -161,7 +164,18 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
               )}>
                 {finding.status.replace('_', ' ')}
               </span>
-              <span className="text-sm text-muted-foreground font-medium">Risk Score: <span className="text-foreground">{finding.risk_score}</span></span>
+              <span className="text-sm text-muted-foreground font-medium border-r border-border pr-3">
+                Risk Score: <span className="text-foreground">{finding.risk_score}</span>
+              </span>
+              {finding.sla_status && (
+                <span className={cn(
+                  "inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider",
+                  finding.sla_breached ? "bg-destructive text-destructive-foreground shadow-sm animate-pulse" : "bg-muted text-muted-foreground border border-border"
+                )}>
+                  {finding.sla_breached ? <AlertCircle className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
+                  SLA: {finding.sla_status}
+                </span>
+              )}
             </div>
             <h1 className="text-2xl font-bold text-foreground">{finding.title}</h1>
             <p className="text-sm text-muted-foreground flex items-center gap-2">
