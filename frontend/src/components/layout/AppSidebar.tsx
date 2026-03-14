@@ -17,7 +17,8 @@ import {
   LogOut,
   LogIn,
   UserCircle,
-  FlaskConical
+  FlaskConical,
+  BookOpen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,6 +34,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Overview",
     items: [
       { href: "/", label: "Dashboard", icon: LayoutDashboard }, // All
+      { href: "/guide", label: "Platform Guide", icon: BookOpen }, // All
       { href: "/chat", label: "vCISO Chat", icon: MessageSquare, roles: ["CISO", "BOARD_MEMBER"] },
     ]
   },
