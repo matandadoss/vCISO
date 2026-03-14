@@ -18,7 +18,10 @@ import {
   LogIn,
   UserCircle,
   FlaskConical,
-  BookOpen
+  BookOpen,
+  GitMerge,
+  ShieldCheck,
+  GlobeLock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -39,34 +42,35 @@ const NAV_GROUPS: NavGroup[] = [
     ]
   },
   {
-    label: "Risk & Compliance",
+    label: "Active Workflows",
     items: [
-      { href: "/findings", label: "Findings", icon: ShieldAlert, roles: ["CISO", "SOC_ANALYST", "AUDITOR"] },
-      { href: "/compliance", label: "Compliance", icon: Activity, roles: ["CISO", "AUDITOR", "BOARD_MEMBER"] },
-      { href: "/vendor-risk", label: "Vendor Risk", icon: Building2, roles: ["CISO", "AUDITOR"] },
-      { href: "/audit-trail", label: "Audit Trail", icon: Terminal, roles: ["CISO", "SOC_ANALYST", "AUDITOR"] },
+      { href: "/workflows/supply-chain", label: "Supply Chain Risk", icon: Building2, roles: ["CISO", "AUDITOR"] },
+      { href: "/threat-intel", label: "Threat Management", icon: Target, roles: ["CISO", "SOC_ANALYST"] },
+      { href: "/findings", label: "Vulnerability Mgmt", icon: ShieldAlert, roles: ["CISO", "SOC_ANALYST", "AUDITOR"] },
+      { href: "/compliance", label: "Framework Compliance", icon: ShieldCheck, roles: ["CISO", "AUDITOR", "BOARD_MEMBER"] },
     ]
   },
   {
-    label: "Threat Operations",
+    label: "Security Utilities",
     items: [
-      { href: "/threat-intel", label: "Threat Intel", icon: Target, roles: ["CISO", "SOC_ANALYST"] },
       { href: "/correlation", label: "Correlation Graph", icon: Network, roles: ["CISO", "SOC_ANALYST"] },
       { href: "/pentest", label: "AI Pentesting", icon: Terminal, roles: ["CISO", "SOC_ANALYST", "SECURITY_ENGINEER"] },
       { href: "/simulator", label: "What-If Simulator", icon: FlaskConical, roles: ["CISO", "SOC_ANALYST"] },
+      { href: "/vendor-risk", label: "Vendor Inspect (Legacy)", icon: GlobeLock, roles: ["CISO", "AUDITOR"] },
     ]
   },
   {
     label: "Automation & Data",
     items: [
       { href: "/playbooks", label: "Playbooks (SOAR)", icon: Zap, roles: ["CISO", "SOC_ANALYST", "SECURITY_ENGINEER"] },
-      { href: "/workflows", label: "Data Workflows", icon: Activity, roles: ["CISO", "SECURITY_ENGINEER"] },
+      { href: "/workflows", label: "Data Pipeline Config", icon: Activity, roles: ["CISO", "SECURITY_ENGINEER"] },
       { href: "/integrations", label: "Integrations Hub", icon: Plug, roles: ["CISO"] },
     ]
   },
   {
     label: "System",
     items: [
+      { href: "/audit-trail", label: "Audit Trail", icon: Terminal, roles: ["CISO", "SOC_ANALYST", "AUDITOR"] },
       { href: "/settings", label: "Settings", icon: Settings, roles: ["CISO"] },
     ]
   }
