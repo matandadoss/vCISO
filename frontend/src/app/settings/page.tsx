@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings, Shield, Cpu, Users, Bell, Key, Rss, ArrowRight } from "lucide-react";
+import { Settings, Shield, Cpu, Users, Bell, Key, Rss, ArrowRight, Building } from "lucide-react";
 import Link from "next/link";
 
 const settingModules = [
@@ -44,6 +44,13 @@ const settingModules = [
     description: "Configure SSO, MFA enforcement, and session timeouts.",
     icon: <Shield className="h-6 w-6 text-red-500" />,
     href: "/settings/security",
+    status: "Active"
+  },
+  {
+    title: "Subscription & Service Tier",
+    description: "Manage your active subscription plan and unlock real-time platform capabilities.",
+    icon: <Building className="h-6 w-6 text-indigo-500" />,
+    href: "/settings/subscription",
     status: "Active"
   }
 ];

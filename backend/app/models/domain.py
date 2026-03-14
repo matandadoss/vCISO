@@ -14,6 +14,12 @@ class ThreatSophistication(str, enum.Enum):
     intermediate = "intermediate"
     basic = "basic"
 
+class ServiceTier(str, enum.Enum):
+    basic = "basic"
+    professional = "professional"
+    enterprise = "enterprise"
+    elite = "elite"
+
 class IndicatorType(str, enum.Enum):
     ip = "ip"
     domain = "domain"
@@ -96,6 +102,7 @@ class Organization(BaseModel):
     industry: Mapped[str] = mapped_column(String(255), nullable=True)
     size: Mapped[str] = mapped_column(String(50), nullable=True)
     gcp_project_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    subscription_tier: Mapped[ServiceTier] = mapped_column(SQLEnum(ServiceTier), default=ServiceTier.professional)
 
 class OrgAIBudget(BaseModel):
     __tablename__ = "org_ai_budgets"
@@ -105,6 +112,17 @@ class OrgAIBudget(BaseModel):
     auto_downgrade_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     active_provider: Mapped[str] = mapped_column(String(50), default="anthropic_direct")
     alert_webhook_url: Mapped[str] = mapped_column(String(2048), nullable=True)
+
+class User(BaseModel):
+    __tablename__ = "users"
+    org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"))
+    firebase_uid: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    full_name: Mapped[str] = mapped_column(String(255), nullable=True)
+    role: Mapped[str] = mapped_column(String(50), default="viewer") # admin, editor, viewer
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    last_login: Mapped[datetime] = mapped_column(nullable=True)
+
 
 class Asset(BaseModel):
     __tablename__ = "assets"

@@ -1,13 +1,16 @@
 from fastapi import APIRouter, Depends
 from typing import Dict, Any
+from app.core.auth import get_current_user
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 @router.get("/summary")
-async def get_dashboard_summary(org_id: str):
+async def get_dashboard_summary(org_id: str, current_user: dict = Depends(get_current_user)):
     """Provides high level metrics for the vCISO dashboard."""
     return {
         "overall_risk_score": 78,
+        "industry_average": 62,
+        "risk_band": "needs_improvement", # excellent, good, needs_improvement, critical
         "compliance_score": 65,
         "open_critical_findings": 12,
         "open_high_findings": 45,
@@ -17,7 +20,7 @@ async def get_dashboard_summary(org_id: str):
     }
 
 @router.get("/trends")
-async def get_risk_trends(org_id: str, days: int = 30):
+async def get_risk_trends(org_id: str, days: int = 30, current_user: dict = Depends(get_current_user)):
     """Provides historical risk score trends for charts."""
     from datetime import datetime, timedelta
     import random
@@ -45,7 +48,7 @@ async def get_risk_trends(org_id: str, days: int = 30):
     }
 
 @router.get("/attention")
-async def get_attention_items(org_id: str):
+async def get_attention_items(org_id: str, current_user: dict = Depends(get_current_user)):
     """Provides high-priority action items for the What Needs Attention widget, prioritized by time sensitivity."""
     items = [
         {

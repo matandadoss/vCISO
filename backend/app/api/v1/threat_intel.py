@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Depends
 from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
@@ -15,6 +15,9 @@ class ThreatActorResponse(BaseModel):
     active: bool
     first_seen: datetime
     last_updated: datetime
+    relevance_score: str = "Medium" # High, Medium, Low
+    relevance_reasons: List[str] = []
+    mitre_attack_techniques: List[dict] = []
 
 class ThreatIndicatorResponse(BaseModel):
     id: str
@@ -22,8 +25,23 @@ class ThreatIndicatorResponse(BaseModel):
     value: str
     confidence: int
     severity: Severity
-    threat_actor_id: Optional[str] = None
     valid_from: Optional[datetime] = None
+    relevance_score: str = "Medium"
+    relevance_reasons: List[str] = []
+    associated_actor_name: Optional[str] = None
+    attack_stages: List[str] = []
+    affected_assets: List[dict] = []
+    recommended_actions: List[str] = []
+
+class DarkWebAlertResponse(BaseModel):
+    id: str
+    alert_type: str # e.g. "Credential Exposure", "Data Leak", "Brand Mention"
+    title: str
+    description: str
+    severity: Severity
+    source: str # e.g. "Genesis Market", "Pastebin"
+    detected_at: datetime
+    is_resolved: bool
 
 @router.get("/actors", response_model=dict)
 async def list_threat_actors(
@@ -32,7 +50,10 @@ async def list_threat_actors(
     limit: int = 50,
     offset: int = 0
 ):
-    # Stub: return mock data
+    # Stub: return mock data with contextual relevance scoring
+    # In reality, this would query the customer's mapped assets/industry table
+    customer_industry = "Hospitality"
+    
     actors = [
         {
             "id": str(uuid.uuid4()),
@@ -41,7 +62,18 @@ async def list_threat_actors(
             "sophistication": ThreatSophistication.advanced,
             "active": True,
             "first_seen": datetime(2015, 1, 1, tzinfo=timezone.utc).isoformat(),
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+            "relevance_score": "High" if customer_industry in ["Retail", "Hospitality"] else "Low",
+            "relevance_reasons": [
+                f"Actor specifically targets {customer_industry} sector organizations.",
+                "Known to exploit point-of-sale systems heavily used in your environment."
+            ] if customer_industry in ["Retail", "Hospitality"] else ["Actor rarely targets your industry."],
+            "mitre_attack_techniques": [
+                {"id": "T1566.001", "name": "Spearphishing Attachment", "tactic": "Initial Access"},
+                {"id": "T1059.001", "name": "PowerShell", "tactic": "Execution"},
+                {"id": "T1110.001", "name": "Password Guessing", "tactic": "Credential Access"},
+                {"id": "T1053.005", "name": "Scheduled Task", "tactic": "Persistence"}
+            ]
         },
         {
             "id": str(uuid.uuid4()),
@@ -50,7 +82,17 @@ async def list_threat_actors(
             "sophistication": ThreatSophistication.nation_state,
             "active": True,
             "first_seen": datetime(2009, 1, 1, tzinfo=timezone.utc).isoformat(),
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+            "relevance_score": "Medium",
+            "relevance_reasons": [
+                "Actor has broad targets including cryptocurrency, which is not your primary sector.",
+                "However, they leverage widespread vulnerabilities (e.g., Log4j) that exist in your tech stack."
+            ],
+            "mitre_attack_techniques": [
+                {"id": "T1190", "name": "Exploit Public-Facing Application", "tactic": "Initial Access"},
+                {"id": "T1140", "name": "Deobfuscate/Decode Files or Information", "tactic": "Defense Evasion"},
+                {"id": "T1071.001", "name": "Web Protocols", "tactic": "Command and Control"}
+            ]
         }
     ]
     return {
@@ -68,7 +110,7 @@ async def list_threat_indicators(
     limit: int = 50,
     offset: int = 0
 ):
-    # Stub: return mock data
+    # Stub: return mock data with contextual relevance scoring
     indicators = [
         {
             "id": str(uuid.uuid4()),
@@ -77,7 +119,21 @@ async def list_threat_indicators(
             "confidence": 95,
             "severity": Severity.critical,
             "threat_actor_id": "actor-123", # mock reference
-            "valid_from": datetime.now(timezone.utc).isoformat()
+            "valid_from": datetime.now(timezone.utc).isoformat(),
+            "relevance_score": "High",
+            "relevance_reasons": [
+                "IP is actively scanning Internet-facing assets matching your external IP range (203.0.113.0/24).",
+                "Observed dropping malware variants that target Linux servers (80% of your fleet)."
+            ],
+            "associated_actor_name": "FIN7",
+            "attack_stages": ["Initial Access", "Command and Control (C2)"],
+            "affected_assets": [
+                {"name": "ext-lb-prod", "type": "Load Balancer", "status": "exposed"}
+            ],
+            "recommended_actions": [
+                "Block IP 198.51.100.42 on external firewalls.",
+                "Add IoC to WAF blocklist."
+            ]
         },
         {
             "id": str(uuid.uuid4()),
@@ -86,7 +142,19 @@ async def list_threat_indicators(
             "confidence": 80,
             "severity": Severity.high,
             "threat_actor_id": "actor-456",
-            "valid_from": datetime.now(timezone.utc).isoformat()
+            "valid_from": datetime.now(timezone.utc).isoformat(),
+            "relevance_score": "Low",
+            "relevance_reasons": [
+                "Domain is primarily used to phish Microsoft 365 credentials.",
+                "Your organization uses GSuite, rendering this specific campaign ineffective."
+            ],
+            "associated_actor_name": "Lazarus Group",
+            "attack_stages": ["Credential Access", "Phishing"],
+            "affected_assets": [],
+            "recommended_actions": [
+                "Sinkhole domain at the DNS level.",
+                "Review email security gateway logs for delivery attempts."
+            ]
         }
     ]
     return {
@@ -94,6 +162,84 @@ async def list_threat_indicators(
         "total": len(indicators),
         "limit": limit,
         "offset": offset
+    }
+
+@router.get("/dark-web", response_model=dict)
+async def list_dark_web_alerts(
+    org_id: str,
+    limit: int = 50,
+    offset: int = 0
+):
+    # Stub: return mock data
+    alerts = [
+        {
+            "id": str(uuid.uuid4()),
+            "alert_type": "Credential Exposure",
+            "title": "Corporate Credentials Found in Stealer Logs",
+            "description": "24 credentials associated with @example.com were identified in a recent RedLine stealer log dump.",
+            "severity": Severity.critical,
+            "source": "Russian Market",
+            "detected_at": datetime.now(timezone.utc).isoformat(),
+            "is_resolved": False
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "alert_type": "Data Leak",
+            "title": "Possible Customer Data Paste",
+            "description": "A paste containing what appears to be a list of user emails and hashed passwords matches your domain nomenclature.",
+            "severity": Severity.high,
+            "source": "Pastebin",
+            "detected_at": datetime.now(timezone.utc).isoformat(),
+            "is_resolved": False
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "alert_type": "Brand Mention",
+            "title": "Discussing Exploitation on Forum",
+            "description": "Threat actors on a prominent cybercrime forum are discussing potential vulnerabilities in your custom web application.",
+            "severity": Severity.medium,
+            "source": "XSS.is Forum",
+            "detected_at": (datetime.now(timezone.utc)).isoformat(),
+            "is_resolved": False
+        }
+    ]
+    
+    return {
+        "items": alerts,
+        "total": len(alerts),
+        "limit": limit,
+        "offset": offset
+    }
+
+@router.get("/breach-reports", response_model=dict)
+async def list_breach_reports(
+    org_id: str,
+    limit: int = 50,
+    offset: int = 0
+):
+    reports = [
+        {
+            "id": str(uuid.uuid4()),
+            "title": "MGM Resorts Ransomware Attack (2023)",
+            "date": "2023-09-11",
+            "summary": "Scattered Spider compromised Okta Identity provider via social engineering the IT Helpdesk, leading to lateral movement, vSphere compromise, and ransomware deployment.",
+            "threat_actor": "Scattered Spider",
+            "industry": "Hospitality",
+            "simulation_query": "Simulate the 2023 MGM Ransomware Attack against our architecture to see if we are vulnerable."
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "title": "Target Supply Chain Breach (2013)",
+            "date": "2013-11-27",
+            "summary": "Attackers stole network credentials from a third-party HVAC vendor, gaining access to the corporate network and subsequently laterally moving to the Point of Sale (POS) network.",
+            "threat_actor": "Financially Motivated",
+            "industry": "Retail",
+            "simulation_query": "Simulate the Target supply chain HVAC breach against our architecture."
+        }
+    ]
+    return {
+        "items": reports,
+        "total": len(reports)
     }
 
 from app.db.session import get_db

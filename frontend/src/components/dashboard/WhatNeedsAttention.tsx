@@ -1,4 +1,5 @@
 "use client";
+import { fetchWithAuth } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import { AlertTriangle, ShieldAlert, FileWarning, Clock } from "lucide-react";
@@ -19,7 +20,7 @@ export function WhatNeedsAttention() {
   useEffect(() => {
     async function fetchAttentionItems() {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/dashboard/attention?org_id=default');
+        const response = await fetchWithAuth('http://localhost:8000/api/v1/dashboard/attention?org_id=default');
         if (!response.ok) {
           throw new Error('Failed to fetch attention items');
         }

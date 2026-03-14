@@ -1,7 +1,8 @@
 "use client";
+import { fetchWithAuth } from "@/lib/api";
 
 import { useEffect, useState, use } from "react";
-import { ArrowLeft, AlertCircle, ShieldAlert, Cpu, Link as LinkIcon, CheckCircle2, Server, Globe, User, CheckCircle, Ticket, Clock, ShieldAlert as ShieldIcon } from "lucide-react";
+import { ArrowLeft, AlertCircle, ShieldAlert, Cpu, Link as LinkIcon, CheckCircle2, Server, Globe, User, Ticket, Clock, ShieldAlert as ShieldIcon, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { formatDate, cn } from "@/lib/utils";
 
@@ -24,6 +25,12 @@ interface LinkedItem {
   name: string;
 }
 
+interface ComplianceControl {
+  framework: string;
+  control: string;
+  description: string;
+}
+
 interface Remediation {
   manual_steps: string[];
   automated_available: boolean;
@@ -44,6 +51,7 @@ interface FindingDetail {
   mitre_attack: MitreTactic[];
   remediation: Remediation;
   linked_items: LinkedItem[];
+  compliance_controls: ComplianceControl[];
   sla_deadline?: string;
   sla_status?: string;
   sla_breached?: boolean;
@@ -58,7 +66,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
   useEffect(() => {
     async function fetchFinding() {
       try {
-        const res = await fetch(`http://localhost:8000/api/v1/findings/${unwrappedParams.id}?org_id=default`);
+        const res = await fetchWithAuth(`http://localhost:8000/api/v1/findings/${unwrappedParams.id}?org_id=default`);
         if (!res.ok) throw new Error("Failed to fetch finding details");
         const data = await res.json();
         setFinding(data);
@@ -82,7 +90,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
       if (action === "accept-risk") body = { justification: "Mitigating controls in place via WAF.", expiration_date: "2024-12-31" };
       if (action === "ticket") body = { integration: "jira", priority: "High" };
 
-      const res = await fetch(`http://localhost:8000/api/v1/findings/${finding.id}/${action}?org_id=default`, {
+      const res = await fetchWithAuth(`http://localhost:8000/api/v1/findings/${finding.id}/${action}?org_id=default`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -213,7 +221,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
               disabled={actionLoading !== null || finding.status === 'remediated'}
               className="px-3 py-2 bg-emerald-600 text-white hover:bg-emerald-700 text-sm font-medium rounded-md transition-colors shadow-sm flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50"
             >
-              <CheckCircle className="h-4 w-4" />
+              <CheckCircle2 className="h-4 w-4" />
               {actionLoading === 'remediate' ? 'Updating...' : finding.status === 'remediated' ? 'Remediated' : 'Mark Remediated'}
             </button>
           </div>
@@ -320,6 +328,30 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
                 ))}
               </div>
             </div>
+
+            {/* Compliance Impact Mapping */}
+            {(finding.compliance_controls && finding.compliance_controls.length > 0) && (
+              <div className="bg-card border border-border rounded-lg p-5">
+                <h3 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wider flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-primary" /> Compliance Impact
+                </h3>
+                <div className="space-y-3">
+                  {finding.compliance_controls.map((ctrl, idx) => (
+                    <div key={idx} className="flex flex-col gap-1 p-3 rounded-md border border-border/50 bg-accent/20">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-foreground bg-background px-2 py-0.5 rounded border">
+                          {ctrl.framework}
+                        </span>
+                        <span className="text-xs font-mono text-muted-foreground">{ctrl.control}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                        {ctrl.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Related Items */}
             <div className="bg-card border border-border rounded-lg p-5">

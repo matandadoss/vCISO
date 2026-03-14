@@ -1,36 +1,60 @@
 "use client";
+import { fetchWithAuth } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { Search, Filter, ArrowRight, Clock, AlertCircle } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function FindingsPage() {
   const [findings, setFindings] = useState([]);
+  const [total, setTotal] = useState(0);
   const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Parse state from URL or set defaults
+  const page = parseInt(searchParams?.get('page') || '1');
+  const limit = 10;
+  const statusFilter = searchParams?.get('status') || '';
+  const severityFilter = searchParams?.get('severity') || '';
 
   useEffect(() => {
     async function fetchFindings() {
       try {
-        const severity = searchParams?.get('severity');
-        const status = searchParams?.get('status');
+        const offset = (page - 1) * limit;
         
-        let url = 'http://localhost:8000/api/v1/findings?org_id=default';
-        if (severity) url += `&severity=${severity}`;
-        if (status) url += `&status=${status}`;
+        // Build base URL
+        let url = `http://localhost:8000/api/v1/findings?org_id=default&limit=${limit}&offset=${offset}`;
+        
+        // Append filters if they exist
+        if (severityFilter) url += `&severity=${severityFilter}`;
+        if (statusFilter) url += `&status=${statusFilter}`;
 
-        const res = await fetch(url);
+        const res = await fetchWithAuth(url);
         if (res.ok) {
           const data = await res.json();
           setFindings(data.items);
+          setTotal(data.total);
         }
       } catch (err) {
         console.error("Failed to fetch findings", err);
       }
     }
     fetchFindings();
-  }, [searchParams]);
+  }, [page, statusFilter, severityFilter]);
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newStatus = e.target.value;
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    if (newStatus) {
+      params.set('status', newStatus);
+    } else {
+      params.delete('status');
+    }
+    params.set('page', '1'); // Reset to page 1 on filter
+    router.push(`/findings?${params.toString()}`);
+  };
 
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
@@ -42,19 +66,33 @@ export default function FindingsPage() {
               Review and remediate security issues detected across all workflows.
             </p>
           </div>
-          <div className="flex gap-4">
-             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input 
-                  type="text" 
-                  placeholder="Search findings..." 
-                  className="pl-9 pr-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-2 ring-primary"
-                />
-             </div>
-             <button className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-md text-sm font-medium hover:bg-muted">
-                <Filter className="h-4 w-4" /> Filter
-             </button>
-          </div>
+             <div className="flex gap-4">
+              <select 
+                value={statusFilter}
+                onChange={handleStatusChange}
+                className="px-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-2 ring-primary"
+              >
+                <option value="">All Statuses</option>
+                <option value="new">New</option>
+                <option value="triaged">Triaged</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+                <option value="accepted">Risk Accepted</option>
+                <option value="false_positive">False Positive</option>
+              </select>
+
+               <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input 
+                    type="text" 
+                    placeholder="Search findings..." 
+                    className="pl-9 pr-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-2 ring-primary"
+                  />
+               </div>
+               <button className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-md text-sm font-medium hover:bg-muted transition-colors border-dashed">
+                  <Filter className="h-4 w-4" /> More Filters
+               </button>
+            </div>
         </div>
 
         <div className="bg-card border border-border rounded-lg overflow-hidden">
@@ -116,6 +154,39 @@ export default function FindingsPage() {
               ))}
             </tbody>
           </table>
+          
+          {/* Pagination Controls */}
+          {total > limit && (
+            <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-card">
+              <span className="text-sm text-muted-foreground">
+                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, total)} of {total} findings
+              </span>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams?.toString() || '');
+                    params.set('page', String(page - 1));
+                    router.push(`/findings?${params.toString()}`);
+                  }}
+                  disabled={page === 1}
+                  className="px-3 py-1 bg-card border border-border rounded-md text-sm font-medium hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                <button 
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams?.toString() || '');
+                    params.set('page', String(page + 1));
+                    router.push(`/findings?${params.toString()}`);
+                  }}
+                  disabled={page * limit >= total}
+                  className="px-3 py-1 bg-card border border-border rounded-md text-sm font-medium hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

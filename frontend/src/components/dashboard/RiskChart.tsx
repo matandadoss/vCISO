@@ -1,4 +1,5 @@
 "use client";
+import { fetchWithAuth } from "@/lib/api";
 
 import { useMemo, useState, useEffect } from "react";
 import {
@@ -24,7 +25,7 @@ export function RiskChart() {
     async function fetchRiskTrends() {
       try {
         // Fetch data from the FastAPI backend endpoint. Added default org_id for now.
-        const response = await fetch('http://localhost:8000/api/v1/dashboard/trends?org_id=default');
+        const response = await fetchWithAuth('http://localhost:8000/api/v1/dashboard/trends?org_id=default');
         if (!response.ok) {
           throw new Error('Failed to fetch risk trends');
         }

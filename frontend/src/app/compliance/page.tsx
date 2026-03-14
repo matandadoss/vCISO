@@ -1,4 +1,5 @@
 "use client";
+import { fetchWithAuth } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import { formatDate, cn } from "@/lib/utils";
@@ -12,7 +13,7 @@ export default function CompliancePage() {
 
   useEffect(() => {
     // Fetch Frameworks
-    fetch("http://localhost:8000/api/v1/compliance/frameworks?org_id=default")
+    fetchWithAuth("http://localhost:8000/api/v1/compliance/frameworks?org_id=default")
       .then((res) => res.json())
       .then((data) => {
         setFrameworks(data.items || []);
@@ -32,7 +33,7 @@ export default function CompliancePage() {
      if (!selectedFramework) return;
      
      setLoading(true);
-     fetch(`http://localhost:8000/api/v1/compliance/frameworks/${selectedFramework.id}/requirements?org_id=default`)
+     fetchWithAuth(`http://localhost:8000/api/v1/compliance/frameworks/${selectedFramework.id}/requirements?org_id=default`)
       .then((res) => res.json())
       .then((data) => {
         setRequirements(data.items || []);
