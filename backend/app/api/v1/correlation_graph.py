@@ -1,6 +1,11 @@
 from fastapi import APIRouter, Query, HTTPException
 from typing import List, Optional, Dict, Any
 import uuid
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends
+from app.db.session import get_db
+from sqlalchemy import select
+from app.models.domain import ComplianceFramework
 
 router = APIRouter(prefix="/correlation", tags=["correlation"])
 
@@ -8,11 +13,12 @@ router = APIRouter(prefix="/correlation", tags=["correlation"])
 async def get_correlation_graph(
     org_id: str,
     focus_node_id: Optional[str] = None,
-    depth: int = 2
+    depth: int = 2,
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Returns mock graph data for demonstrating correlation between assets,
-    vulnerabilities, threat actors, and compliance controls.
+    vulnerabilities, threat actors, and dynamic compliance controls.
     """
     
     nodes = [
@@ -28,11 +34,35 @@ async def get_correlation_graph(
         # Threat Actors / Indicators
         {"id": "threat-1", "label": "FIN7", "group": "ThreatActor", "sophistication": "advanced"},
         {"id": "threat-2", "label": "198.51.100.42", "group": "Indicator", "type": "IP"},
-        
-        # Controls / Compliance
-        {"id": "control-1", "label": "WAF Ruleset", "group": "Control", "status": "partial"},
-        {"id": "control-2", "label": "MFA Enforced", "group": "Control", "status": "compliant"}
     ]
+    
+    try:
+        org_uuid = uuid.UUID(org_id)
+    except:
+        org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        
+    fw_res = await db.execute(select(ComplianceFramework).where(ComplianceFramework.org_id == org_uuid))
+    frameworks = fw_res.scalars().all()
+    
+    control_nodes = []
+    if frameworks:
+        for idx, fw in enumerate(frameworks):
+            # mock failing or compliant controls based on their names
+            status = "compliant" if fw.overall_compliance_pct >= 90 else "partial"
+            control_nodes.append({
+                "id": f"control-{idx+1}", 
+                "label": f"{fw.framework_name} Standard", 
+                "group": "Control", 
+                "status": status
+            })
+    else:
+        # fallback
+        control_nodes = [
+            {"id": "control-1", "label": "WAF Ruleset", "group": "Control", "status": "partial"},
+            {"id": "control-2", "label": "MFA Enforced", "group": "Control", "status": "compliant"}
+        ]
+        
+    nodes.extend(control_nodes)
     
     links = [
         {"source": "vuln-1", "target": "asset-1", "label": "Affects", "is_attack_path": True},

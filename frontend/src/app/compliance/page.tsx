@@ -3,13 +3,19 @@ import { fetchWithAuth } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import { formatDate, cn } from "@/lib/utils";
-import { Search, FileCheck, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { Search, FileCheck, CheckCircle2, AlertCircle, Clock, Plus, X } from "lucide-react";
 
 export default function CompliancePage() {
   const [frameworks, setFrameworks] = useState<any[]>([]);
   const [requirements, setRequirements] = useState<any[]>([]);
   const [selectedFramework, setSelectedFramework] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  // Add Framework Modal State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newFrameworkName, setNewFrameworkName] = useState("");
+  const [newFrameworkVersion, setNewFrameworkVersion] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     // Fetch Frameworks
@@ -45,6 +51,35 @@ export default function CompliancePage() {
       });
   }, [selectedFramework]);
 
+  const handleAddFramework = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFrameworkName) return;
+    
+    setIsSubmitting(true);
+    try {
+      const res = await fetchWithAuth("http://localhost:8000/api/v1/compliance/frameworks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          org_id: "default",
+          framework_name: newFrameworkName,
+          version: newFrameworkVersion
+        })
+      });
+      
+      const newFw = await res.json();
+      setFrameworks([...frameworks, newFw]);
+      setSelectedFramework(newFw);
+      setIsAddModalOpen(false);
+      setNewFrameworkName("");
+      setNewFrameworkVersion("");
+    } catch (err) {
+      console.error("Failed to add framework:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -67,6 +102,13 @@ export default function CompliancePage() {
                   className="pl-9 pr-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-2 ring-primary"
                 />
              </div>
+             <button
+               onClick={() => setIsAddModalOpen(true)}
+               className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition"
+             >
+               <Plus className="w-4 h-4" />
+               Add Framework
+             </button>
           </div>
         </div>
 
@@ -182,6 +224,61 @@ export default function CompliancePage() {
           </div>
         )}
       </div>
+
+      {/* Add Framework Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-card border border-border rounded-lg shadow-xl p-6">
+             <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-foreground">Add Custom Framework</h3>
+                <button onClick={() => setIsAddModalOpen(false)} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-5 h-5" />
+                </button>
+             </div>
+             <form onSubmit={handleAddFramework}>
+               <div className="space-y-4">
+                 <div>
+                   <label className="block text-sm font-medium text-foreground mb-1">Framework Name *</label>
+                   <input 
+                     type="text" 
+                     value={newFrameworkName}
+                     onChange={(e) => setNewFrameworkName(e.target.value)}
+                     required
+                     className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 ring-primary"
+                     placeholder="e.g. PCI DSS, HIPAA"
+                   />
+                 </div>
+                 <div>
+                   <label className="block text-sm font-medium text-foreground mb-1">Version (Optional)</label>
+                   <input 
+                     type="text" 
+                     value={newFrameworkVersion}
+                     onChange={(e) => setNewFrameworkVersion(e.target.value)}
+                     className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 ring-primary"
+                     placeholder="e.g. v4.0"
+                   />
+                 </div>
+               </div>
+               <div className="mt-8 flex justify-end gap-3">
+                 <button 
+                   type="button" 
+                   onClick={() => setIsAddModalOpen(false)}
+                   className="px-4 py-2 bg-transparent text-foreground hover:bg-muted font-medium rounded-md transition"
+                 >
+                   Cancel
+                 </button>
+                 <button 
+                   type="submit" 
+                   disabled={isSubmitting || !newFrameworkName}
+                   className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded-md hover:bg-primary/90 transition disabled:opacity-50"
+                 >
+                   {isSubmitting ? "Adding..." : "Add Framework"}
+                 </button>
+               </div>
+             </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

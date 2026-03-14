@@ -106,24 +106,42 @@ async def get_finding(finding_id: str, org_id: str, db: AsyncSession = Depends(g
         {"id": "ctrl-8", "type": "Security Control Default", "name": "MFA Enforcement Policy (Failed)"}
     ]
     
-    # Inject Mock Compliance Controls that would be breached by this finding
+    # Inject Dynamic Compliance Controls that would be breached by this finding
     finding_dict["compliance_controls"] = []
     
-    if finding_dict["finding_type"] == FindingType.credential_exposure or finding_dict["finding_type"] == FindingType.access_sale:
-        finding_dict["compliance_controls"] = [
-            {"framework": "SOC 2 Type II", "control": "CC6.1", "description": "Logical access security: passwords and MFA"},
-            {"framework": "ISO 27001", "control": "A.9.2.1", "description": "User registration and de-registration (Access Control)"}
-        ]
-    elif finding_dict["finding_type"] == FindingType.vulnerability or finding_dict["finding_type"] == FindingType.misconfiguration:
-        finding_dict["compliance_controls"] = [
-            {"framework": "SOC 2 Type II", "control": "CC7.1", "description": "System configuration and vulnerability management"},
-            {"framework": "PCI DSS v4.0", "control": "Req 6", "description": "Develop and maintain secure systems and software/apps"}
-        ]
-    else:
-        finding_dict["compliance_controls"] = [
-            {"framework": "SOC 2 Type II", "control": "CC7.2", "description": "Security event monitoring and anomaly detection"}
-        ]
-    
+    # dynamically fetch all frameworks for the org to map against the AI finding
+    try:
+        fw_res = await db.execute(select(ComplianceFramework).where(ComplianceFramework.org_id == org_uuid))
+        frameworks = fw_res.scalars().all()
+        
+        for fw in frameworks:
+             if finding_dict["finding_type"] in [FindingType.credential_exposure, FindingType.access_sale]:
+                  finding_dict["compliance_controls"].append({
+                      "framework": fw.framework_name,
+                      "control": f"{fw.framework_name.split(' ')[0]}-AUTH",
+                      "description": "Logical access security: passwords and MFA enforcement"
+                  })
+             elif finding_dict["finding_type"] in [FindingType.vulnerability, FindingType.misconfiguration]:
+                  finding_dict["compliance_controls"].append({
+                      "framework": fw.framework_name,
+                      "control": f"{fw.framework_name.split(' ')[0]}-VULN",
+                      "description": "System configuration and continuous vulnerability management"
+                  })
+             else:
+                  finding_dict["compliance_controls"].append({
+                      "framework": fw.framework_name,
+                      "control": f"{fw.framework_name.split(' ')[0]}-MON",
+                      "description": "Security event monitoring and anomaly detection"
+                  })
+                  
+        if not finding_dict["compliance_controls"]:
+            # fallback mock
+            finding_dict["compliance_controls"] = [
+                {"framework": "General Security", "control": "GEN-01", "description": "Baseline monitoring"}
+            ]
+    except Exception as e:
+        pass
+        
     return finding_dict
 
 class AssignRequest(BaseModel):
