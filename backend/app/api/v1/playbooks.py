@@ -28,6 +28,37 @@ MOCK_AUDIT_TRAIL = [
     }
 ]
 
+AVAILABLE_PLAYBOOKS = [
+    {
+        "id": "pb-isolate-host",
+        "name": "Isolate Host / Endpoint",
+        "description": "Uses EDR integration to immediately cut off network access to a potentially compromised endpoint.",
+        "risk_level": "High",
+        "category": "Containment"
+    },
+    {
+        "id": "pb-block-ip",
+        "name": "Block Malicious IP",
+        "description": "Adds a drop rule to the perimeter firewall and WAF for a known C2 or attacking IP.",
+        "risk_level": "Medium",
+        "category": "Network Response"
+    },
+    {
+        "id": "pb-revoke-tokens",
+        "name": "Revoke User Access Tokens",
+        "description": "Invalidates active sessions in Okta/Active Directory to force re-authentication.",
+        "risk_level": "Low",
+        "category": "Identity"
+    },
+    {
+        "id": "pb-enforce-mfa",
+        "name": "Enforce MFA for User",
+        "description": "Updates identity policies to strictly require Multi-Factor Authentication on all future logins.",
+        "risk_level": "Low",
+        "category": "Identity"
+    }
+]
+
 class ExecutionRequest(BaseModel):
     action_name: str
     target: str
@@ -57,3 +88,7 @@ async def execute_playbook(request: ExecutionRequest):
 @router.get("/audit")
 async def get_audit_trail():
     return {"audit_trail": MOCK_AUDIT_TRAIL}
+
+@router.get("/")
+async def list_playbooks():
+    return {"playbooks": AVAILABLE_PLAYBOOKS}

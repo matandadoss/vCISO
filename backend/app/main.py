@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.auth import get_current_user
-from app.api.v1 import ai_settings, chat, findings, dashboard, ws, threat_intel, compliance, correlation_graph, playbooks, onboarding, integrations, simulator, organizations, vendors
+from app.api.v1 import ai_settings, chat, findings, dashboard, ws, threat_intel, compliance, correlation_graph, playbooks, onboarding, integrations, simulator, organizations, vendors, pentest, workflows, bugs
 
 app = FastAPI(
     title="Virtual CISO API",
@@ -33,6 +33,9 @@ app.include_router(integrations.router, prefix="/api/v1", dependencies=[Depends(
 app.include_router(simulator.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
 app.include_router(organizations.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
 app.include_router(vendors.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(pentest.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(workflows.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(bugs.router, prefix="/api/v1") # Open/loose auth for bug report catching
 
 @app.get("/")
 async def root():

@@ -16,35 +16,90 @@ class GCPSCCConnector(BaseConnector):
 
     async def fetch_data(self, since: Optional[datetime] = None) -> List[Dict[str, Any]]:
         """
-        Mock implementation of fetching from SCC.
+        Fetches active findings from Google Cloud Security Command Center.
         """
-        # Read from config
-        # gcp_project = self.config.settings.get("gcp_project")
+        try:
+            from google.cloud import securitycenter_v1
+        except ImportError:
+            # If the library isn't installed in the environment, fallback gracefully
+            return []
+
+        # In production this comes safely from self.config.settings securely
+        organization_id = self.config.settings.get("gcp_organization_id")
+        if not organization_id:
+             print("GCP SCC Connector Error: Missing gcp_organization_id setting.")
+             return []
+
+        client = securitycenter_v1.SecurityCenterClient()
+        source_name = f"organizations/{organization_id}/sources/-"
+
+        # Build filter string
+        # We only care about ACTIVE findings. If 'since' is provided, we filter by eventTime.
+        filter_str = 'state="ACTIVE"'
+        if since:
+            # GCP SCC filter expects RFC 3339 timestamps
+            time_str = since.isoformat()
+            if time_str.endswith("+00:00"):
+                time_str = time_str[:-6] + "Z"
+            filter_str += f' AND eventTime > "{time_str}"'
+
+        request = securitycenter_v1.ListFindingsResponse(
+            request={
+                "parent": source_name,
+                "filter": filter_str,
+            }
+        )
+
+        # To execute async, we run the synchronous GCP SDK call in a threadpool
+        import asyncio
+        loop = asyncio.get_running_loop()
         
-        # Simulated SCC Findings (e.g., Event Threat Detection, Web Security Scanner)
-        return [
-             {
-                "name": f"organizations/123/sources/456/findings/{uuid.uuid4().hex}",
-                "parent": "organizations/123/sources/456",
-                "resourceName": "//compute.googleapis.com/projects/my-prod/zones/us-central1-a/instances/web-server-1",
-                "state": "ACTIVE",
-                "category": "OPEN_FIREWALL",
-                "externalUri": "https://console.cloud.google.com/security/command-center/findings",
-                "sourceProperties": {
-                     "explanation": "Firewall rule allows all IPs to port 22"
-                },
-                "securityMarks": {
-                    "marks": {"env": "prod"}
-                },
-                "eventTime": datetime.now(timezone.utc).isoformat(),
-                "severity": "HIGH",
-             },
-             {
-                "name": f"organizations/123/sources/789/findings/{uuid.uuid4().hex}",
-                "resourceName": "projects/my-prod",
-                "state": "ACTIVE",
-                "category": "ANOMALOUS_IAM_GRANT",
-                "eventTime": datetime.now(timezone.utc).isoformat(),
-                "severity": "CRITICAL",
+        try:
+            iterator = await loop.run_in_executor(
+                None, 
+                lambda: client.list_findings(request={"parent": source_name, "filter": filter_str})
+            )
+        except Exception as e:
+            print(f"GCP API Error: {e}")
+            return []
+
+        raw_data = []
+        for page in iterator:
+             finding = page.finding
+             # Map from Google's proto structure to a dict
+             severity_map = {
+                 0: "INFORMATIONAL", # SEVERITY_UNSPECIFIED
+                 1: "CRITICAL",
+                 2: "HIGH",
+                 3: "MEDIUM",
+                 4: "LOW"
              }
-        ]
+             severity = severity_map.get(finding.severity, "INFORMATIONAL")
+             
+             # Extract dict representations for JSON serialization
+             marks = {}
+             if finding.security_marks and hasattr(finding.security_marks, "marks"):
+                  marks = dict(finding.security_marks.marks)
+                  
+             props = {}
+             if finding.source_properties:
+                  for key, val in finding.source_properties.items():
+                       props[key] = str(val)
+
+             raw_data.append({
+                "name": finding.name,
+                "parent": finding.parent,
+                "resourceName": finding.resource_name,
+                "state": "ACTIVE" if finding.state == 1 else "INACTIVE",
+                "category": finding.category,
+                "externalUri": finding.external_uri,
+                "sourceProperties": props,
+                "securityMarks": {
+                    "marks": marks
+                },
+                "eventTime": finding.event_time.isoformat() if finding.event_time else datetime.now(timezone.utc).isoformat(),
+                "severity": severity,
+                "description": finding.description
+             })
+
+        return raw_data

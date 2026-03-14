@@ -12,6 +12,7 @@ import {
   Network,
   Terminal,
   Plug,
+  Zap,
   Building2,
   LogOut,
   LogIn,
@@ -29,11 +30,14 @@ const NAV_ITEMS: { href: string; label: string; icon: any; roles?: Role[] }[] = 
   { href: "/compliance", label: "Compliance", icon: Activity, roles: ["CISO", "AUDITOR", "BOARD_MEMBER"] },
   { href: "/correlation", label: "Correlation Graph", icon: Network, roles: ["CISO", "SOC_ANALYST"] },
   { href: "/simulator", label: "What-If Simulator", icon: FlaskConical, roles: ["CISO", "SOC_ANALYST"] },
+  { href: "/pentest", label: "AI Pentesting", icon: Terminal, roles: ["CISO", "SOC_ANALYST", "SECURITY_ENGINEER"] },
   { href: "/audit-trail", label: "Audit Trail", icon: Terminal, roles: ["CISO", "SOC_ANALYST", "AUDITOR"] },
   { href: "/vendor-risk", label: "Vendor Risk", icon: Building2, roles: ["CISO", "AUDITOR"] },
+  { href: "/playbooks", label: "Playbooks (SOAR)", icon: Zap, roles: ["CISO", "SOC_ANALYST", "SECURITY_ENGINEER"] },
+  { href: "/workflows", label: "Data Workflows", icon: Activity, roles: ["CISO", "SECURITY_ENGINEER"] },
   { href: "/integrations", label: "Integrations Hub", icon: Plug, roles: ["CISO"] },
   { href: "/chat", label: "vCISO Chat", icon: MessageSquare, roles: ["CISO", "BOARD_MEMBER"] },
-  { href: "/settings/ai", label: "AI Settings", icon: Settings, roles: ["CISO"] },
+  { href: "/settings", label: "Settings", icon: Settings, roles: ["CISO"] },
 ];
 
 export function AppSidebar() {

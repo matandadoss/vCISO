@@ -14,31 +14,76 @@ class ThreatIntelConnector(BaseConnector):
 
     async def fetch_data(self, since: Optional[datetime] = None) -> List[Dict[str, Any]]:
         """
-        Mock implementation of fetching from a Threat Intel platform.
+        Fetches live pulses and indicators of compromise from AlienVault OTX.
         """
-        # feed_url = self.config.settings.get("feed_url")
-        # api_key = get_secret(self.config.credentials_secret_name)
+        try:
+            import httpx
+        except ImportError:
+            print("Threat Intel Connector Error: httpx not installed.")
+            return []
+
+        # We can configure api_key in settings. For OTX, public feeds don't strictly require one for basic polling, 
+        # but it's recommended.
+        otx_api_key = self.config.settings.get("otx_api_key", "")
+        headers = {}
+        if otx_api_key:
+             headers["X-OTX-API-KEY"] = otx_api_key
+
+        # Let's poll for the most recent Pulses (Threat intelligence reports containing indicators)
+        # Using a fixed limit for demonstration, in a real app this handles pagination
+        url = "https://otx.alienvault.com/api/v1/pulses/subscribed" if otx_api_key else "https://otx.alienvault.com/api/v1/search/pulses?q=malware&sort=-modified&limit=5"
         
-        # Simulated Threat Intel STIX/TAXII objects or custom JSON
-        return [
-             {
-                "id": f"indicator--{uuid.uuid4()}",
-                "type": "indicator",
-                "pattern_type": "stix",
-                "pattern": "[ipv4-addr:value = '198.51.100.42']",
-                "valid_from": datetime.now(timezone.utc).isoformat(),
-                "name": "FIN7 C2 Infrastructure",
-                "description": "Observed command and control node for FIN7.",
-                "labels": ["malicious-activity", "c2"],
-                "confidence": 95,
-                "severity": "high"
-             },
-             {
-                "id": f"threat-actor--{uuid.uuid4()}",
-                "type": "threat-actor",
-                "name": "FIN7",
-                "description": "Financially motivated threat group.",
-                "sophistication": "advanced",
-                "roles": ["director", "malware-author"]
-             }
-        ]
+        # Determine how far back to look. OTX allows filtering by modified date
+        if since:
+             # Just a simple string format for OTX
+             url += f"&modified_since={since.isoformat()}"
+
+        raw_indicators = []
+        
+        try:
+             async with httpx.AsyncClient(timeout=15.0) as client:
+                 response = await client.get(url, headers=headers)
+                 
+                 if response.status_code != 200:
+                      print(f"OTX API Error: Status {response.status_code}")
+                      return []
+                      
+                 data = response.json()
+                 pulses = data.get("results", [])
+                 
+                 for pulse in pulses:
+                      pulse_id = pulse.get("id")
+                      pulse_name = pulse.get("name", "Unknown Campaign")
+                      tags = pulse.get("tags", [])
+                      indicators = pulse.get("indicators", [])
+                      
+                      for ind in indicators:
+                           ind_type = ind.get("type", "")
+                           
+                           # Map OTX type to our system's expected domain models
+                           internal_type = "url"
+                           if ind_type == "IPv4" or ind_type == "IPv6": internal_type = "ip"
+                           elif ind_type == "domain": internal_type = "domain"
+                           elif "hash" in ind_type.lower() or ind_type in ["FileHash-MD5", "FileHash-SHA256"]: internal_type = "file_hash"
+                           else: continue # Skip indicators we don't track natively
+                           
+                           # Normalize severity (OTX doesn't always have strict severity per indicator, derive from Pulse)
+                           raw_indicators.append({
+                               "id": f"indicator--{ind.get('id', uuid.uuid4())}",
+                               "type": "indicator",
+                               "pattern_type": "stix", # Mocking stix format wrapper for our internal consumer
+                               "pattern": f"[{internal_type}:value = '{ind.get('indicator', '')}']",
+                               "valid_from": pulse.get("modified", datetime.now(timezone.utc).isoformat()),
+                               "name": pulse_name,
+                               "description": ind.get("description", "") or pulse.get("description", ""),
+                               "labels": tags,
+                               "confidence": 80, # Defaulting confidence
+                               "severity": "high",
+                               "source": "AlienVault OTX",
+                               "otx_pulse_id": pulse_id
+                           })
+
+        except httpx.RequestError as e:
+             print(f"Network error fetching from Threat Intel provider: {e}")
+             
+        return raw_indicators

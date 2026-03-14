@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 # Get DB URL from env or fallback to docker-compose default
 SQLALCHEMY_DATABASE_URL = os.getenv(
     "DATABASE_URL", 
-    "postgresql+asyncpg://postgres:password@localhost:5432/vciso_dev"
+    "sqlite+aiosqlite:///./vciso_dev.db"
 )
 
 engine = create_async_engine(

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-export type Role = "CISO" | "SOC_ANALYST" | "AUDITOR" | "BOARD_MEMBER";
+export type Role = "CISO" | "SOC_ANALYST" | "SECURITY_ENGINEER" | "AUDITOR" | "BOARD_MEMBER";
 
 interface RoleContextType {
   role: Role;

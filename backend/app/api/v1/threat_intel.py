@@ -3,7 +3,10 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
 from pydantic import BaseModel
-from app.models.domain import Severity, ThreatSophistication, IndicatorType
+from app.models.domain import Severity, ThreatSophistication, IndicatorType, ThreatActor, ThreatIntelIndicator
+from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.session import get_db
 
 router = APIRouter(prefix="/threat-intel", tags=["threat-intel"])
 
@@ -48,56 +51,28 @@ async def list_threat_actors(
     org_id: str,
     active: Optional[bool] = None,
     limit: int = 50,
-    offset: int = 0
+    offset: int = 0,
+    db: AsyncSession = Depends(get_db)
 ):
-    # Stub: return mock data with contextual relevance scoring
-    # In reality, this would query the customer's mapped assets/industry table
-    customer_industry = "Hospitality"
+    try:
+        org_uuid = uuid.UUID(org_id)
+    except ValueError:
+        org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        
+    stmt = select(ThreatActor).where(ThreatActor.org_id == org_uuid)
+    if active is not None:
+        stmt = stmt.where(ThreatActor.active == active)
+        
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = (await db.execute(count_stmt)).scalar() or 0
     
-    actors = [
-        {
-            "id": str(uuid.uuid4()),
-            "name": "FIN7",
-            "description": "Financially motivated threat group targeting retail and hospitality.",
-            "sophistication": ThreatSophistication.advanced,
-            "active": True,
-            "first_seen": datetime(2015, 1, 1, tzinfo=timezone.utc).isoformat(),
-            "last_updated": datetime.now(timezone.utc).isoformat(),
-            "relevance_score": "High" if customer_industry in ["Retail", "Hospitality"] else "Low",
-            "relevance_reasons": [
-                f"Actor specifically targets {customer_industry} sector organizations.",
-                "Known to exploit point-of-sale systems heavily used in your environment."
-            ] if customer_industry in ["Retail", "Hospitality"] else ["Actor rarely targets your industry."],
-            "mitre_attack_techniques": [
-                {"id": "T1566.001", "name": "Spearphishing Attachment", "tactic": "Initial Access"},
-                {"id": "T1059.001", "name": "PowerShell", "tactic": "Execution"},
-                {"id": "T1110.001", "name": "Password Guessing", "tactic": "Credential Access"},
-                {"id": "T1053.005", "name": "Scheduled Task", "tactic": "Persistence"}
-            ]
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "name": "Lazarus Group",
-            "description": "State-sponsored actor associated with North Korea.",
-            "sophistication": ThreatSophistication.nation_state,
-            "active": True,
-            "first_seen": datetime(2009, 1, 1, tzinfo=timezone.utc).isoformat(),
-            "last_updated": datetime.now(timezone.utc).isoformat(),
-            "relevance_score": "Medium",
-            "relevance_reasons": [
-                "Actor has broad targets including cryptocurrency, which is not your primary sector.",
-                "However, they leverage widespread vulnerabilities (e.g., Log4j) that exist in your tech stack."
-            ],
-            "mitre_attack_techniques": [
-                {"id": "T1190", "name": "Exploit Public-Facing Application", "tactic": "Initial Access"},
-                {"id": "T1140", "name": "Deobfuscate/Decode Files or Information", "tactic": "Defense Evasion"},
-                {"id": "T1071.001", "name": "Web Protocols", "tactic": "Command and Control"}
-            ]
-        }
-    ]
+    stmt = stmt.limit(limit).offset(offset)
+    result = await db.execute(stmt)
+    actors = result.scalars().all()
+    
     return {
         "items": actors,
-        "total": len(actors),
+        "total": total,
         "limit": limit,
         "offset": offset
     }
@@ -108,58 +83,31 @@ async def list_threat_indicators(
     threat_actor_id: Optional[str] = None,
     severity: Optional[Severity] = None,
     limit: int = 50,
-    offset: int = 0
+    offset: int = 0,
+    db: AsyncSession = Depends(get_db)
 ):
-    # Stub: return mock data with contextual relevance scoring
-    indicators = [
-        {
-            "id": str(uuid.uuid4()),
-            "indicator_type": IndicatorType.ip,
-            "value": "198.51.100.42",
-            "confidence": 95,
-            "severity": Severity.critical,
-            "threat_actor_id": "actor-123", # mock reference
-            "valid_from": datetime.now(timezone.utc).isoformat(),
-            "relevance_score": "High",
-            "relevance_reasons": [
-                "IP is actively scanning Internet-facing assets matching your external IP range (203.0.113.0/24).",
-                "Observed dropping malware variants that target Linux servers (80% of your fleet)."
-            ],
-            "associated_actor_name": "FIN7",
-            "attack_stages": ["Initial Access", "Command and Control (C2)"],
-            "affected_assets": [
-                {"name": "ext-lb-prod", "type": "Load Balancer", "status": "exposed"}
-            ],
-            "recommended_actions": [
-                "Block IP 198.51.100.42 on external firewalls.",
-                "Add IoC to WAF blocklist."
-            ]
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "indicator_type": IndicatorType.domain,
-            "value": "malicious-c2.login.example.com",
-            "confidence": 80,
-            "severity": Severity.high,
-            "threat_actor_id": "actor-456",
-            "valid_from": datetime.now(timezone.utc).isoformat(),
-            "relevance_score": "Low",
-            "relevance_reasons": [
-                "Domain is primarily used to phish Microsoft 365 credentials.",
-                "Your organization uses GSuite, rendering this specific campaign ineffective."
-            ],
-            "associated_actor_name": "Lazarus Group",
-            "attack_stages": ["Credential Access", "Phishing"],
-            "affected_assets": [],
-            "recommended_actions": [
-                "Sinkhole domain at the DNS level.",
-                "Review email security gateway logs for delivery attempts."
-            ]
-        }
-    ]
+    try:
+        org_uuid = uuid.UUID(org_id)
+    except ValueError:
+        org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        
+    stmt = select(ThreatIntelIndicator).where(ThreatIntelIndicator.org_id == org_uuid)
+    
+    if threat_actor_id:
+        stmt = stmt.where(ThreatIntelIndicator.threat_actor_id == uuid.UUID(threat_actor_id))
+    if severity:
+        stmt = stmt.where(ThreatIntelIndicator.severity == severity)
+        
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = (await db.execute(count_stmt)).scalar() or 0
+    
+    stmt = stmt.limit(limit).offset(offset)
+    result = await db.execute(stmt)
+    indicators = result.scalars().all()
+    
     return {
         "items": indicators,
-        "total": len(indicators),
+        "total": total,
         "limit": limit,
         "offset": offset
     }

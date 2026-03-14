@@ -1,8 +1,12 @@
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Depends
 from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
 from pydantic import BaseModel
+from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.session import get_db
+from app.models.domain import ComplianceFramework, ComplianceRequirement
 
 router = APIRouter(prefix="/compliance", tags=["compliance"])
 
@@ -11,37 +15,25 @@ async def list_frameworks(
     org_id: str,
     applicable: Optional[bool] = None,
     limit: int = 50,
-    offset: int = 0
+    offset: int = 0,
+    db: AsyncSession = Depends(get_db)
 ):
-    # Stub: return mock data
-    frameworks = [
-        {
-            "id": str(uuid.uuid4()),
-            "framework_name": "SOC 2 Type II",
-            "version": "2017",
-            "applicable": True,
-            "overall_compliance_pct": 85.5,
-            "last_assessed": datetime(2023, 8, 15, tzinfo=timezone.utc).isoformat(),
-            "next_assessment_due": datetime(2024, 8, 15, tzinfo=timezone.utc).isoformat()
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "framework_name": "ISO 27001",
-            "version": "2022",
-            "applicable": True,
-            "overall_compliance_pct": 62.0,
-            "last_assessed": datetime(2023, 1, 10, tzinfo=timezone.utc).isoformat(),
-            "next_assessment_due": datetime(2024, 1, 10, tzinfo=timezone.utc).isoformat()
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "framework_name": "GDPR",
-            "applicable": True,
-            "overall_compliance_pct": 92.5,
-            "last_assessed": datetime(2023, 11, 5, tzinfo=timezone.utc).isoformat(),
-            "next_assessment_due": datetime(2024, 11, 5, tzinfo=timezone.utc).isoformat()
-        }
-    ]
+    try:
+        org_uuid = uuid.UUID(org_id)
+    except ValueError:
+        org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        
+    stmt = select(ComplianceFramework).where(ComplianceFramework.org_id == org_uuid)
+    if applicable is not None:
+        stmt = stmt.where(ComplianceFramework.applicable == applicable)
+        
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = (await db.execute(count_stmt)).scalar() or 0
+    
+    stmt = stmt.limit(limit).offset(offset)
+    result = await db.execute(stmt)
+    frameworks = result.scalars().all()
+    
     return {
         "items": frameworks,
         "total": len(frameworks),
@@ -55,36 +47,24 @@ async def list_requirements(
     org_id: str,
     status: Optional[str] = None,
     limit: int = 50,
-    offset: int = 0
+    offset: int = 0,
+    db: AsyncSession = Depends(get_db)
 ):
-    # Stub: return mock data
-    requirements = [
-        {
-            "id": str(uuid.uuid4()),
-            "requirement_id_code": "CC1.1",
-            "title": "COSO Principle 1: Demonstrates commitment to integrity and ethical values",
-            "status": "compliant",
-            "evidence_status": "collected",
-            "last_reviewed": datetime.now(timezone.utc).isoformat()
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "requirement_id_code": "CC1.2",
-            "title": "COSO Principle 2: Exercises oversight responsibility",
-            "status": "non_compliant",
-            "evidence_status": "missing",
-            "last_reviewed": datetime.now(timezone.utc).isoformat()
-        },
-        {
-            "id": str(uuid.uuid4()),
-            "requirement_id_code": "CC2.1",
-            "title": "Provides clear communication of objectives",
-            "status": "partial",
-            "evidence_status": "incomplete",
-            "last_reviewed": datetime.now(timezone.utc).isoformat()
-        }
-    ]
+    try:
+        framework_uuid = uuid.UUID(framework_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid framework ID")
+
+    stmt = select(ComplianceRequirement).where(ComplianceRequirement.framework_id == framework_uuid)
+    if status is not None:
+        stmt = stmt.where(ComplianceRequirement.status == status)
+        
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = (await db.execute(count_stmt)).scalar() or 0
     
+    stmt = stmt.limit(limit).offset(offset)
+    result = await db.execute(stmt)
+    requirements = result.scalars().all()
     return {
         "items": requirements,
         "total": len(requirements),

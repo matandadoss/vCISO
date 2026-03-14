@@ -40,19 +40,14 @@ async def get_cost_breakdown(org_id: str, cost_tracker: CostTracker = Depends(ge
     return {"by_workflow": extended_workflow, "by_tier": tier}
 
 @router.get("/budget-trends")
-async def get_budget_trends(org_id: str, days: int = 7):
-    # Mock return 7-day or 30-day trend data
-    import random
-    from datetime import datetime, timedelta
-    trend = []
-    for i in range(days, 0, -1):
-        date = (datetime.utcnow() - timedelta(days=i)).strftime("%m/%d")
-        cost = round(random.uniform(1.5, 4.5), 2)
-        trend.append({"date": date, "cost": cost})
-    return {"trend": trend}
+async def get_budget_trends(org_id: str, days: int = 7, cost_tracker: CostTracker = Depends(get_cost_tracker)):
+    trends = await cost_tracker.get_budget_trends(org_id, days)
+    return {"trend": trends}
 
 @router.get("/roi-metrics")
-async def get_roi_metrics(org_id: str):
+async def get_roi_metrics(org_id: str, cost_tracker: CostTracker = Depends(get_cost_tracker)):
+    # In a full system, we might query the AIQueryLog or Findings table for this.
+    # We will keep realistic placeholders for now, but hook it into the dependency.
     return {
         "estimated_hours_saved": 42.5,
         "incidents_auto_triaged": 128,

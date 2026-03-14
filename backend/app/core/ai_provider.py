@@ -79,7 +79,15 @@ class AIProviderClient:
         self._bedrock_client = None
 
         if self.active_provider == AIProvider.VERTEX_AI:
-            pass # Stub for genai
+            try:
+                import vertexai
+                vertexai.init(
+                    project=self.config.VERTEX_PROJECT_ID,
+                    location=self.config.VERTEX_LOCATION
+                )
+                self._vertex_client = True # Just a flag to show it's configured
+            except ImportError:
+                pass
         elif self.active_provider == AIProvider.ANTHROPIC_DIRECT:
             try:
                 from anthropic import AsyncAnthropic
@@ -161,16 +169,48 @@ class AIProviderClient:
         return response
 
     async def _complete_vertex(self, request: AIRequest, model: str):
-        return "Stub response from Vertex", 10, 20
+        if not self._vertex_client:
+            return "Vertex AI not configured. Please set VERTEX_PROJECT_ID and VERTEX_LOCATION.", 0, 0
+        from vertexai.generative_models import GenerativeModel, GenerationConfig
+        try:
+            gen_model = GenerativeModel(model)
+            config = GenerationConfig(
+                max_output_tokens=request.max_tokens,
+                temperature=request.temperature,
+                response_mime_type="application/json" if request.structured_output_schema else "text/plain",
+            )
+            # system instruction not directly supported in generate_content, prepend to prompt
+            full_prompt = f"{request.system_prompt}\n\n{request.user_prompt}"
+            if request.structured_output_schema:
+                full_prompt += f"\n\nReturn the output exactly matching this JSON schema:\n{json.dumps(request.structured_output_schema)}"
+            
+            # Using synchronous call in a thread pool since vertexai client might not be fully async
+            loop = asyncio.get_running_loop()
+            res = await loop.run_in_executor(None, lambda: gen_model.generate_content(
+                full_prompt,
+                generation_config=config,
+            ))
+            
+            in_tokens = res.usage_metadata.prompt_token_count if hasattr(res, 'usage_metadata') else 0
+            out_tokens = res.usage_metadata.candidates_token_count if hasattr(res, 'usage_metadata') else 0
+            return res.text, in_tokens, out_tokens
+        except Exception as e:
+            print(f"Vertex AI Error: {e}")
+            return f"Error: {str(e)}", 0, 0
         
     async def _complete_anthropic(self, request: AIRequest, model: str):
         if self._anthropic_client:
             tools = []
             if request.structured_output_schema:
+                # Add title and type to ensure schema format, Anthropic requires name and description.
+                structured_schema = request.structured_output_schema.copy()
+                if "type" not in structured_schema:
+                     structured_schema["type"] = "object"
+                     
                 tools = [{
                     "name": "structured_output",
-                    "description": "Output according to schema",
-                    "input_schema": request.structured_output_schema
+                    "description": "Output according to schema. You MUST use this tool to respond.",
+                    "input_schema": structured_schema
                 }]
             res = await self._anthropic_client.messages.create(
                 model=model,
@@ -178,11 +218,22 @@ class AIProviderClient:
                 temperature=request.temperature,
                 system=request.system_prompt,
                 messages=[{"role": "user", "content": request.user_prompt}],
-                tools=tools if tools else None
+                tools=tools if tools else None,
+                tool_choice={"type": "tool", "name": "structured_output"} if tools else None
             )
-            content = res.content[0].text if not tools else json.dumps(res.content[0].input)
+            
+            if tools:
+                content = None
+                for block in res.content:
+                     if block.type == "tool_use" and block.name == "structured_output":
+                          content = json.dumps(block.input)
+                          break
+                if not content:
+                     content = "{}" # Fallback
+            else:
+                 content = res.content[0].text
             return content, res.usage.input_tokens, res.usage.output_tokens
-        return "Stub response", 10, 20
+        return "Anthropic direct not configured. Please set ANTHROPIC_API_KEY", 0, 0
 
     async def _complete_bedrock(self, request: AIRequest, model: str):
         return "Stub response from Bedrock", 10, 20

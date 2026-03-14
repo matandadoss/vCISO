@@ -3,17 +3,17 @@ from app.core.ai_provider import AIProviderClient
 from app.core.query_router import QueryRouter
 from app.core.cost_tracker import CostTracker
 
-# We will create global singletons here
-_cost_tracker = CostTracker()
-# We don't have db connection setup yet, so db=None
-_ai_client = AIProviderClient(cost_tracker=_cost_tracker, db=None)
-_query_router = QueryRouter()
+from app.db.session import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
 
-def get_cost_tracker() -> CostTracker:
-    return _cost_tracker
+def get_cost_tracker(db: AsyncSession = Depends(get_db)) -> CostTracker:
+    return CostTracker(db=db)
 
-def get_ai_client() -> AIProviderClient:
-    return _ai_client
+def get_ai_client(
+    db: AsyncSession = Depends(get_db), 
+    tracker: CostTracker = Depends(get_cost_tracker)
+) -> AIProviderClient:
+    return AIProviderClient(cost_tracker=tracker, db=db)
 
 def get_query_router() -> QueryRouter:
-    return _query_router
+    return QueryRouter()

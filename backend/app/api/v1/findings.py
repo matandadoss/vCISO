@@ -6,8 +6,8 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.domain import Severity, FindingStatus, FindingType, WorkflowName, Finding
+from sqlalchemy import select, func
 from app.db.session import get_db
-from app.crud import finding as crud_finding
 from app.schemas.finding import FindingResponse, FindingUpdate
 
 router = APIRouter(prefix="/findings", tags=["findings"])
@@ -37,302 +37,27 @@ async def list_findings(
     except ValueError:
         # If default string is passed, we might need a dummy org id or throw error
         # In a real app the org_id comes from token, for now let's just use a dummy
-        org_uuid = uuid.uuid4()
+        org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
         
-    items, total = await crud_finding.get_by_org(
-        db=db, 
-        org_id=org_uuid, 
-        skip=offset, 
-        limit=limit, 
-        severity=severity, 
-        status=status
-    )
+    stmt = select(Finding).where(Finding.org_id == org_uuid)
     
-    # Optional logic: If empty, inject mock items for demo purposes to avoid an empty dashboard
-    if total == 0 and org_id == "default":
-        from app.schemas.finding import FindingCreate
-        mock_0 = FindingCreate(
-            org_id=org_uuid,
-            title="Outdated Apache Struts 0",
-            finding_type=FindingType.credential_exposure,
-            severity=Severity.medium,
-            risk_score=46.9,
-            source_workflow=WorkflowName.supply_chain,
-            status=FindingStatus.in_progress,
-            detected_at=datetime.utcnow() - timedelta(days=13, hours=3)
-        )
-        await crud_finding.create(db=db, obj_in=mock_0)
-        mock_1 = FindingCreate(
-            org_id=org_uuid,
-            title="Data Exfiltration Anomaly 1",
-            finding_type=FindingType.threat_indicator,
-            severity=Severity.high,
-            risk_score=81.2,
-            source_workflow=WorkflowName.compliance,
-            status=FindingStatus.new,
-            detected_at=datetime.utcnow() - timedelta(days=12, hours=22)
-        )
-        await crud_finding.create(db=db, obj_in=mock_1)
-        mock_2 = FindingCreate(
-            org_id=org_uuid,
-            title="Suspicious Login from Unknown Geolocation 2",
-            finding_type=FindingType.control_gap,
-            severity=Severity.high,
-            risk_score=73.3,
-            source_workflow=WorkflowName.infrastructure,
-            status=FindingStatus.new,
-            detected_at=datetime.utcnow() - timedelta(days=26, hours=12)
-        )
-        await crud_finding.create(db=db, obj_in=mock_2)
-        mock_3 = FindingCreate(
-            org_id=org_uuid,
-            title="Insecure Direct Object Reference 3",
-            finding_type=FindingType.threat_indicator,
-            severity=Severity.high,
-            risk_score=74.1,
-            source_workflow=WorkflowName.supply_chain,
-            status=FindingStatus.resolved,
-            detected_at=datetime.utcnow() - timedelta(days=3, hours=19)
-        )
-        await crud_finding.create(db=db, obj_in=mock_3)
-        mock_4 = FindingCreate(
-            org_id=org_uuid,
-            title="RDP Brute Force Attempt 4",
-            finding_type=FindingType.misconfiguration,
-            severity=Severity.medium,
-            risk_score=47.5,
-            source_workflow=WorkflowName.vulnerability,
-            status=FindingStatus.false_positive,
-            detected_at=datetime.utcnow() - timedelta(days=6, hours=10)
-        )
-        await crud_finding.create(db=db, obj_in=mock_4)
-        mock_5 = FindingCreate(
-            org_id=org_uuid,
-            title="Unsecured Kubernetes API 5",
-            finding_type=FindingType.threat_indicator,
-            severity=Severity.critical,
-            risk_score=90.3,
-            source_workflow=WorkflowName.threat,
-            status=FindingStatus.accepted,
-            detected_at=datetime.utcnow() - timedelta(days=16, hours=21)
-        )
-        await crud_finding.create(db=db, obj_in=mock_5)
-        mock_6 = FindingCreate(
-            org_id=org_uuid,
-            title="Suspicious Login from Unknown Geolocation 6",
-            finding_type=FindingType.access_sale,
-            severity=Severity.high,
-            risk_score=76.0,
-            source_workflow=WorkflowName.osint,
-            status=FindingStatus.new,
-            detected_at=datetime.utcnow() - timedelta(days=22, hours=15)
-        )
-        await crud_finding.create(db=db, obj_in=mock_6)
-        mock_7 = FindingCreate(
-            org_id=org_uuid,
-            title="Hardcoded Credentials in Source Code 7",
-            finding_type=FindingType.credential_exposure,
-            severity=Severity.high,
-            risk_score=77.5,
-            source_workflow=WorkflowName.threat,
-            status=FindingStatus.triaged,
-            detected_at=datetime.utcnow() - timedelta(days=9, hours=21)
-        )
-        await crud_finding.create(db=db, obj_in=mock_7)
-        mock_8 = FindingCreate(
-            org_id=org_uuid,
-            title="Insecure Direct Object Reference 8",
-            finding_type=FindingType.credential_exposure,
-            severity=Severity.high,
-            risk_score=76.4,
-            source_workflow=WorkflowName.threat,
-            status=FindingStatus.accepted,
-            detected_at=datetime.utcnow() - timedelta(days=8, hours=7)
-        )
-        await crud_finding.create(db=db, obj_in=mock_8)
-        mock_9 = FindingCreate(
-            org_id=org_uuid,
-            title="Root Account Used without Justification 9",
-            finding_type=FindingType.misconfiguration,
-            severity=Severity.low,
-            risk_score=22.2,
-            source_workflow=WorkflowName.osint,
-            status=FindingStatus.false_positive,
-            detected_at=datetime.utcnow() - timedelta(days=7, hours=14)
-        )
-        await crud_finding.create(db=db, obj_in=mock_9)
-        mock_10 = FindingCreate(
-            org_id=org_uuid,
-            title="Open SSH Port to Public Internet 10",
-            finding_type=FindingType.credential_exposure,
-            severity=Severity.high,
-            risk_score=74.3,
-            source_workflow=WorkflowName.vulnerability,
-            status=FindingStatus.triaged,
-            detected_at=datetime.utcnow() - timedelta(days=16, hours=6)
-        )
-        await crud_finding.create(db=db, obj_in=mock_10)
-        mock_11 = FindingCreate(
-            org_id=org_uuid,
-            title="Privilege Escalation Exploit 11",
-            finding_type=FindingType.access_sale,
-            severity=Severity.high,
-            risk_score=79.2,
-            source_workflow=WorkflowName.vulnerability,
-            status=FindingStatus.in_progress,
-            detected_at=datetime.utcnow() - timedelta(days=29, hours=13)
-        )
-        await crud_finding.create(db=db, obj_in=mock_11)
-        mock_12 = FindingCreate(
-            org_id=org_uuid,
-            title="Outdated Apache Struts 12",
-            finding_type=FindingType.compliance_gap,
-            severity=Severity.high,
-            risk_score=75.1,
-            source_workflow=WorkflowName.supply_chain,
-            status=FindingStatus.accepted,
-            detected_at=datetime.utcnow() - timedelta(days=20, hours=13)
-        )
-        await crud_finding.create(db=db, obj_in=mock_12)
-        mock_13 = FindingCreate(
-            org_id=org_uuid,
-            title="Hardcoded Credentials in Source Code 13",
-            finding_type=FindingType.control_gap,
-            severity=Severity.critical,
-            risk_score=94.7,
-            source_workflow=WorkflowName.osint,
-            status=FindingStatus.false_positive,
-            detected_at=datetime.utcnow() - timedelta(days=26, hours=12)
-        )
-        await crud_finding.create(db=db, obj_in=mock_13)
-        mock_14 = FindingCreate(
-            org_id=org_uuid,
-            title="Malicious IP Connection Detected 14",
-            finding_type=FindingType.misconfiguration,
-            severity=Severity.high,
-            risk_score=74.7,
-            source_workflow=WorkflowName.threat,
-            status=FindingStatus.in_progress,
-            detected_at=datetime.utcnow() - timedelta(days=3, hours=10)
-        )
-        await crud_finding.create(db=db, obj_in=mock_14)
-        mock_15 = FindingCreate(
-            org_id=org_uuid,
-            title="Missing WAF Rules 15",
-            finding_type=FindingType.credential_exposure,
-            severity=Severity.low,
-            risk_score=29.2,
-            source_workflow=WorkflowName.compliance,
-            status=FindingStatus.accepted,
-            detected_at=datetime.utcnow() - timedelta(days=13, hours=15)
-        )
-        await crud_finding.create(db=db, obj_in=mock_15)
-        mock_16 = FindingCreate(
-            org_id=org_uuid,
-            title="Outdated Apache Struts 16",
-            finding_type=FindingType.credential_exposure,
-            severity=Severity.medium,
-            risk_score=54.8,
-            source_workflow=WorkflowName.vulnerability,
-            status=FindingStatus.triaged,
-            detected_at=datetime.utcnow() - timedelta(days=2, hours=11)
-        )
-        await crud_finding.create(db=db, obj_in=mock_16)
-        mock_17 = FindingCreate(
-            org_id=org_uuid,
-            title="SQL Injection in Search Feature 17",
-            finding_type=FindingType.vulnerability,
-            severity=Severity.medium,
-            risk_score=53.2,
-            source_workflow=WorkflowName.supply_chain,
-            status=FindingStatus.in_progress,
-            detected_at=datetime.utcnow() - timedelta(days=8, hours=9)
-        )
-        await crud_finding.create(db=db, obj_in=mock_17)
-        mock_18 = FindingCreate(
-            org_id=org_uuid,
-            title="Suspicious Login from Unknown Geolocation 18",
-            finding_type=FindingType.threat_indicator,
-            severity=Severity.medium,
-            risk_score=53.4,
-            source_workflow=WorkflowName.threat,
-            status=FindingStatus.false_positive,
-            detected_at=datetime.utcnow() - timedelta(days=27, hours=23)
-        )
-        await crud_finding.create(db=db, obj_in=mock_18)
-        mock_19 = FindingCreate(
-            org_id=org_uuid,
-            title="Outdated Apache Struts 19",
-            finding_type=FindingType.threat_indicator,
-            severity=Severity.critical,
-            risk_score=96.8,
-            source_workflow=WorkflowName.supply_chain,
-            status=FindingStatus.accepted,
-            detected_at=datetime.utcnow() - timedelta(days=15, hours=5)
-        )
-        await crud_finding.create(db=db, obj_in=mock_19)
-        mock_20 = FindingCreate(
-            org_id=org_uuid,
-            title="Third-party Library with CVE 20",
-            finding_type=FindingType.control_gap,
-            severity=Severity.critical,
-            risk_score=97.4,
-            source_workflow=WorkflowName.osint,
-            status=FindingStatus.false_positive,
-            detected_at=datetime.utcnow() - timedelta(days=27, hours=14)
-        )
-        await crud_finding.create(db=db, obj_in=mock_20)
-        mock_21 = FindingCreate(
-            org_id=org_uuid,
-            title="Log4j Vulnerability Found 21",
-            finding_type=FindingType.threat_indicator,
-            severity=Severity.high,
-            risk_score=71.1,
-            source_workflow=WorkflowName.vulnerability,
-            status=FindingStatus.triaged,
-            detected_at=datetime.utcnow() - timedelta(days=14, hours=16)
-        )
-        await crud_finding.create(db=db, obj_in=mock_21)
-        mock_22 = FindingCreate(
-            org_id=org_uuid,
-            title="Outdated Apache Struts 22",
-            finding_type=FindingType.control_gap,
-            severity=Severity.informational,
-            risk_score=17.4,
-            source_workflow=WorkflowName.compliance,
-            status=FindingStatus.accepted,
-            detected_at=datetime.utcnow() - timedelta(days=10, hours=9)
-        )
-        await crud_finding.create(db=db, obj_in=mock_22)
-        mock_23 = FindingCreate(
-            org_id=org_uuid,
-            title="Third-party Library with CVE 23",
-            finding_type=FindingType.control_gap,
-            severity=Severity.low,
-            risk_score=23.4,
-            source_workflow=WorkflowName.compliance,
-            status=FindingStatus.accepted,
-            detected_at=datetime.utcnow() - timedelta(days=29, hours=14)
-        )
-        await crud_finding.create(db=db, obj_in=mock_23)
-        mock_24 = FindingCreate(
-            org_id=org_uuid,
-            title="Suspicious Login from Unknown Geolocation 24",
-            finding_type=FindingType.vulnerability,
-            severity=Severity.medium,
-            risk_score=44.4,
-            source_workflow=WorkflowName.threat,
-            status=FindingStatus.false_positive,
-            detected_at=datetime.utcnow() - timedelta(days=23, hours=23)
-        )
-        await crud_finding.create(db=db, obj_in=mock_24)
-        # Fetch again
-        items, total = await crud_finding.get_by_org(
-            db=db, org_id=org_uuid, skip=0, limit=100, severity=severity, status=status
-        )
-
-    # Note: CRUD get_by_org already handles skip and limit and severity/status correctly if implemented.
-    # We will just return what the DB/CRUD hands us.
+    if severity:
+        stmt = stmt.where(Finding.severity == severity)
+    if status is not None and status != "all":
+        # simple check assuming status enum cast
+        stmt = stmt.where(Finding.status == FindingStatus(status))
+        
+    # Get total count
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total_res = await db.execute(count_stmt)
+    total = total_res.scalar() or 0
+    
+    # Get items with limit and offset
+    stmt = stmt.limit(limit).offset(offset)
+    result = await db.execute(stmt)
+    items = result.scalars().all()
+    
+    # Fastapi will automatically parse SQLAlchemy models if response_model is correct
     return {"items": items, "total": total, "limit": limit, "offset": offset}
 
 @router.get("/{finding_id}")
@@ -343,7 +68,8 @@ async def get_finding(finding_id: str, org_id: str, db: AsyncSession = Depends(g
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid finding ID format")
         
-    db_finding = await crud_finding.get(db=db, id=finding_uuid)
+    result = await db.execute(select(Finding).where(Finding.id == finding_uuid))
+    db_finding = result.scalar_one_or_none()
     if not db_finding:
         raise HTTPException(status_code=404, detail="Finding not found")
         
@@ -418,9 +144,10 @@ async def assign_finding(finding_id: str, request: AssignRequest, org_id: str, d
     try:
         finding_uuid = uuid.UUID(finding_id)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid finding ID")
+        raise HTTPException(status_code=400, detail="Invalid finding ID format")
         
-    db_finding = await crud_finding.get(db=db, id=finding_uuid)
+    result = await db.execute(select(Finding).where(Finding.id == finding_uuid))
+    db_finding = result.scalar_one_or_none()
     if not db_finding:
         raise HTTPException(status_code=404, detail="Finding not found")
         
@@ -428,7 +155,9 @@ async def assign_finding(finding_id: str, request: AssignRequest, org_id: str, d
     if request.notes:
         update_data["remediation_notes"] = request.notes
         
-    await crud_finding.update(db=db, db_obj=db_finding, obj_in=update_data)
+    for key, value in update_data.items():
+        setattr(db_finding, key, value)
+    await db.commit()
     return {"status": "success", "action": "assigned", "finding_id": finding_id, "owner": request.owner_id}
 
 @router.post("/{finding_id}/remediate")
@@ -437,14 +166,16 @@ async def mark_remediated(finding_id: str, org_id: str, db: AsyncSession = Depen
     try:
         finding_uuid = uuid.UUID(finding_id)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid finding ID")
+        raise HTTPException(status_code=400, detail="Invalid finding ID format")
         
-    db_finding = await crud_finding.get(db=db, id=finding_uuid)
+    result = await db.execute(select(Finding).where(Finding.id == finding_uuid))
+    db_finding = result.scalar_one_or_none()
     if not db_finding:
         raise HTTPException(status_code=404, detail="Finding not found")
         
-    update_data = {"status": FindingStatus.resolved, "resolved_at": datetime.utcnow()}
-    await crud_finding.update(db=db, db_obj=db_finding, obj_in=update_data)
+    db_finding.status = FindingStatus.resolved
+    db_finding.resolved_at = datetime.utcnow()
+    await db.commit()
     return {"status": "success", "action": "remediated", "finding_id": finding_id, "new_status": "resolved"}
 
 @router.post("/{finding_id}/accept-risk")
@@ -453,17 +184,16 @@ async def accept_risk(finding_id: str, request: AcceptRiskRequest, org_id: str, 
     try:
         finding_uuid = uuid.UUID(finding_id)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid finding ID")
+        raise HTTPException(status_code=400, detail="Invalid finding ID format")
         
-    db_finding = await crud_finding.get(db=db, id=finding_uuid)
+    result = await db.execute(select(Finding).where(Finding.id == finding_uuid))
+    db_finding = result.scalar_one_or_none()
     if not db_finding:
         raise HTTPException(status_code=404, detail="Finding not found")
         
-    update_data = {
-        "status": FindingStatus.accepted, 
-        "remediation_notes": f"Risk Accepted. Justification: {request.justification}. Expires: {request.expiration_date}"
-    }
-    await crud_finding.update(db=db, db_obj=db_finding, obj_in=update_data)
+    db_finding.status = FindingStatus.accepted
+    db_finding.remediation_notes = f"Risk Accepted. Justification: {request.justification}. Expires: {request.expiration_date}"
+    await db.commit()
     return {"status": "success", "action": "risk_accepted", "finding_id": finding_id, "new_status": "accepted"}
 
 @router.post("/{finding_id}/ticket")
