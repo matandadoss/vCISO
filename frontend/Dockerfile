@@ -18,6 +18,7 @@ COPY . .
 
 # Set environment variables for build time (if necessary for build static generation)
 # ENV NEXT_PUBLIC_FIREBASE_API_KEY=dummy
+RUN apk add --no-cache ca-certificates
 RUN npm run build
 
 # Step 3: Production image, copy all the files and run next
