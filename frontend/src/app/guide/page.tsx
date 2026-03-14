@@ -7,24 +7,33 @@ export default function UserGuidePage() {
         <div>
           <h1 className="text-4xl font-bold tracking-tight text-foreground flex items-center gap-3">
             <BookOpen className="h-10 w-10 text-primary" />
-            Platform Guide
+            Platform Guide (How-To)
           </h1>
           <p className="text-xl text-muted-foreground mt-4 leading-relaxed">
             Welcome to your Virtual Chief Information Security Officer (vCISO). 
-            This platform acts as your automated security leader, helping you understand and manage business risks without needing a master's degree in cybersecurity.
+            This platform is designed for business leaders to manage risk without needing a technical degree. 
+            Below is a simple breakdown of every page in the left menu and exactly how to use it.
           </p>
         </div>
 
         <section className="space-y-6">
           <div className="border-b border-border pb-2">
-            <h2 className="text-3xl font-semibold text-foreground">1. The Big Picture</h2>
+            <h2 className="text-3xl font-semibold text-foreground">1. Overview</h2>
           </div>
           
           <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-xl font-bold text-primary mb-2">Dashboard (Home)</h3>
+            <h3 className="text-xl font-bold text-primary mb-2">Dashboard</h3>
             <p className="font-medium text-foreground mb-4">What it is: <span className="font-normal text-muted-foreground">Your daily health check.</span></p>
             <p className="text-muted-foreground mb-4">
-              <strong>How it helps your business:</strong> Instead of digging through ten different technical tools, the dashboard gives you a single "credit score" for your company's security. It shows you exactly where you stand, what needs urgent attention, and if your business is safe to operate today.
+              <strong>How to use it:</strong> Log in every morning and look at the "Overall Security Score" at the top. If the number is green and high (like a credit score), your business is safe. If the number drops, look at the "Recent Findings" box below it to see what broke overnight.
+            </p>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h3 className="text-xl font-bold text-primary mb-2">Platform Guide</h3>
+            <p className="font-medium text-foreground mb-4">What it is: <span className="font-normal text-muted-foreground">The page you are currently reading.</span></p>
+            <p className="text-muted-foreground mb-4">
+              <strong>How to use it:</strong> Come back to this page whenever you forget what a certain button or page does, or when you are training a new employee on how to use the system.
             </p>
           </div>
 
@@ -32,29 +41,29 @@ export default function UserGuidePage() {
             <h3 className="text-xl font-bold text-primary mb-2">vCISO Chat</h3>
             <p className="font-medium text-foreground mb-4">What it is: <span className="font-normal text-muted-foreground">Your personal security advisor.</span></p>
             <p className="text-muted-foreground mb-4">
-              <strong>How it helps your business:</strong> Have a question about a weird email or a new regulation? Just ask the vCISO chat in plain English. It translates complex technical jargon into simple business advice, saving you the cost of calling an expensive consultant for every minor question.
+              <strong>How to use it:</strong> Type questions into the chat box exactly as if you were texting a human expert. For example, type "Is my database secure?" or "How do I pass a SOC 2 audit?". The AI understands plain English and will guide you step-by-step.
             </p>
           </div>
         </section>
 
         <section className="space-y-6">
           <div className="border-b border-border pb-2">
-            <h2 className="text-3xl font-semibold text-foreground">2. Keeping the Business Open (Compliance & Risk)</h2>
+            <h2 className="text-3xl font-semibold text-foreground">2. Risk & Compliance</h2>
           </div>
           
           <div className="bg-card border border-border rounded-lg p-6">
             <h3 className="text-xl font-bold text-primary mb-2">Findings</h3>
             <p className="font-medium text-foreground mb-4">What it is: <span className="font-normal text-muted-foreground">Your prioritized to-do list for fixing problems.</span></p>
             <p className="text-muted-foreground mb-4">
-              <strong>How it helps your business:</strong> Computers generate thousands of meaningless "alerts" every day. This page uses AI to silence the noise and show you only the actual, critical problems that could cost you money or data. It tells you what broke and gives you a simple button to fix it.
+              <strong>How to use it:</strong> Review this list weekly. Look at the items marked "Critical" in red. Click the "View" button next to a critical finding. You will see an explanation of the problem. Click "Assign" to send the problem to your IT person, or click "Auto-Remediate" to let the software fix it for you automatically.
             </p>
           </div>
 
           <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-xl font-bold text-primary mb-2">Compliance Management</h3>
+            <h3 className="text-xl font-bold text-primary mb-2">Compliance</h3>
             <p className="font-medium text-foreground mb-4">What it is: <span className="font-normal text-muted-foreground">Your automated auditor.</span></p>
             <p className="text-muted-foreground mb-4">
-              <strong>How it helps your business:</strong> To win big clients, you often need to prove you meet certain standards (like SOC 2, HIPAA, or PCI). Preparing for these audits manually takes months and costs hundreds of thousands of dollars. This page automatically collects the proof you need, ensuring you never fail an audit or lose a major deal.
+              <strong>How to use it:</strong> If a major client demands you meet standard security regulations (like HIPAA or PCI), click the "Add Framework" button to track it. The page will give you a percentage score. When the score hits 100%, you are ready to pass the audit and close the deal.
             </p>
           </div>
 
@@ -62,21 +71,37 @@ export default function UserGuidePage() {
             <h3 className="text-xl font-bold text-primary mb-2">Vendor Risk</h3>
             <p className="font-medium text-foreground mb-4">What it is: <span className="font-normal text-muted-foreground">Background checks on the software you buy.</span></p>
             <p className="text-muted-foreground mb-4">
-              <strong>How it helps your business:</strong> If a company whose software you use gets hacked, *you* get hacked. This page automatically grades the security of all the third-party apps your employees use, protecting your company from other people's mistakes.
+              <strong>How to use it:</strong> Before your company buys a new software subscription from a third-party vendor, add the vendor's name here. Click "Analyze" and the AI will scan the internet to see if that vendor has a history of getting hacked. Do not buy software from vendors with a "High Risk" score.
+            </p>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h3 className="text-xl font-bold text-primary mb-2">Audit Trail</h3>
+            <p className="font-medium text-foreground mb-4">What it is: <span className="font-normal text-muted-foreground">The security camera for the app.</span></p>
+            <p className="text-muted-foreground mb-4">
+              <strong>How to use it:</strong> You generally don't need to check this daily. If something goes wrong and you need to know *who* pushed a button and *when* they did it, open this page. You can search by employee name to see everything they clicked on.
             </p>
           </div>
         </section>
 
         <section className="space-y-6">
           <div className="border-b border-border pb-2">
-            <h2 className="text-3xl font-semibold text-foreground">3. Active Defense</h2>
+            <h2 className="text-3xl font-semibold text-foreground">3. Threat Operations</h2>
           </div>
 
           <div className="bg-card border border-border rounded-lg p-6">
             <h3 className="text-xl font-bold text-primary mb-2">Threat Intel</h3>
             <p className="font-medium text-foreground mb-4">What it is: <span className="font-normal text-muted-foreground">The neighborhood watch.</span></p>
             <p className="text-muted-foreground mb-4">
-              <strong>How it helps your business:</strong> This page constantly watches the dark web and global news to see what hackers are doing today. If a new scam or attack is trending, the platform warns you and checks if your business is vulnerable to it *before* the criminals target you.
+              <strong>How to use it:</strong> This page shows what hackers are currently doing in the wild. Look at the top alert. If the system says "Your business is affected," it means you use a software program that hackers are currently breaking into globally. Assign it to your IT team immediately.
+            </p>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h3 className="text-xl font-bold text-primary mb-2">Correlation Graph</h3>
+            <p className="font-medium text-foreground mb-4">What it is: <span className="font-normal text-muted-foreground">A map of how a hacker would break in.</span></p>
+            <p className="text-muted-foreground mb-4">
+              <strong>How to use it:</strong> This looks like a spider web connecting red and green dots. Instead of reading boring logs, follow the red lines with your finger. If a red line connects from the internet all the way to your customer database, it means you have an open door that needs to be closed. Read the "AI Assessment" text box for plain English instructions on where to break the line.
             </p>
           </div>
 
@@ -84,21 +109,59 @@ export default function UserGuidePage() {
             <h3 className="text-xl font-bold text-primary mb-2">AI Pentesting</h3>
             <p className="font-medium text-foreground mb-4">What it is: <span className="font-normal text-muted-foreground">Simulated ethical hacking.</span></p>
             <p className="text-muted-foreground mb-4">
-              <strong>How it helps your business:</strong> We deploy safe, automated AI "hackers" against your own company to find unlocked doors before the bad guys do. It guarantees your defenses actually work when it matters, without paying massive fees to manual testing firms.
+              <strong>How to use it:</strong> Once a week, click the "Start New Assessment" button. Our AI will pretend to be a criminal and try to break into your systems exactly like a real hacker would. When it finishes, read its report. If it successfully broke in, it will show you exactly how it did it so you can fix the lock.
+            </p>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h3 className="text-xl font-bold text-primary mb-2">What-If Simulator</h3>
+            <p className="font-medium text-foreground mb-4">What it is: <span className="font-normal text-muted-foreground">A safe playground for testing.</span></p>
+            <p className="text-muted-foreground mb-4">
+              <strong>How to use it:</strong> Before your engineers install a new database or change a major firewall rule, use this page. Type in what they plan to do and click "Simulate." The AI will warn you if this planned change will accidentally open a door for hackers.
             </p>
           </div>
         </section>
         
         <section className="space-y-6">
           <div className="border-b border-border pb-2">
-            <h2 className="text-3xl font-semibold text-foreground">4. Automation (Saving Time)</h2>
+            <h2 className="text-3xl font-semibold text-foreground">4. Automation & Data</h2>
           </div>
 
           <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-xl font-bold text-primary mb-2">Playbooks</h3>
+            <h3 className="text-xl font-bold text-primary mb-2">Playbooks (SOAR)</h3>
             <p className="font-medium text-foreground mb-4">What it is: <span className="font-normal text-muted-foreground">Auto-pilot for emergencies.</span></p>
             <p className="text-muted-foreground mb-4">
-              <strong>How it helps your business:</strong> If a hacker tries to break in at 2:00 AM on a Sunday, you can't wait for an IT person to wake up. Playbooks are pre-written rules that instantly lock the doors, shut down compromised computers, and stop attacks in seconds, automatically.
+              <strong>How to use it:</strong> Think of these like smart-home rules (e.g., "If someone opens the window, turn on the alarm"). Click "Create Rule". You can tell the system: "If a hacker logs in from Russia, instantly lock their account and text my phone." Once you set these rules, they run 24/7 without you doing anything.
+            </p>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h3 className="text-xl font-bold text-primary mb-2">Data Workflows</h3>
+            <p className="font-medium text-foreground mb-4">What it is: <span className="font-normal text-muted-foreground">Connecting the plumbing.</span></p>
+            <p className="text-muted-foreground mb-4">
+              <strong>How to use it:</strong> This is a technical page primarily for your IT team. It tells the platform how to pull logs from your cloud providers. You do not need to check this page daily unless the Dashboard tells you a data source has disconnected.
+            </p>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h3 className="text-xl font-bold text-primary mb-2">Integrations Hub</h3>
+            <p className="font-medium text-foreground mb-4">What it is: <span className="font-normal text-muted-foreground">Linking your tools together.</span></p>
+            <p className="text-muted-foreground mb-4">
+              <strong>How to use it:</strong> Find the logos of all the business tools you currently use (like Slack, Google Cloud, AWS, or Jira). Click "Connect" on each one. This allows the vCISO platform to see everything happening in your business and automatically send messages to your team if a problem happens.
+            </p>
+          </div>
+        </section>
+
+        <section className="space-y-6">
+          <div className="border-b border-border pb-2">
+            <h2 className="text-3xl font-semibold text-foreground">5. System</h2>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h3 className="text-xl font-bold text-primary mb-2">Settings</h3>
+            <p className="font-medium text-foreground mb-4">What it is: <span className="font-normal text-muted-foreground">Your billing and admin controls.</span></p>
+            <p className="text-muted-foreground mb-4">
+              <strong>How to use it:</strong> Use this page to add new employee accounts or check how much the AI usage is costing you this month.
             </p>
           </div>
         </section>
