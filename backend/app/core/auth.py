@@ -55,7 +55,8 @@ async def get_current_user(
     return {
         "firebase_uid": firebase_uid, 
         "email": email,
-        "roles": roles
+        "roles": roles,
+        "org_id": decoded_token.get("org_id", "3fa85f64-5717-4562-b3fc-2c963f66afa6")
     }
 
 def require_role(required_role: str):

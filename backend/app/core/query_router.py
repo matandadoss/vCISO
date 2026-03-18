@@ -149,8 +149,15 @@ class QueryRouter:
         return min(score, 10)
 
     def build_sql_for_tier0(self, pattern_name: str, query: str, org_id: str) -> str:
+        # Prevent SQL injection by strictly validating org_id as UUID
+        import uuid
+        try:
+            valid_org_id = str(uuid.UUID(org_id))
+        except ValueError:
+            return ""
+            
         templates = {
-            "count_findings": f"SELECT severity, COUNT(*) FROM findings WHERE org_id='{org_id}' AND status='open' GROUP BY severity",
-            "compliance_score": f"SELECT f.framework_name, f.overall_compliance_pct FROM compliance_frameworks f WHERE f.org_id='{org_id}'",
+            "count_findings": f"SELECT severity, COUNT(*) FROM findings WHERE org_id='{valid_org_id}' AND status='open' GROUP BY severity",
+            "compliance_score": f"SELECT f.framework_name, f.overall_compliance_pct FROM compliance_frameworks f WHERE f.org_id='{valid_org_id}'",
         }
         return templates.get(pattern_name, "")

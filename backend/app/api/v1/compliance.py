@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
+from app.core.auth import get_current_user
 from app.models.domain import ComplianceFramework, ComplianceRequirement
 
 router = APIRouter(prefix="/compliance", tags=["compliance"])
@@ -21,8 +22,12 @@ async def list_frameworks(
     applicable: Optional[bool] = None,
     limit: int = 50,
     offset: int = 0,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
+    if str(org_id) != str(current_user.get("org_id")):
+        raise HTTPException(status_code=403, detail="Unauthorized to access this organization's data")
+        
     try:
         org_uuid = uuid.UUID(org_id)
     except ValueError:
@@ -80,8 +85,12 @@ async def list_frameworks(
 @router.post("/frameworks", response_model=dict)
 async def create_framework(
     request: FrameworkCreate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
+    if str(request.org_id) != str(current_user.get("org_id")):
+        raise HTTPException(status_code=403, detail="Unauthorized to access this organization's data")
+        
     try:
         org_uuid = uuid.UUID(request.org_id)
     except ValueError:
@@ -125,8 +134,12 @@ async def list_requirements(
     status: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
+    if str(org_id) != str(current_user.get("org_id")):
+        raise HTTPException(status_code=403, detail="Unauthorized to access this organization's data")
+        
     try:
         framework_uuid = uuid.UUID(framework_id)
     except ValueError:
