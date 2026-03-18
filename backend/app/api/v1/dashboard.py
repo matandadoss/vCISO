@@ -28,13 +28,14 @@ async def get_risk_trends(org_id: str, days: int = 30, current_user: dict = Depe
         raise HTTPException(status_code=403, detail="Unauthorized")
         
     from datetime import datetime, timedelta
-    import random
+    import secrets
 
     dates = []
     scores = []
     
     # Generate mock data that looks realistic (trending downward slightly but with spikes)
     base_risk = 75
+    secure_rand = secrets.SystemRandom()
     
     for i in range(days):
         # Calculate date (going backwards from today)
@@ -43,7 +44,7 @@ async def get_risk_trends(org_id: str, days: int = 30, current_user: dict = Depe
         
         # Calculate score
         day_factor = i * 0.5
-        random_spike = random.uniform(0, 15) if random.random() > 0.8 else random.uniform(0, 5)
+        random_spike = secure_rand.uniform(0, 15) if secure_rand.random() > 0.8 else secure_rand.uniform(0, 5)
         score = max(0, min(100, round(base_risk - day_factor + random_spike)))
         scores.append(score)
         

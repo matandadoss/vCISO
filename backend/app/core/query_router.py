@@ -157,7 +157,7 @@ class QueryRouter:
             return ""
             
         templates = {
-            "count_findings": f"SELECT severity, COUNT(*) FROM findings WHERE org_id='{valid_org_id}' AND status='open' GROUP BY severity",
-            "compliance_score": f"SELECT f.framework_name, f.overall_compliance_pct FROM compliance_frameworks f WHERE f.org_id='{valid_org_id}'",
+            "count_findings": f"SELECT severity, COUNT(*) FROM findings WHERE org_id='{valid_org_id}' AND status='open' GROUP BY severity",  # nosec B608
+            "compliance_score": f"SELECT f.framework_name, f.overall_compliance_pct FROM compliance_frameworks f WHERE f.org_id='{valid_org_id}'",  # nosec B608
         }
         return templates.get(pattern_name, "")

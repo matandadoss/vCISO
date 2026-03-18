@@ -119,4 +119,5 @@ class BaseWorkflow(ABC):
                 )
             except Exception as e:
                 # Log error in production
-                pass
+                import logging
+                logging.getLogger(__name__).error("Failed to emit event: %s", e)

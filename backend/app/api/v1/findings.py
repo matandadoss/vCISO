@@ -115,23 +115,24 @@ async def get_finding(finding_id: str, org_id: str, db: AsyncSession = Depends(g
         frameworks = fw_res.scalars().all()
         
         for fw in frameworks:
-             if finding_dict["finding_type"] in [FindingType.credential_exposure, FindingType.access_sale]:
+             is_cis = "CIS" in fw.framework_name
+             if finding_dict.get("finding_type") in [FindingType.credential_exposure, FindingType.access_sale]:
                   finding_dict["compliance_controls"].append({
                       "framework": fw.framework_name,
-                      "control": f"{fw.framework_name.split(' ')[0]}-AUTH",
-                      "description": "Logical access security: passwords and MFA enforcement"
+                      "control": "CIS-5" if is_cis else f"{fw.framework_name.split(' ')[0]}-AUTH",
+                      "description": "Account Management: Use secure authentication protocols and manage credentials." if is_cis else "Logical access security: passwords and MFA enforcement"
                   })
-             elif finding_dict["finding_type"] in [FindingType.vulnerability, FindingType.misconfiguration]:
+             elif finding_dict.get("finding_type") in [FindingType.vulnerability, FindingType.misconfiguration]:
                   finding_dict["compliance_controls"].append({
                       "framework": fw.framework_name,
-                      "control": f"{fw.framework_name.split(' ')[0]}-VULN",
-                      "description": "System configuration and continuous vulnerability management"
+                      "control": "CIS-4" if is_cis else f"{fw.framework_name.split(' ')[0]}-VULN",
+                      "description": "Secure Configuration of Enterprise Assets and Software." if is_cis else "System configuration and continuous vulnerability management"
                   })
              else:
                   finding_dict["compliance_controls"].append({
                       "framework": fw.framework_name,
-                      "control": f"{fw.framework_name.split(' ')[0]}-MON",
-                      "description": "Security event monitoring and anomaly detection"
+                      "control": "CIS-8" if is_cis else f"{fw.framework_name.split(' ')[0]}-MON",
+                      "description": "Audit Log Management: Collect, alert, review, and retain audit logs." if is_cis else "Security event monitoring and anomaly detection"
                   })
                   
         if not finding_dict["compliance_controls"]:
@@ -140,7 +141,8 @@ async def get_finding(finding_id: str, org_id: str, db: AsyncSession = Depends(g
                 {"framework": "General Security", "control": "GEN-01", "description": "Baseline monitoring"}
             ]
     except Exception as e:
-        pass
+        import logging
+        logging.getLogger(__name__).warning("Error fetching compliance controls: %s", e)
         
     return finding_dict
 

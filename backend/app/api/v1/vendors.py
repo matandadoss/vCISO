@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List
 import datetime
 import asyncio
-import random
+import secrets
 
 router = APIRouter(prefix="/vendors", tags=["vendors"])
 
@@ -86,7 +86,7 @@ async def inspect_vendor(vendor_id: str):
         "vendor_id": vendor_id,
         "report": {
             "summary": f"AI Executive Summary for {vendor['name']}",
-            "confidence_score": random.randint(70, 99),
+            "confidence_score": secrets.SystemRandom().randint(70, 99),
             "threat_insights": threat_intel,
             "recommended_action": "Monitor closely" if vendor["status"] != "Critical" else "URGENT: Initiate incident response protocols and isolate connection.",
             "generated_at": datetime.datetime.utcnow().isoformat()

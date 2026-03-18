@@ -27,9 +27,10 @@ class ConnectionManager:
             for connection in self.active_connections[org_id]:
                 try:
                     await connection.send_text(message)
-                except:
+                except Exception:
                     # Handle disconnected clients
-                    pass
+                    import logging
+                    logging.getLogger(__name__).debug("Client disconnected or error sending message")
 
 manager = ConnectionManager()
 
