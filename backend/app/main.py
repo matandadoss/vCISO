@@ -9,7 +9,7 @@ from app.core.auth import get_current_user
 from app.api.v1 import ai_settings, chat, findings, dashboard, ws, threat_intel, compliance, correlation_graph, playbooks, onboarding, integrations, simulator, organizations, vendors, pentest, workflows, bugs
 
 # Initialize Rate Limiter
-limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
+from app.core.rate_limit import limiter
 
 # Initialize Security Headers
 secure_headers = Secure()

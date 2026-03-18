@@ -1,24 +1,28 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 import uuid
 from datetime import datetime
+from app.core.auth import get_current_user
+from fastapi import HTTPException
 
 from app.services.chat_service import ChatService
 from app.correlation.llm_engine import LLMCorrelationEngine
 from app.core.dependencies import get_ai_client, get_query_router, get_cost_tracker
+from app.core.rate_limit import limiter
+from fastapi import Request
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 class NewSessionRequest(BaseModel):
     org_id: str
-    initial_message: Optional[str] = None
+    initial_message: Optional[str] = Field(None, max_length=1500)
 
 class MessageRequest(BaseModel):
-    content: str
+    content: str = Field(..., max_length=1500)
     org_id: str
-    page_context: Optional[str] = None
+    page_context: Optional[str] = Field(None, max_length=5000)
 
 def get_chat_service(
     ai_client=Depends(get_ai_client),
@@ -29,14 +33,18 @@ def get_chat_service(
     return ChatService(llm, query_router, cost_tracker, db=None)
 
 @router.post("/sessions")
-async def create_session(request: NewSessionRequest):
+async def create_session(request: NewSessionRequest, current_user: dict = Depends(get_current_user)):
+    if str(request.org_id) != str(current_user.get("org_id")):
+        raise HTTPException(status_code=403, detail="Unauthorized")
     return {
         "session_id": str(uuid.uuid4()),
         "created_at": datetime.utcnow().isoformat()
     }
 
 @router.get("/sessions")
-async def list_sessions(org_id: str):
+async def list_sessions(org_id: str, current_user: dict = Depends(get_current_user)):
+    if str(org_id) != str(current_user.get("org_id")):
+        raise HTTPException(status_code=403, detail="Unauthorized")
     return {
         "sessions": [
             {
@@ -65,14 +73,17 @@ async def send_message_sync(session_id: str, request: MessageRequest, service: C
     }
 
 @router.post("/sessions/{session_id}/stream")
-async def send_message_stream(session_id: str, request: MessageRequest, service: ChatService = Depends(get_chat_service)):
+@limiter.limit("10/minute")
+async def send_message_stream(request: Request, session_id: str, payload: MessageRequest, service: ChatService = Depends(get_chat_service)):
     return StreamingResponse(
-        service.handle_message(session_id, request.content, request.org_id, page_context=request.page_context),
+        service.handle_message(session_id, payload.content, payload.org_id, page_context=payload.page_context),
         media_type="text/event-stream"
     )
 
 @router.get("/suggestions")
-async def get_suggestions(org_id: str):
+async def get_suggestions(org_id: str, current_user: dict = Depends(get_current_user)):
+    if str(org_id) != str(current_user.get("org_id")):
+        raise HTTPException(status_code=403, detail="Unauthorized")
     return [
         {"text": "How many critical findings are open right now?", "tier": "search_only"},
         {"text": "Which assets are overdue on SLA?", "tier": "search_only"},

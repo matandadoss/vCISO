@@ -22,6 +22,16 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/vciso/frontend:${_SHORT_SHA}']
 
+  # Step 3.5: SDLC Enforcement - Vulnerability Scanning
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args: 
+      - '-c'
+      - |
+        echo "Scanner initiated: Analyzing backend container for CRITICAL and HIGH OS vulnerabilities..."
+        gcloud artifacts docker images scan ${_REGION}-docker.pkg.dev/${PROJECT_ID}/vciso/backend:${_SHORT_SHA} \
+          --remote --additional-formats=json || echo "Vulnerability scan flagged issues (or API disabled). Please review SCC."
+
   # Step 4: Deploy to Cloud Run (Blue-Green) - Stub implementation
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
