@@ -18,6 +18,7 @@ class NewSessionRequest(BaseModel):
 class MessageRequest(BaseModel):
     content: str
     org_id: str
+    page_context: Optional[str] = None
 
 def get_chat_service(
     ai_client=Depends(get_ai_client),
@@ -66,7 +67,7 @@ async def send_message_sync(session_id: str, request: MessageRequest, service: C
 @router.post("/sessions/{session_id}/stream")
 async def send_message_stream(session_id: str, request: MessageRequest, service: ChatService = Depends(get_chat_service)):
     return StreamingResponse(
-        service.handle_message(session_id, request.content, request.org_id),
+        service.handle_message(session_id, request.content, request.org_id, page_context=request.page_context),
         media_type="text/event-stream"
     )
 

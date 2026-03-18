@@ -10,7 +10,12 @@ export default function ThreatIntelPage() {
   const [actors, setActors] = useState([]);
   const [indicators, setIndicators] = useState([]);
   const [darkWebAlerts, setDarkWebAlerts] = useState([]);
-  const [breachReports, setBreachReports] = useState([]);
+  const [breachReports, setBreachReports] = useState<any[]>([]);
+  const [breachOffset, setBreachOffset] = useState(0);
+  const [breachHasMore, setBreachHasMore] = useState(false);
+  const [loadingMoreBreaches, setLoadingMoreBreaches] = useState(false);
+  const BREACH_LIMIT = 4;
+  
   const [loading, setLoading] = useState(true);
   const [expandedIoc, setExpandedIoc] = useState<string | null>(null);
   
@@ -25,7 +30,7 @@ export default function ThreatIntelPage() {
   const executePlaybook = async (ind: any) => {
     setExecutingIoc(ind.id);
     try {
-      const res = await fetchWithAuth("http://localhost:8000/api/v1/playbooks/execute", {
+      const res = await fetchWithAuth(`/api/v1/playbooks/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -44,9 +49,34 @@ export default function ThreatIntelPage() {
     }
   };
 
+  const fetchBreaches = async (offset: number) => {
+    try {
+      const res = await fetchWithAuth(`/api/v1/threat-intel/breach-reports?org_id=default&limit=${BREACH_LIMIT}&offset=${offset}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (offset === 0) {
+          setBreachReports(data.items || []);
+        } else {
+          setBreachReports(prev => [...prev, ...(data.items || [])]);
+        }
+        setBreachHasMore(data.has_more);
+      }
+    } catch (err) {
+      console.error("Error fetching breach reports:", err);
+    }
+  };
+
+  const handleLoadMoreBreaches = async () => {
+    setLoadingMoreBreaches(true);
+    const nextOffset = breachOffset + BREACH_LIMIT;
+    await fetchBreaches(nextOffset);
+    setBreachOffset(nextOffset);
+    setLoadingMoreBreaches(false);
+  };
+
   useEffect(() => {
     // Fetch Threat Actors
-    fetchWithAuth("http://localhost:8000/api/v1/threat-intel/actors?org_id=default")
+    fetchWithAuth(`/api/v1/threat-intel/actors?org_id=default`)
       .then((res) => res.json())
       .then((data) => {
         setActors(data.items || []);
@@ -54,7 +84,7 @@ export default function ThreatIntelPage() {
       .catch((err) => console.error("Error fetching actors:", err));
 
     // Fetch Threat Indicators
-    fetchWithAuth("http://localhost:8000/api/v1/threat-intel/indicators?org_id=default")
+    fetchWithAuth(`/api/v1/threat-intel/indicators?org_id=default`)
       .then((res) => res.json())
       .then((data) => {
         setIndicators(data.items || []);
@@ -62,13 +92,10 @@ export default function ThreatIntelPage() {
       .catch((err) => console.error("Error fetching indicators:", err));
 
     // Fetch Breach Reports
-    fetchWithAuth("http://localhost:8000/api/v1/threat-intel/breach-reports?org_id=default")
-      .then((res) => res.json())
-      .then((data) => setBreachReports(data.items || []))
-      .catch((err) => console.error("Error fetching breach reports:", err));
+    fetchBreaches(0);
 
     // Fetch Dark Web Alerts
-    fetchWithAuth("http://localhost:8000/api/v1/threat-intel/dark-web?org_id=default")
+    fetchWithAuth(`/api/v1/threat-intel/dark-web?org_id=default`)
       .then((res) => res.json())
       .then((data) => {
         setDarkWebAlerts(data.items || []);
@@ -81,27 +108,25 @@ export default function ThreatIntelPage() {
   }, []);
 
   return (
-    <div className="flex-1 overflow-y-auto bg-background p-8">
+    <div className="flex-1 overflow-y-auto bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
               <ShieldAlert className="h-8 w-8 text-primary" />
               Threat Intelligence
             </h1>
             <p className="text-muted-foreground mt-1">
-              Monitor active threat actors and known indicators of compromise (IoCs).
+              Monitor active threat actors and known threat signals.
             </p>
           </div>
-          <div className="flex gap-4">
-             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input 
-                  type="text" 
-                  placeholder="Search intelligence..." 
-                  className="pl-9 pr-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-2 ring-primary"
-                />
-             </div>
+          <div className="flex w-full xl:w-auto relative">
+             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+             <input 
+               type="text" 
+               placeholder="Search intelligence..." 
+               className="pl-9 pr-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-2 ring-primary w-full md:w-64"
+             />
           </div>
         </div>
 
@@ -159,7 +184,7 @@ export default function ThreatIntelPage() {
                   <div className="mb-6">
                     <p className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
-                      Known Tactics & Techniques
+                      Known Attack Methods
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {actor.mitre_attack_techniques.map((ttp: any, i: number) => (
@@ -193,9 +218,9 @@ export default function ThreatIntelPage() {
         <div className="pt-4">
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
             <Activity className="h-5 w-5 text-blue-500" /> 
-            Recent Indicators of Compromise
+            Recent Threat Signals
           </h2>
-          <div className="bg-card border border-border rounded-lg overflow-hidden">
+          <div className="bg-card border border-border rounded-lg overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead className="bg-muted text-muted-foreground border-b border-border">
                 <tr>
@@ -371,7 +396,7 @@ export default function ThreatIntelPage() {
                                          {executingIoc === ind.id ? (
                                            <><Activity className="w-4 h-4 animate-spin" /> Executing...</>
                                          ) : (
-                                           "Execute Playbook"
+                                           "Execute Action Plan"
                                          )}
                                        </button>
                                     )}
@@ -437,6 +462,21 @@ export default function ThreatIntelPage() {
               </div>
             ))}
           </div>
+          {breachHasMore && (
+            <div className="flex justify-center mt-6">
+              <button 
+                onClick={handleLoadMoreBreaches}
+                disabled={loadingMoreBreaches}
+                className="px-6 py-2 bg-muted text-foreground hover:bg-accent hover:text-accent-foreground border border-border rounded-full text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 shadow-sm"
+              >
+                {loadingMoreBreaches ? (
+                  <><Activity className="w-4 h-4 animate-spin" /> Loading more...</>
+                ) : (
+                  "Load More Previous Breaches"
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Dark Web Monitoring Section */}

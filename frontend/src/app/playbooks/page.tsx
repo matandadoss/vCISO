@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { ShieldAlert, Zap, AlertTriangle, Play, CheckCircle2 } from "lucide-react";
@@ -29,7 +29,7 @@ export default function PlaybooksPage() {
 
   const fetchPlaybooks = async () => {
     try {
-      const res = await fetchWithAuth("http://localhost:8000/api/v1/playbooks");
+      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/playbooks`);
       const data = await res.json();
       setPlaybooks(data.playbooks || []);
     } catch (e) {
@@ -51,7 +51,7 @@ export default function PlaybooksPage() {
     setExecuting(selectedPlaybook.id);
 
     try {
-      const res = await fetchWithAuth("http://localhost:8000/api/v1/playbooks/execute", {
+      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/playbooks/execute`, {
         method: "POST",
         body: JSON.stringify({
           action_name: selectedPlaybook.name,

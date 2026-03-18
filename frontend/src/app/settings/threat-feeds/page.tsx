@@ -22,7 +22,7 @@ export default function ThreatFeedsSettingsPage() {
   useEffect(() => {
     async function fetchFeeds() {
       try {
-        const res = await fetchWithAuth("http://localhost:8000/api/v1/threat-intel/feeds?org_id=default");
+        const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/threat-intel/feeds?org_id=default`);
         if (res.ok) {
           const data = await res.json();
           setFeeds(data);
@@ -50,7 +50,7 @@ export default function ThreatFeedsSettingsPage() {
     setSaveSuccess(false);
     try {
       const activeFeedIds = feeds.filter(f => f.is_active).map(f => f.id);
-      const res = await fetchWithAuth("http://localhost:8000/api/v1/threat-intel/feeds?org_id=default", {
+      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/threat-intel/feeds?org_id=default`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ feed_ids: activeFeedIds }),
@@ -94,15 +94,15 @@ export default function ThreatFeedsSettingsPage() {
 
         {/* Feeds Configuration Card */}
         <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
-          <div className="p-6 border-b border-border bg-accent/30 flex justify-between items-center">
+          <div className="p-6 border-b border-border bg-accent/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
             <div>
               <h2 className="text-lg font-semibold text-foreground">Active Subscriptions</h2>
-              <p className="text-sm text-muted-foreground">Manage your inbound IoC, TTP, and vulnerability streams.</p>
+              <p className="text-sm text-muted-foreground">Manage your inbound threat signals, known attack methods, and vulnerability streams.</p>
             </div>
             <button 
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium rounded-md shadow-sm transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium rounded-md shadow-sm transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : "Save Configuration"}
             </button>

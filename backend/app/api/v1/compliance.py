@@ -29,6 +29,31 @@ async def list_frameworks(
         org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
         
     stmt = select(ComplianceFramework).where(ComplianceFramework.org_id == org_uuid)
+    
+    # Simple check for empty state to seed defaults dynamically
+    check_stmt = select(func.count()).select_from(stmt.subquery())
+    existing_count = (await db.execute(check_stmt)).scalar() or 0
+    
+    if existing_count == 0:
+        default_fws = [
+            ("OWASP Top 10", "2021"),
+            ("CIS Controls", "v8"),
+            ("NIST CSF", "2.0")
+        ]
+        from datetime import datetime
+        for fw_name, fw_version in default_fws:
+            new_fw = ComplianceFramework(
+                id=uuid.uuid4(),
+                org_id=org_uuid,
+                framework_name=fw_name,
+                version=fw_version,
+                applicable=True,
+                overall_compliance_pct=100.0,
+                last_assessed=datetime.utcnow()
+            )
+            db.add(new_fw)
+        await db.commit()
+
     if applicable is not None:
         stmt = stmt.where(ComplianceFramework.applicable == applicable)
         
@@ -40,7 +65,13 @@ async def list_frameworks(
     frameworks = result.scalars().all()
     
     return {
-        "items": frameworks,
+        "items": [{
+           "id": str(fw.id),
+           "framework_name": fw.framework_name,
+           "version": fw.version,
+           "overall_compliance_pct": fw.overall_compliance_pct,
+           "next_assessment_due": fw.next_assessment_due.isoformat() if fw.next_assessment_due else None
+        } for fw in frameworks],
         "total": len(frameworks),
         "limit": limit,
         "offset": offset
@@ -112,7 +143,14 @@ async def list_requirements(
     result = await db.execute(stmt)
     requirements = result.scalars().all()
     return {
-        "items": requirements,
+        "items": [{
+            "id": str(req.id),
+            "requirement_id_code": req.requirement_id_code,
+            "title": req.title,
+            "status": req.status,
+            "evidence_status": req.evidence_status,
+            "last_reviewed": req.last_reviewed.isoformat() if req.last_reviewed else None
+        } for req in requirements],
         "total": len(requirements),
         "limit": limit,
         "offset": offset

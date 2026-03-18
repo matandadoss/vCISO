@@ -3,7 +3,7 @@ import { fetchWithAuth } from "@/lib/api";
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { FlaskConical, Send, Bot, AlertTriangle, ShieldCheck, Zap, ArrowRight, Activity, TrendingDown, TrendingUp, Network, BookOpen, Layers, Database } from "lucide-react";
+import { FlaskConical, Send, Bot, AlertTriangle, ShieldCheck, Zap, ArrowRight, Activity, TrendingDown, TrendingUp, Network, BookOpen, Layers, Database, Terminal } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
@@ -12,13 +12,13 @@ export default function SimulatorPage() {
   const [query, setQuery] = useState("");
   const [simulating, setSimulating] = useState(false);
   const [result, setResult] = useState<any>(null);
-  const [simType, setSimType] = useState<"architecture" | "breach">("architecture");
+  const [simType, setSimType] = useState<"architecture" | "breach" | "pentest">("architecture");
   const [tier, setTier] = useState<string>("professional");
   const initRef = useRef(false);
 
   useEffect(() => {
     // Fetch tier
-    fetchWithAuth("http://localhost:8000/api/v1/organizations/test-org")
+    fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/organizations/test-org`)
       .then(res => res.json())
       .then(data => {
         if (data.subscription_tier) setTier(data.subscription_tier);
@@ -34,6 +34,8 @@ export default function SimulatorPage() {
       // Auto-switch to breach mode if the query looks like a breach simulation
       if (qParam.toLowerCase().includes("simulate") && (qParam.toLowerCase().includes("attack") || qParam.toLowerCase().includes("breach"))) {
           setSimType("breach");
+      } else if (qParam.toLowerCase().includes("scan") || qParam.toLowerCase().includes("pentest") || qParam.toLowerCase().includes("exploit")) {
+          setSimType("pentest");
       }
       runSimulation(qParam);
     }
@@ -74,7 +76,7 @@ export default function SimulatorPage() {
     setResult(null);
 
     try {
-      const res = await fetchWithAuth("http://localhost:8000/api/v1/simulator/simulate", {
+      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/simulator/simulate`, {
          method: "POST",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify({ query: simulationQuery })
@@ -162,10 +164,10 @@ export default function SimulatorPage() {
         <div className="p-6 border-b border-border bg-primary/5">
           <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2 mb-2">
             <FlaskConical className="h-6 w-6 text-primary" />
-            What-If Simulator
+            Red Team Operations
           </h1>
           <p className="text-sm text-muted-foreground">
-            Proactively test your security posture. Simulate the impact of proposed infrastructure changes, or run Hindsight scenarios to see how your current or proposed architecture would withstand historical breaches.
+            Proactively test your security posture. Simulate architecture changes, run Hindsight scenarios on historical breaches, or launch AI-driven adversarial pentests against active endpoints.
           </p>
         </div>
         
@@ -184,6 +186,12 @@ export default function SimulatorPage() {
               >
                  <BookOpen className="w-3.5 h-3.5" /> Hindsight
               </button>
+              <button 
+                className={cn("flex-1 text-xs font-medium py-1.5 rounded-md flex items-center justify-center gap-2 transition-all", simType === "pentest" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                onClick={() => { setSimType("pentest"); setQuery(""); setResult(null); }}
+              >
+                 <Terminal className="w-3.5 h-3.5" /> Pen Test
+              </button>
            </div>
 
            {tier === "basic" ? (
@@ -200,11 +208,15 @@ export default function SimulatorPage() {
            ) : (
              <form onSubmit={handleSimulate} className="flex flex-col flex-1 h-[calc(100%-3rem)]">
              <label className="text-sm font-semibold mb-2">
-               {simType === "architecture" ? "Proposed Architecture Change" : "Select a Breach Scenario to Test Against Your Architecture"}
+               {simType === "architecture" ? "Proposed Architecture Change" : 
+                simType === "breach" ? "Select a Breach Scenario to Test Against Your Architecture" : 
+                "Define Adversarial Campaign or Target Vectors"}
              </label>
              <textarea 
                className="w-full bg-background border border-border rounded-md p-3 text-sm flex-1 min-h-[120px] max-h-[200px] resize-none focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-               placeholder={simType === "architecture" ? "e.g. Move the customer database from the private subnet to a public DMZ, but put it behind a new WAF." : "e.g. Simulate the 2023 MGM Ransomware Attack against our proposed DMZ architecture to see if we are vulnerable."}
+               placeholder={simType === "architecture" ? "e.g. Move the customer database from the private subnet to a public DMZ, but put it behind a new WAF." : 
+                           simType === "breach" ? "e.g. Simulate the 2023 MGM Ransomware Attack against our proposed DMZ architecture to see if we are vulnerable." : 
+                           "e.g. Attempt lateral movement from compromised HR workstation to core banking databases using Pass-the-Hash."}
                value={query}
                onChange={(e) => setQuery(e.target.value)}
              />
@@ -219,7 +231,7 @@ export default function SimulatorPage() {
                      "Add Okta MFA to legacy admin console."
                    </button>
                  </div>
-             ) : (
+             ) : simType === "breach" ? (
                  <div className="mt-4 flex flex-col gap-2">
                    <span className="text-xs text-muted-foreground w-full mb-1">Available Breaches:</span>
                    <button type="button" onClick={() => setQuery("Simulate the 2023 MGM Ransomware Attack against our architecture to see if we are vulnerable.")} className="text-[11px] bg-primary/20 hover:bg-primary/30 text-primary-foreground px-2 py-2 rounded text-left transition-colors border border-primary/30 flex justify-between items-center group">
@@ -228,6 +240,18 @@ export default function SimulatorPage() {
                    </button>
                    <button type="button" onClick={() => setQuery("Simulate the Target supply chain HVAC breach against our architecture.")} className="text-[11px] bg-primary/20 hover:bg-primary/30 text-primary-foreground px-2 py-2 rounded text-left transition-colors border border-primary/30 flex justify-between items-center group">
                      <span>2013 Target Supply Chain Breach</span>
+                     <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                   </button>
+                 </div>
+             ) : (
+                 <div className="mt-4 flex flex-col gap-2">
+                   <span className="text-xs text-muted-foreground w-full mb-1">Campaign Strategies:</span>
+                   <button type="button" onClick={() => setQuery("Pen test: Scan external perimeter mapping OWASP Top 10 against active web endpoints.")} className="text-[11px] bg-red-500/10 hover:bg-red-500/20 text-red-500 px-2 py-2 rounded text-left transition-colors border border-red-500/20 flex justify-between items-center group">
+                     <span>External OWASP Web Assessment</span>
+                     <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                   </button>
+                   <button type="button" onClick={() => setQuery("Pen test: Test Internal Active Directory traversal from standard user node.")} className="text-[11px] bg-red-500/10 hover:bg-red-500/20 text-red-500 px-2 py-2 rounded text-left transition-colors border border-red-500/20 flex justify-between items-center group">
+                     <span>Internal AD Privilege Escalation</span>
                      <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                    </button>
                  </div>
@@ -267,7 +291,7 @@ export default function SimulatorPage() {
             <div className="p-8 max-w-5xl mx-auto space-y-6">
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  {/* Risk Card */}
-                 <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex items-center justify-between">
+                 <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
                     <div>
                       <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4 text-amber-500" /> Risk Score Impact
@@ -293,7 +317,7 @@ export default function SimulatorPage() {
                  </div>
 
                  {/* Compliance Card */}
-                 <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex items-center justify-between">
+                 <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
                     <div>
                       <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-2">
                         <ShieldCheck className="w-4 h-4 text-blue-500" /> Compliance Impact

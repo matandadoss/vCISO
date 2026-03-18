@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { fetchWithAuth } from "@/lib/api";
 
 import { useEffect, useState } from "react";
@@ -10,7 +10,7 @@ export default function SubscriptionPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchWithAuth("http://localhost:8000/api/v1/organizations/test-org")
+    fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/organizations/test-org`)
       .then(res => res.json())
       .then(data => {
         if (data.subscription_tier) setTier(data.subscription_tier);
@@ -25,7 +25,7 @@ export default function SubscriptionPage() {
   const handleSave = async (newTier: string) => {
     setTier(newTier);
     try {
-      const res = await fetchWithAuth("http://localhost:8000/api/v1/organizations/test-org", {
+      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/organizations/test-org`, {
          method: "PUT",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify({ subscription_tier: newTier })

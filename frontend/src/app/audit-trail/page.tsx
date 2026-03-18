@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { fetchWithAuth } from "@/lib/api";
 
 import { useState, useEffect } from "react";
@@ -22,7 +22,7 @@ export default function AuditTrailPage() {
   useEffect(() => {
     async function fetchAuditTrail() {
        try {
-         const res = await fetchWithAuth("http://localhost:8000/api/v1/playbooks/audit");
+         const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/playbooks/audit`);
          const data = await res.json();
          setLogs(data.audit_trail || []);
        } catch (e) {

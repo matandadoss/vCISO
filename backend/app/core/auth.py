@@ -25,8 +25,8 @@ security = HTTPBearer(auto_error=False)
 
 async def verify_firebase_token(credentials: HTTPAuthorizationCredentials = Security(security)):
     """Verifies the Firebase ID token in the Authorization header."""
-    if not credentials or credentials.credentials == "mock-token":
-        return {"uid": "mock-123", "email": "demo@vciso.local"}
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Authentication required")
         
     token = credentials.credentials
     try:
@@ -47,13 +47,28 @@ async def get_current_user(
     firebase_uid = decoded_token.get("uid")
     email = decoded_token.get("email")
     
-    # TODO: Fetch user from Postgres once models are set up
-    # user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
-    # if not user:
-    #     user = User(firebase_uid=firebase_uid, email=email)
-    #     db.add(user)
-    #     db.commit()
-    #     db.refresh(user)
+    # Extract roles from the decoded token (custom claims in Firebase)
+    # For the mock user or if none exist, we default to providing admin capabilities during dev
+    roles = decoded_token.get("roles", ["admin", "analyst"])
 
     # Return a mock dictionary for now until we build the User model
-    return {"firebase_uid": firebase_uid, "email": email}
+    return {
+        "firebase_uid": firebase_uid, 
+        "email": email,
+        "roles": roles
+    }
+
+def require_role(required_role: str):
+    """
+    Dependency factory to enforce role-based access control.
+    """
+    async def role_checker(current_user: dict = Depends(get_current_user)):
+        roles = current_user.get("roles", [])
+        if required_role not in roles:
+            logger.warning(f"Access denied: User {current_user.get('email')} lacks required role '{required_role}'")
+            raise HTTPException(
+                status_code=403, 
+                detail=f"Operation not permitted. Requires role: {required_role}"
+            )
+        return current_user
+    return role_checker

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { fetchWithAuth } from "@/lib/api";
 
 import { useState } from "react";
@@ -35,7 +35,7 @@ export default function OnboardPage() {
     setStep(4); // Move to baseline generation step
     
     try {
-      await fetchWithAuth("http://localhost:8000/api/v1/onboarding/complete", {
+      await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/onboarding/complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ organization: org, integrations, frameworks })

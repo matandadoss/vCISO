@@ -13,6 +13,7 @@ class QueryContext:
     referenced_asset_count: Optional[int] = 0
     session_cost_so_far_usd: float = 0.0
     daily_budget_remaining_usd: float = 10.0
+    page_context: Optional[str] = None
 
 @dataclass
 class QueryClassification:

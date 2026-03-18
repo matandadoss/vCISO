@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { fetchWithAuth } from "@/lib/api";
 
 import { useState, useEffect } from "react";
@@ -16,9 +16,9 @@ export default function AISettingsPage() {
     async function fetchData() {
        try {
          const [roiRes, trendRes, costRes] = await Promise.all([
-            fetchWithAuth('http://localhost:8000/api/v1/ai/roi-metrics?org_id=test-org'),
-            fetchWithAuth('http://localhost:8000/api/v1/ai/budget-trends?org_id=test-org&days=7'),
-            fetchWithAuth('http://localhost:8000/api/v1/ai/cost-breakdown?org_id=test-org')
+            fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/ai/roi-metrics?org_id=test-org`),
+            fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/ai/budget-trends?org_id=test-org&days=7`),
+            fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/ai/cost-breakdown?org_id=test-org`)
          ]);
          
          const roi = await roiRes.json();

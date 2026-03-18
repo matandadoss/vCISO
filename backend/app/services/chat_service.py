@@ -18,8 +18,8 @@ class ChatService:
         self.cost_tracker = cost_tracker
         self.db = db
 
-    async def handle_message(self, session_id: str, content: str, org_id: str) -> AsyncGenerator[str, None]:
-        context = await self._build_query_context(org_id)
+    async def handle_message(self, session_id: str, content: str, org_id: str, page_context: str = None) -> AsyncGenerator[str, None]:
+        context = await self._build_query_context(org_id, page_context)
         classification = self.router.classify(content, context)
 
         yield f"data: {{\"type\": \"routing\", \"tier\": \"{classification.tier}\", \"reason\": \"{classification.routing_reason}\"}}\n\n"
@@ -39,12 +39,13 @@ class ChatService:
             
             yield f"data: {{\"type\": \"done\", \"cost_usd\": {result.cost_usd}, \"model_used\": \"{result.model_used}\"}}\n\n"
 
-    async def _build_query_context(self, org_id: str) -> QueryContext:
+    async def _build_query_context(self, org_id: str, page_context: str = None) -> QueryContext:
         return QueryContext(
             org_id=org_id,
             user_role="admin",
             open_finding_count=100,
             critical_finding_count=10,
             session_cost_so_far_usd=0.0,
-            daily_budget_remaining_usd=10.0
+            daily_budget_remaining_usd=10.0,
+            page_context=page_context
         )

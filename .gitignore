@@ -31,3 +31,6 @@ htmlcov/
 # Logs
 logs
 *.log
+
+# Sensitive Credentials
+workflow_upgrade/*.json

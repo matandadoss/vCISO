@@ -5,6 +5,12 @@ import { useEffect, useState } from "react";
 import { formatDate, cn } from "@/lib/utils";
 import { Search, FileCheck, CheckCircle2, AlertCircle, Clock, Plus, X } from "lucide-react";
 
+const FRAMEWORK_SUGGESTIONS = [
+  "SOC 2 Type II", "SOC 1 Type II", "ISO 27001", "ISO 27701",
+  "GDPR", "HIPAA", "PCI DSS v4.0", "NIST CSF 2.0", "NIST SP 800-53",
+  "NIST SP 800-171", "CIS Controls v8", "FedRAMP", "CMMC 2.0", "CCPA"
+];
+
 export default function CompliancePage() {
   const [frameworks, setFrameworks] = useState<any[]>([]);
   const [requirements, setRequirements] = useState<any[]>([]);
@@ -16,10 +22,11 @@ export default function CompliancePage() {
   const [newFrameworkName, setNewFrameworkName] = useState("");
   const [newFrameworkVersion, setNewFrameworkVersion] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     // Fetch Frameworks
-    fetchWithAuth("http://localhost:8000/api/v1/compliance/frameworks?org_id=default")
+    fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/compliance/frameworks?org_id=default`)
       .then((res) => res.json())
       .then((data) => {
         setFrameworks(data.items || []);
@@ -39,7 +46,7 @@ export default function CompliancePage() {
      if (!selectedFramework) return;
      
      setLoading(true);
-     fetchWithAuth(`http://localhost:8000/api/v1/compliance/frameworks/${selectedFramework.id}/requirements?org_id=default`)
+     fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/compliance/frameworks/${selectedFramework.id}/requirements?org_id=default`)
       .then((res) => res.json())
       .then((data) => {
         setRequirements(data.items || []);
@@ -57,7 +64,7 @@ export default function CompliancePage() {
     
     setIsSubmitting(true);
     try {
-      const res = await fetchWithAuth("http://localhost:8000/api/v1/compliance/frameworks", {
+      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/compliance/frameworks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -83,7 +90,7 @@ export default function CompliancePage() {
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
               <FileCheck className="h-8 w-8 text-primary" />
@@ -93,18 +100,18 @@ export default function CompliancePage() {
               Track frameworks, view compliance posture, and manage evidence collection.
             </p>
           </div>
-          <div className="flex gap-4">
-             <div className="relative">
+          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto mt-4 md:mt-0">
+             <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input 
                   type="text" 
                   placeholder="Search requirements..." 
-                  className="pl-9 pr-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-2 ring-primary"
+                  className="pl-9 pr-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-2 ring-primary w-full"
                 />
              </div>
              <button
                onClick={() => setIsAddModalOpen(true)}
-               className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition"
+               className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition w-full sm:w-auto"
              >
                <Plus className="w-4 h-4" />
                Add Framework
@@ -155,12 +162,12 @@ export default function CompliancePage() {
         {/* Requirements Table */}
         {selectedFramework && (
           <div className="pt-4">
-            <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-foreground mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
               <span>{selectedFramework.framework_name} Requirements</span>
               <span className="text-sm font-normal text-muted-foreground">Showing {requirements.length} controls</span>
             </h2>
-            <div className="bg-card border border-border rounded-lg overflow-hidden">
-              <table className="w-full text-sm text-left">
+            <div className="bg-card border border-border rounded-lg overflow-x-auto w-full">
+              <table className="w-full text-sm text-left min-w-[800px]">
                 <thead className="bg-muted text-muted-foreground border-b border-border">
                   <tr>
                     <th className="px-6 py-4 font-medium uppercase tracking-wider w-[120px]">Control ID</th>
@@ -237,16 +244,32 @@ export default function CompliancePage() {
              </div>
              <form onSubmit={handleAddFramework}>
                <div className="space-y-4">
-                 <div>
+                 <div className="relative">
                    <label className="block text-sm font-medium text-foreground mb-1">Framework Name *</label>
                    <input 
                      type="text" 
                      value={newFrameworkName}
-                     onChange={(e) => setNewFrameworkName(e.target.value)}
+                     onChange={(e) => { setNewFrameworkName(e.target.value); setShowSuggestions(true); }}
+                     onFocus={() => setShowSuggestions(true)}
+                     onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                      required
+                     autoComplete="off"
                      className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 ring-primary"
                      placeholder="e.g. PCI DSS, HIPAA"
                    />
+                   {showSuggestions && newFrameworkName && FRAMEWORK_SUGGESTIONS.filter(s => s.toLowerCase().includes(newFrameworkName.toLowerCase())).length > 0 && (
+                       <ul className="absolute top-full left-0 z-10 w-full bg-background border border-border mt-1 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                           {FRAMEWORK_SUGGESTIONS.filter(s => s.toLowerCase().includes(newFrameworkName.toLowerCase())).map(s => (
+                               <li 
+                                   key={s} 
+                                   onMouseDown={(e) => { e.preventDefault(); setNewFrameworkName(s); setShowSuggestions(false); }} 
+                                   className="px-3 py-2 hover:bg-muted text-sm cursor-pointer"
+                               >
+                                   {s}
+                               </li>
+                           ))}
+                       </ul>
+                   )}
                  </div>
                  <div>
                    <label className="block text-sm font-medium text-foreground mb-1">Version (Optional)</label>

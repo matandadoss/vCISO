@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MERIDIAN — Supply Chain Cyber Risk</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Newsreader:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-deep:#06080D;--bg-base:#0B0F18;--bg-raised:#111827;--bg-card:#151C2C;--bg-hover:#1A2236;
+  --text-1:#F1F5F9;--text-2:#94A3B8;--text-3:#64748B;--text-4:#475569;
+  --border-1:rgba(255,255,255,.06);--border-2:rgba(255,255,255,.08);--border-3:rgba(255,255,255,.12);
+  --blue:#3B82F6;--blue-s:rgba(59,130,246,.12);--blue-g:rgba(59,130,246,.25);--blue-d:#1E40AF;--blue-t:#93C5FD;
+  --cyan:#22D3EE;--cyan-s:rgba(34,211,238,.10);
+  --green:#10B981;--green-s:rgba(16,185,129,.12);--green-g:rgba(16,185,129,.20);--green-t:#6EE7B7;
+  --amber:#EAB308;--amber-s:rgba(234,179,8,.12);--amber-t:#FDE047;
+  --orange:#F97316;--orange-s:rgba(249,115,22,.12);
+  --red:#EF4444;--red-s:rgba(239,68,68,.12);--red-g:rgba(239,68,68,.20);--red-t:#FCA5A5;
+  --purple:#8B5CF6;--purple-s:rgba(139,92,246,.12);--purple-t:#C4B5FD;
+  --f-display:'Outfit',system-ui,sans-serif;--f-serif:'Newsreader',Georgia,serif;--f-mono:'JetBrains Mono','Fira Code',monospace;
+  --r-sm:8px;--r:12px;--r-lg:16px;--r-xl:20px;--r-pill:99px;
+  --ease:cubic-bezier(.16,1,.3,1);--spring:cubic-bezier(.34,1.56,.64,1);
+}
+html{font-size:15px;background:var(--bg-deep)}
+body{font-family:var(--f-display);color:var(--text-1);background:var(--bg-deep);min-height:100vh;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.ao{position:fixed;border-radius:50%;pointer-events:none;z-index:0}
+.ao1{top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(59,130,246,.08) 0%,transparent 70%);animation:ad 20s ease-in-out infinite}
+.ao2{bottom:-300px;left:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(139,92,246,.06) 0%,transparent 70%);animation:ad2 25s ease-in-out infinite}
+@keyframes ad{0%,100%{transform:translate(0,0)}50%{transform:translate(-40px,30px)}}
+@keyframes ad2{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-40px)}}
+
+.app{display:grid;grid-template-columns:72px 240px 1fr;min-height:100vh;position:relative;z-index:1}
+@media(max-width:1000px){.app{grid-template-columns:64px 1fr}.side{display:none}}
+
+/* Rail */
+.rail{background:var(--bg-base);border-right:.5px solid var(--border-1);display:flex;flex-direction:column;align-items:center;padding:20px 0;gap:4px}
+.rail-logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#3B82F6,#8B5CF6);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 0 20px rgba(59,130,246,.3);cursor:pointer;transition:transform .2s var(--spring)}
+.rail-logo:hover{transform:scale(1.05)}
+.rail-logo svg{width:20px;height:20px}
+.rb{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s var(--ease);position:relative;color:var(--text-3);background:0;border:0;font-family:inherit}
+.rb:hover{background:var(--bg-hover);color:var(--text-2)}
+.rb.on{background:var(--blue-s);color:var(--blue)}
+.rb.on::before{content:'';position:absolute;left:-1px;top:12px;bottom:12px;width:2px;border-radius:1px;background:var(--blue)}
+.rb svg{width:20px;height:20px}
+.rb .bdg{position:absolute;top:6px;right:6px;min-width:16px;height:16px;border-radius:8px;font-size:9px;font-weight:600;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.rb .bdg.r{background:var(--red);color:#fff}
+.rb .bdg.b{background:var(--blue);color:#fff}
+.rb .bdg.a{background:var(--amber);color:#000}
+.rail-sp{flex:1}
+
+/* Sidebar */
+.side{background:var(--bg-base);border-right:.5px solid var(--border-1);padding:20px 16px;overflow-y:auto;display:flex;flex-direction:column}
+.side-search{width:100%;padding:9px 12px;border-radius:var(--r-sm);border:.5px solid var(--border-2);background:var(--bg-raised);color:var(--text-1);font-family:inherit;font-size:13px;outline:0;transition:border-color .2s;margin-bottom:20px}
+.side-search::placeholder{color:var(--text-4)}
+.side-search:focus{border-color:var(--blue)}
+.sg{margin-bottom:24px}
+.sg-l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--text-4);margin-bottom:8px;padding:0 8px}
+.si{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r-sm);cursor:pointer;transition:all .2s;font-size:13px;color:var(--text-2)}
+.si:hover{background:var(--bg-hover);color:var(--text-1)}
+.si.on{background:var(--blue-s);color:var(--blue)}
+.si-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.si-m{margin-left:auto;font-size:11px;font-family:var(--f-mono);font-weight:300}
+
+/* Supplier cards */
+.sup-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r-sm);border:.5px solid var(--border-2);background:var(--bg-card);cursor:pointer;transition:all .2s;margin-bottom:6px}
+.sup-card:hover{border-color:var(--border-3)}
+.sup-card.on{border-color:var(--blue);background:var(--blue-s)}
+.sup-av{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.sup-info{flex:1;min-width:0}
+.sup-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sup-type{font-size:11px;color:var(--text-3);font-weight:300}
+.sup-score{font-size:12px;font-family:var(--f-mono);font-weight:500}
+
+/* Criticality badges */
+.crit-badge{font-size:9px;font-weight:600;padding:2px 6px;border-radius:var(--r-pill);margin-left:auto}
+.crit-badge.t1{background:var(--red-s);color:var(--red-t)}
+.crit-badge.t2{background:var(--orange-s);color:var(--orange)}
+.crit-badge.t3{background:var(--amber-s);color:var(--amber-t)}
+
+.side-card{margin-top:auto;padding:14px;background:var(--bg-card);border-radius:var(--r);border:.5px solid var(--border-1)}
+.side-card-l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-4);margin-bottom:8px}
+.mp{display:flex;flex-wrap:wrap;gap:4px}
+.mp button{padding:5px 10px;border-radius:var(--r-pill);font-size:11px;border:.5px solid var(--border-2);background:0;color:var(--text-3);cursor:pointer;transition:all .2s;font-family:inherit}
+.mp button:hover{border-color:var(--border-3);color:var(--text-2)}
+.mp button.on{background:var(--text-1);color:var(--bg-deep);border-color:transparent;font-weight:500}
+
+.main{padding:32px 40px;overflow-y:auto;max-height:100vh;scroll-behavior:smooth}
+.ph{margin-bottom:28px}
+.greeting{font-size:28px;font-weight:300;letter-spacing:-.02em;line-height:1.3}
+.greeting strong{font-weight:600}
+.ph-sub{font-size:14px;color:var(--text-2);margin-top:6px;line-height:1.6;max-width:640px;font-weight:300}
+
+.intent{position:relative;margin-bottom:28px}
+.intent input{width:100%;padding:16px 56px 16px 20px;border-radius:var(--r-lg);border:.5px solid var(--border-2);background:var(--bg-card);color:var(--text-1);font-family:inherit;font-size:15px;font-weight:300;outline:0;transition:all .3s var(--ease);box-shadow:0 0 0 0 rgba(59,130,246,0)}
+.intent input::placeholder{color:var(--text-4)}
+.intent input:focus{border-color:rgba(59,130,246,.4);box-shadow:0 0 0 4px rgba(59,130,246,.08),0 8px 32px rgba(0,0,0,.3)}
+.intent button{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:10px;background:var(--blue);border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s var(--spring);box-shadow:0 2px 12px rgba(59,130,246,.3)}
+.intent button:hover{transform:translateY(-50%) scale(1.05)}
+.intent button svg{width:16px;height:16px}
+
+.cog{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg-card);border-radius:var(--r);border:.5px solid var(--border-1);margin-bottom:24px;backdrop-filter:blur(8px)}
+.cog-ring{position:relative;width:40px;height:40px;flex-shrink:0}
+.cog-ring svg{width:40px;height:40px;transform:rotate(-90deg)}
+.cog-ring circle{fill:none;stroke-width:3;stroke-linecap:round}
+.cog-ring .trk{stroke:var(--border-2)}
+.cog-ring .fl{transition:stroke-dashoffset .8s var(--ease)}
+.cog-ring span{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;font-weight:600;font-family:var(--f-mono)}
+.cog-t{font-size:13px;font-weight:500}
+.cog-h{font-size:12px;color:var(--text-3);margin-top:1px}
+
+.ss{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.sc{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r-pill);font-size:12px;font-weight:500;border:.5px solid var(--border-1);background:var(--bg-card);backdrop-filter:blur(8px)}
+.sc-dot{width:6px;height:6px;border-radius:50%;animation:pls 2.5s ease infinite}
+@keyframes pls{0%,100%{opacity:1}50%{opacity:.35}}
+.sc.grn{color:var(--green);border-color:rgba(16,185,129,.15)}.sc.grn .sc-dot{background:var(--green);box-shadow:0 0 6px var(--green-g)}
+.sc.amb{color:var(--amber);border-color:rgba(234,179,8,.15)}.sc.amb .sc-dot{background:var(--amber)}
+.sc.rd{color:var(--red);border-color:rgba(239,68,68,.15)}.sc.rd .sc-dot{background:var(--red);box-shadow:0 0 6px var(--red-g)}
+
+.resolved{display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:var(--r);margin-bottom:14px;font-size:13px;color:var(--green);background:var(--green-s);border:.5px solid rgba(16,185,129,.12);animation:ri .5s var(--ease)}
+@keyframes ri{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.resolved svg{width:18px;height:18px;flex-shrink:0}
+
+.sl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--text-4);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.sl::after{content:'';flex:1;height:.5px;background:var(--border-1)}
+
+.port-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+@media(max-width:900px){.port-grid{grid-template-columns:repeat(2,1fr)}}
+.port-stat{background:var(--bg-card);border-radius:var(--r);border:.5px solid var(--border-1);padding:18px;transition:all .2s}
+.port-stat:hover{border-color:var(--border-3)}
+.port-stat-l{font-size:11px;color:var(--text-4);font-weight:300;margin-bottom:6px}
+.port-stat-n{font-size:28px;font-weight:600;font-family:var(--f-mono);line-height:1}
+.port-stat-s{font-size:12px;color:var(--text-3);margin-top:4px;font-weight:300}
+
+/* Outcome cards */
+.outcomes{display:flex;flex-direction:column;gap:14px;margin-bottom:28px}
+.oc{position:relative;background:var(--bg-card);border-radius:var(--r-lg);border:.5px solid var(--border-1);cursor:pointer;transition:all .3s var(--ease);overflow:hidden}
+.oc:hover{border-color:var(--border-3);transform:translateY(-1px);box-shadow:0 8px 32px rgba(0,0,0,.25)}
+.oc-bar{position:absolute;top:0;left:0;bottom:0;width:3px;border-radius:0 2px 2px 0;transition:width .2s}
+.oc:hover .oc-bar{width:4px}
+.oc.spot{border-color:rgba(59,130,246,.25)}.oc.spot .oc-bar{background:var(--blue)}
+.oc.warn .oc-bar{background:var(--amber)}
+.oc.crit .oc-bar{background:var(--red)}
+.oc.ok .oc-bar{background:var(--green)}
+.oc-body{padding:22px 24px}
+.oc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:8px}
+.oc-title{font-size:16px;font-weight:500;line-height:1.4;letter-spacing:-.01em}
+.oc-tag{font-size:11px;padding:4px 12px;border-radius:var(--r-pill);font-weight:500;white-space:nowrap;flex-shrink:0}
+.oc-supplier{font-size:11px;color:var(--text-3);font-family:var(--f-mono);font-weight:300;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.oc-supplier .cd{width:6px;height:6px;border-radius:50%}
+.oc-why{font-size:13px;color:var(--text-2);line-height:1.65;margin-bottom:16px;font-weight:300}
+.oc-why strong{font-weight:500;color:var(--text-1)}
+.oc-prog{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.prog-bar{flex:1;height:4px;background:var(--bg-hover);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;position:relative;transition:width 1s var(--ease)}
+.prog-fill::after{content:'';position:absolute;right:0;top:-2px;bottom:-2px;width:8px;border-radius:4px;background:inherit;filter:blur(4px);opacity:.7}
+.prog-pct{font-size:13px;font-weight:600;font-family:var(--f-mono);min-width:36px;text-align:right}
+.oc-meta{display:flex;gap:18px;font-size:12px;color:var(--text-3);font-weight:300;flex-wrap:wrap}
+.oc-meta span{display:flex;align-items:center;gap:5px}
+.oc-meta svg{width:13px;height:13px;opacity:.5}
+
+.oc-steps{display:none;padding:0 24px 22px;animation:si .35s var(--ease)}
+.oc.exp .oc-steps{display:block}
+@keyframes si{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.s-div{height:.5px;background:var(--border-1);margin-bottom:18px}
+.step{display:flex;align-items:flex-start;gap:14px;padding:8px 0 18px;position:relative}
+.step:not(:last-child)::after{content:'';position:absolute;left:14px;top:38px;bottom:0;width:1px;background:var(--border-1)}
+.sd{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:600}
+.sd.dn{background:var(--green-s);color:var(--green)}
+.sd.ac{background:var(--blue-s);color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+.sd.pn{background:var(--bg-hover);color:var(--text-4);border:1px solid var(--border-2)}
+.sd.bl{background:var(--red-s);color:var(--red);box-shadow:0 0 0 3px rgba(239,68,68,.08)}
+.s-title{font-size:13px;font-weight:500;margin-bottom:3px}
+.s-desc{font-size:12px;color:var(--text-3);line-height:1.55;font-weight:300}
+.s-why{margin-top:10px;padding:12px 14px;background:var(--bg-raised);border-radius:var(--r-sm);border-left:2px solid var(--blue);font-size:12px;line-height:1.6;color:var(--text-2);font-weight:300}
+.s-why strong{font-weight:500;color:var(--text-1)}
+.s-why.crit{border-left-color:var(--red)}
+.s-btn{margin-top:10px;padding:7px 18px;border-radius:var(--r-sm);border:0;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s var(--spring)}
+.s-btn.pri{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(59,130,246,.25)}
+.s-btn.pri:hover{background:var(--blue-d);transform:translateY(-1px)}
+.s-btn.dan{background:var(--red);color:#fff;box-shadow:0 2px 8px rgba(239,68,68,.25)}
+.s-btn.dan:hover{transform:translateY(-1px)}
+.s-btn.gho{background:0;border:.5px solid var(--border-3);color:var(--text-2)}
+.s-btn.gho:hover{background:var(--bg-hover);color:var(--text-1)}
+
+/* Posture matrix */
+.posture-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:24px}
+.posture-row{display:grid;grid-template-columns:200px repeat(6,1fr);gap:0;background:var(--bg-card);border-radius:var(--r);border:.5px solid var(--border-1);overflow:hidden;align-items:center;transition:all .2s;cursor:pointer}
+.posture-row:hover{border-color:var(--border-3)}
+.posture-sup{padding:12px 16px;display:flex;align-items:center;gap:10px;border-right:.5px solid var(--border-1)}
+.posture-fn{padding:10px;text-align:center;font-size:12px;font-family:var(--f-mono);font-weight:500;border-right:.5px solid var(--border-1)}
+.posture-fn:last-child{border-right:0}
+.posture-fn.hi{color:var(--green-t);background:rgba(16,185,129,.06)}
+.posture-fn.md{color:var(--amber-t);background:rgba(234,179,8,.06)}
+.posture-fn.lo{color:var(--red-t);background:rgba(239,68,68,.06)}
+.posture-header{background:var(--bg-raised)}
+.posture-header .posture-fn{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-4);font-family:var(--f-display);background:0}
+
+/* Threat cards */
+.tc{position:relative;background:var(--bg-card);border-radius:var(--r-lg);border:.5px solid var(--border-1);padding:22px 24px;margin-bottom:12px;transition:all .2s;overflow:hidden;cursor:pointer}
+.tc:hover{border-color:var(--border-3);transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.tc .oc-bar{position:absolute;top:0;left:0;bottom:0;width:3px;border-radius:0 2px 2px 0}
+.tc-rel{font-size:13px;color:var(--text-2);line-height:1.6;margin-top:8px;font-weight:300}
+.tc-rel strong{font-weight:500;color:var(--text-1)}
+.tc-tags{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ttag{padding:4px 10px;border-radius:var(--r-pill);font-size:11px;font-family:var(--f-mono);font-weight:300;background:var(--bg-raised);color:var(--text-3);border:.5px solid var(--border-1)}
+.tc-sups{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+.tc-sup-pill{padding:3px 10px;border-radius:var(--r-pill);font-size:10px;font-weight:500;border:.5px solid}
+.tc-sup-pill.hi{background:var(--red-s);color:var(--red-t);border-color:rgba(239,68,68,.15)}
+.tc-sup-pill.md{background:var(--amber-s);color:var(--amber-t);border-color:rgba(234,179,8,.15)}
+.tc-sup-pill.lo{background:var(--blue-s);color:var(--blue-t);border-color:rgba(59,130,246,.15)}
+
+/* Metric rows */
+.mtr-card{background:var(--bg-card);border-radius:var(--r-lg);border:.5px solid var(--border-1);padding:24px 28px;margin-bottom:24px}
+.mtr-row{display:flex;align-items:center;gap:14px;padding:11px 0;border-bottom:.5px solid var(--border-1)}
+.mtr-row:last-of-type{border-bottom:0}
+.mtr-label{font-size:12px;font-weight:400;min-width:160px;color:var(--text-2)}
+.mtr-bar{flex:1;height:6px;background:var(--bg-hover);border-radius:3px;overflow:hidden}
+.mtr-bar-fill{height:100%;border-radius:3px;transition:width .8s var(--ease)}
+.mtr-pct{font-size:12px;font-family:var(--f-mono);font-weight:400;min-width:40px;text-align:right}
+.mtr-insight{margin-top:16px;padding:14px 16px;background:var(--bg-raised);border-radius:var(--r);border-left:2px solid var(--blue);font-size:13px;color:var(--text-2);line-height:1.6;font-weight:300}
+.mtr-insight strong{font-weight:500;color:var(--text-1)}
+.mtr-insight.crit{border-left-color:var(--red)}
+.mtr-insight.crit strong{color:var(--red-t)}
+
+/* Momentum */
+.mcard{background:var(--bg-card);border-radius:var(--r-lg);border:.5px solid var(--border-1);padding:24px 28px;margin-bottom:24px}
+.m-hdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+.m-title{font-size:15px;font-weight:500}
+.m-status{font-size:13px;font-weight:500}
+.m-bar{height:6px;background:var(--bg-hover);border-radius:3px;overflow:hidden;margin-bottom:6px}
+.m-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#60A5FA,var(--blue));transition:width 1.2s var(--ease);position:relative}
+.m-fill::after{content:'';position:absolute;right:0;top:-4px;bottom:-4px;width:16px;border-radius:8px;background:var(--blue);filter:blur(8px);opacity:.5}
+.m-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text-4);font-family:var(--f-mono);font-weight:300;margin-bottom:20px}
+.m-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:700px){.m-grid{grid-template-columns:repeat(2,1fr)}}
+.m-stat{padding:14px;background:var(--bg-raised);border-radius:var(--r);text-align:center;border:.5px solid var(--border-1);transition:all .2s}
+.m-stat:hover{border-color:var(--border-3);background:var(--bg-hover)}
+.m-stat-n{font-size:24px;font-weight:600;line-height:1.2;font-family:var(--f-mono)}
+.m-stat-l{font-size:11px;color:var(--text-4);margin-top:4px;font-weight:300}
+.m-note{text-align:center;font-size:12px;color:var(--text-4);margin-top:16px;font-style:italic;font-family:var(--f-serif)}
+
+/* Gov stats */
+.gov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+@media(max-width:700px){.gov-grid{grid-template-columns:1fr}}
+
+/* Narrative */
+.ncard{background:var(--bg-card);border-radius:var(--r-lg);border:.5px solid var(--border-1);padding:24px 28px;margin-bottom:24px}
+.ncard-l{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-4);margin-bottom:20px}
+.thread{position:relative;padding-left:32px}
+.thread::before{content:'';position:absolute;left:12px;top:12px;bottom:12px;width:1px;background:linear-gradient(to bottom,var(--border-3),var(--border-1),transparent)}
+.tn{position:relative;padding:6px 0 22px}
+.td{width:24px;height:24px;border-radius:50%;position:absolute;left:-32px;top:8px;display:flex;align-items:center;justify-content:center}
+.td.past{background:var(--bg-hover);border:1px solid var(--border-3)}
+.td.now{background:var(--blue-s);border:2px solid var(--blue);box-shadow:0 0 12px var(--blue-g)}
+.td.fut{background:0;border:1px dashed var(--border-3)}
+.td svg{width:8px;height:8px;opacity:.4}
+.t-time{font-size:11px;font-family:var(--f-mono);font-weight:300;color:var(--text-4);margin-bottom:3px}
+.t-text{font-size:13px;line-height:1.6;color:var(--text-2);font-weight:300}
+.t-text strong{font-weight:500;color:var(--text-1)}
+.tn.dim{opacity:.4}
+
+.stagger>*{animation:stgr .5s var(--ease) both}
+.stagger>*:nth-child(1){animation-delay:50ms}.stagger>*:nth-child(2){animation-delay:100ms}.stagger>*:nth-child(3){animation-delay:150ms}.stagger>*:nth-child(4){animation-delay:200ms}.stagger>*:nth-child(5){animation-delay:250ms}.stagger>*:nth-child(6){animation-delay:300ms}.stagger>*:nth-child(7){animation-delay:350ms}.stagger>*:nth-child(8){animation-delay:400ms}.stagger>*:nth-child(9){animation-delay:450ms}.stagger>*:nth-child(10){animation-delay:500ms}.stagger>*:nth-child(11){animation-delay:550ms}.stagger>*:nth-child(12){animation-delay:600ms}
+@keyframes stgr{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.view{display:none}.view.on{display:block}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:0}::-webkit-scrollbar-thumb{background:var(--border-3);border-radius:3px}
+</style>
+</head>
+<body>
+<div class="ao ao1"></div><div class="ao ao2"></div>
+<div class="app">
+
+<!-- RAIL -->
+<div class="rail">
+  <div class="rail-logo"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <button class="rb on" onclick="nav(this,'command')" title="Command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button>
+  <button class="rb" onclick="nav(this,'chain')" title="Supply Chain"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg><span class="bdg b">6</span></button>
+  <button class="rb" onclick="nav(this,'threat')" title="Threat Intel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span class="bdg a">3</span></button>
+  <button class="rb" onclick="nav(this,'govern')" title="Governance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+  <button class="rb" onclick="nav(this,'reports')" title="Reporting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button>
+  <div class="rail-sp"></div>
+  <button class="rb" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9"/></svg></button>
+</div>
+
+<!-- SIDEBAR -->
+<div class="side">
+  <input class="side-search" placeholder="Search suppliers, risks...">
+
+  <div class="sg">
+    <div class="sg-l">Critical suppliers</div>
+    <div class="sup-card on">
+      <div class="sup-av" style="background:var(--red-s);color:var(--red-t)">CX</div>
+      <div class="sup-info"><div class="sup-name">CoreAxis Payments</div><div class="sup-type">Payment processing</div></div>
+      <div class="sup-score" style="color:var(--red)">D+</div>
+    </div>
+    <div class="sup-card">
+      <div class="sup-av" style="background:var(--amber-s);color:var(--amber-t)">NP</div>
+      <div class="sup-info"><div class="sup-name">NorthPoint Cloud</div><div class="sup-type">Infrastructure (IaaS)</div></div>
+      <div class="sup-score" style="color:var(--amber)">C</div>
+    </div>
+    <div class="sup-card">
+      <div class="sup-av" style="background:var(--green-s);color:var(--green-t)">DV</div>
+      <div class="sup-info"><div class="sup-name">DataVault Analytics</div><div class="sup-type">Data analytics</div></div>
+      <div class="sup-score" style="color:var(--green)">B+</div>
+    </div>
+    <div class="sup-card">
+      <div class="sup-av" style="background:var(--amber-s);color:var(--amber-t)">SW</div>
+      <div class="sup-info"><div class="sup-name">Sentinel Workforce</div><div class="sup-type">HR SaaS platform</div></div>
+      <div class="sup-score" style="color:var(--amber)">C+</div>
+    </div>
+    <div class="sup-card">
+      <div class="sup-av" style="background:var(--green-s);color:var(--green-t)">QL</div>
+      <div class="sup-info"><div class="sup-name">QuantumLeap AI</div><div class="sup-type">ML model provider</div></div>
+      <div class="sup-score" style="color:var(--green)">B</div>
+    </div>
+    <div class="sup-card">
+      <div class="sup-av" style="background:var(--blue-s);color:var(--blue-t)">FR</div>
+      <div class="sup-info"><div class="sup-name">FortressReach</div><div class="sup-type">Managed SOC</div></div>
+      <div class="sup-score" style="color:var(--blue-t)">A-</div>
+    </div>
+  </div>
+
+  <div class="sg">
+    <div class="sg-l">Active risk outcomes</div>
+    <div class="si on"><div class="si-dot" style="background:var(--red)"></div>CoreAxis IAM gaps<span class="si-m" style="color:var(--red)">Crit</span></div>
+    <div class="si"><div class="si-dot" style="background:var(--amber)"></div>NorthPoint data residency<span class="si-m" style="color:var(--amber)">High</span></div>
+    <div class="si"><div class="si-dot" style="background:var(--purple)"></div>QuantumLeap model governance<span class="si-m" style="color:var(--text-4)">New</span></div>
+  </div>
+
+  <div class="side-card">
+    <div class="side-card-l">Focus mode</div>
+    <div class="mp">
+      <button class="on" onclick="setMode(this)">Risk mgmt</button>
+      <button onclick="setMode(this)">Onboarding</button>
+      <button onclick="setMode(this)">Incident</button>
+      <button onclick="setMode(this)">Audit prep</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- ===== COMMAND ===== -->
+<div class="view on" id="v-command"><div class="stagger">
+  <div class="ph">
+    <div class="greeting">Good afternoon, <strong>Matanda</strong></div>
+    <div class="ph-sub">You're tracking 6 suppliers across your supply chain. Two carry critical risk that needs action this week — one has a regulatory dimension. Your cognitive load is moderate.</div>
+  </div>
+
+  <div class="intent">
+    <input placeholder="What supply chain risk are you managing?">
+    <button><svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </div>
+
+  <div class="cog">
+    <div class="cog-ring">
+      <svg viewBox="0 0 44 44"><circle class="trk" cx="22" cy="22" r="18"/><circle class="fl" cx="22" cy="22" r="18" stroke="var(--amber)" stroke-dasharray="113" stroke-dashoffset="45"/></svg>
+      <span style="color:var(--amber)">3/5</span>
+    </div>
+    <div style="flex:1"><div class="cog-t">Cognitive load: moderate</div><div class="cog-h">3 active risk threads across 3 suppliers. One is time-critical (regulatory).</div></div>
+  </div>
+
+  <div class="ss">
+    <div class="sc grn"><div class="sc-dot"></div> No active supply chain incidents</div>
+    <div class="sc rd"><div class="sc-dot"></div> CoreAxis: FCA scrutiny in 18 days</div>
+    <div class="sc amb"><div class="sc-dot"></div> NorthPoint contract renewal in 30 days</div>
+  </div>
+
+  <div class="resolved"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.06l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"/></svg>DataVault Analytics — annual security assessment completed. No critical findings. Posture confirmed at B+.</div>
+
+  <div class="sl">Supply chain snapshot</div>
+  <div class="port-grid">
+    <div class="port-stat"><div class="port-stat-l">Suppliers tracked</div><div class="port-stat-n" style="color:var(--blue)">6</div><div class="port-stat-s">2 Tier-1, 3 Tier-2, 1 Tier-3</div></div>
+    <div class="port-stat"><div class="port-stat-l">Critical findings (supplier)</div><div class="port-stat-n" style="color:var(--red)">8</div><div class="port-stat-s">5 at CoreAxis, 3 at NorthPoint</div></div>
+    <div class="port-stat"><div class="port-stat-l">Avg supplier posture</div><div class="port-stat-n" style="color:var(--amber)">C+</div><div class="port-stat-s">Up from C last quarter</div></div>
+    <div class="port-stat"><div class="port-stat-l">Contract renewals</div><div class="port-stat-n" style="color:var(--text-1)">2</div><div class="port-stat-s">NorthPoint (30d), Sentinel (60d)</div></div>
+  </div>
+
+  <div class="sl">Active risk outcomes — across suppliers</div>
+  <div class="outcomes">
+
+    <!-- CoreAxis IAM -->
+    <div class="oc spot" onclick="toggleCard(this)">
+      <div class="oc-bar"></div>
+      <div class="oc-body">
+        <div class="oc-supplier"><div class="cd" style="background:var(--red)"></div> CoreAxis Payments · Tier-1 · Payment processing</div>
+        <div class="oc-top">
+          <div class="oc-title">Remediate critical IAM gaps at CoreAxis before FCA review</div>
+          <div class="oc-tag" style="background:var(--red-s);color:var(--red)">FCA in 18 days</div>
+        </div>
+        <div class="oc-why">CoreAxis processes all your customer card transactions. Their <strong>5 critical IAM findings</strong> — no MFA on privileged accounts, shared service accounts, 340+ excess admins — create a direct path to your customer data. The <strong>FCA is reviewing your outsourcing arrangements in 18 days</strong>. If CoreAxis can't demonstrate remediation, your organisation inherits the regulatory exposure. This is your highest-consequence supply chain risk.</div>
+        <div class="oc-prog"><div class="prog-bar"><div class="prog-fill" style="width:35%;background:var(--red)"></div></div><div class="prog-pct" style="color:var(--red)">35%</div></div>
+        <div class="oc-meta">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 9v2m0 4h.01M5.07 19H18.93a2 2 0 001.74-2.99L13.74 4a2 2 0 00-3.48 0L3.33 16.01A2 2 0 005.07 19z"/></svg> 5 critical findings</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> FCA review Apr 1</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg> Handles £12M/month in transactions</span>
+        </div>
+      </div>
+      <div class="oc-steps"><div class="s-div"></div>
+        <div class="step"><div class="sd dn"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></div><div class="step-info"><div class="s-title">Supplier assessment completed</div><div class="s-desc">Full IAM review against CRI FSP PR.AC controls. 5 critical, 8 high, 12 medium findings documented and shared with CoreAxis management.</div></div></div>
+        <div class="step"><div class="sd dn"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></div><div class="step-info"><div class="s-title">Remediation plan agreed with CoreAxis CISO</div><div class="s-desc">Phased plan: MFA rollout (2 weeks), service account isolation (3 weeks), PAM deployment (6 weeks). Contractual remediation clause activated.</div></div></div>
+        <div class="step"><div class="sd ac"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="step-info"><div class="s-title">MFA rollout stalled — CoreAxis needs escalation</div><div class="s-desc">12 privileged accounts identified. CoreAxis IT has completed 4 of 12. They're citing internal resource constraints.</div>
+          <div class="s-why crit"><strong>Why this, why now:</strong> The FCA reviews your outsourcing risk posture in 18 days. Under the FCA's operational resilience framework, YOU are responsible for ensuring critical suppliers meet security standards. If CoreAxis can't show MFA on all privileged accounts, the regulator will ask why you didn't exercise your contractual remediation rights sooner. Escalate to CoreAxis CEO today — invoke the contractual clause.</div>
+          <button class="s-btn dan" onclick="event.stopPropagation()">Draft escalation to CoreAxis CEO</button>
+        </div></div>
+        <div class="step"><div class="sd pn">4</div><div class="step-info"><div class="s-title">Service account isolation</div><div class="s-desc">Shared accounts across prod/staging need separation. Blocked until MFA completes.</div></div></div>
+        <div class="step"><div class="sd pn">5</div><div class="step-info"><div class="s-title">Evidence package for FCA review</div><div class="s-desc">Board-ready documentation showing supply chain risk management: assessment process, findings, remediation timeline, contractual enforcement.</div></div></div>
+      </div>
+    </div>
+
+    <!-- NorthPoint data residency -->
+    <div class="oc warn" onclick="toggleCard(this)">
+      <div class="oc-bar"></div>
+      <div class="oc-body">
+        <div class="oc-supplier"><div class="cd" style="background:var(--amber)"></div> NorthPoint Cloud · Tier-1 · Infrastructure (IaaS)</div>
+        <div class="oc-top">
+          <div class="oc-title">Resolve data residency risk before contract renewal</div>
+          <div class="oc-tag" style="background:var(--amber-s);color:var(--amber)">Renewal in 30 days</div>
+        </div>
+        <div class="oc-why">NorthPoint hosts your customer data and core applications. During the annual review you discovered <strong>customer PII is being replicated to a US data centre</strong> without explicit contractual permission — a potential UK GDPR violation. The <strong>contract renewal is in 30 days</strong>. This is your leverage window to demand data residency guarantees and right-to-audit clauses before you re-sign.</div>
+        <div class="oc-prog"><div class="prog-bar"><div class="prog-fill" style="width:50%;background:var(--amber)"></div></div><div class="prog-pct" style="color:var(--amber)">50%</div></div>
+        <div class="oc-meta">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> Data residency issue</span>
+          <span>GDPR Art 44-49 exposure</span>
+          <span>Contract value: £1.8M/yr</span>
+        </div>
+      </div>
+      <div class="oc-steps"><div class="s-div"></div>
+        <div class="step"><div class="sd dn"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></div><div class="step-info"><div class="s-title">Data flow mapping completed</div><div class="s-desc">Confirmed PII replication to us-east-1. NorthPoint claims it's for disaster recovery. No DPIA covers this transfer.</div></div></div>
+        <div class="step"><div class="sd ac">2</div><div class="step-info"><div class="s-title">Draft amended contract terms with data residency guarantees</div><div class="s-desc">Work with legal to draft: data residency clause (UK/EEA only), right-to-audit, breach notification SLA, and data deletion on termination.</div>
+          <div class="s-why"><strong>Why this, why now:</strong> The contract auto-renews in 30 days. If you renew without these clauses, you lose leverage for another 12 months. The ICO has been increasing enforcement on international data transfers — you need contractual protection before the renewal locks in. Legal needs the draft by Friday to review before the negotiation window.</div>
+          <button class="s-btn pri" onclick="event.stopPropagation()">Draft contract amendments</button>
+        </div></div>
+        <div class="step"><div class="sd pn">3</div><div class="step-info"><div class="s-title">Negotiate with NorthPoint account team</div><div class="s-desc">Present amended terms. Leverage the renewal as a forcing function.</div></div></div>
+      </div>
+    </div>
+
+    <!-- QuantumLeap AI governance -->
+    <div class="oc" onclick="toggleCard(this)">
+      <div class="oc-bar" style="background:var(--purple)"></div>
+      <div class="oc-body">
+        <div class="oc-supplier"><div class="cd" style="background:var(--purple)"></div> QuantumLeap AI · Tier-2 · ML model provider</div>
+        <div class="oc-top">
+          <div class="oc-title">Assess AI/ML governance of QuantumLeap's models integrated into your platform</div>
+          <div class="oc-tag" style="background:var(--purple-s);color:var(--purple-t)">New assessment</div>
+        </div>
+        <div class="oc-why">QuantumLeap provides the ML models powering your fraud detection and customer risk scoring. <strong>You have no visibility into their model training data, drift monitoring, or adversarial robustness.</strong> The EU AI Act classifies financial risk scoring as high-risk AI — your organisation bears compliance responsibility even when the model is supplied by a third party.</div>
+        <div class="oc-prog"><div class="prog-bar"><div class="prog-fill" style="width:10%;background:var(--purple)"></div></div><div class="prog-pct" style="color:var(--purple-t)">10%</div></div>
+        <div class="oc-meta"><span>EU AI Act high-risk classification</span><span>MITRE ATLAS mapping pending</span><span>MACEE framework scoping</span></div>
+      </div>
+      <div class="oc-steps"><div class="s-div"></div>
+        <div class="step"><div class="sd dn"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></div><div class="step-info"><div class="s-title">Model inventory completed</div><div class="s-desc">3 QuantumLeap models integrated: fraud detection, customer risk scoring, AML screening. Data lineage partially documented.</div></div></div>
+        <div class="step"><div class="sd ac">2</div><div class="step-info"><div class="s-title">Request QuantumLeap's AI governance documentation</div><div class="s-desc">Need: model cards, training data provenance, bias testing results, drift monitoring procedures, adversarial robustness testing, incident response for model failures.</div>
+          <button class="s-btn gho" onclick="event.stopPropagation()">Draft supplier questionnaire</button>
+        </div></div>
+        <div class="step"><div class="sd pn">3</div><div class="step-info"><div class="s-title">MITRE ATLAS threat mapping</div><div class="s-desc">Map QuantumLeap's models against ATLAS adversarial ML techniques. Identify gaps in their defences.</div></div></div>
+        <div class="step"><div class="sd pn">4</div><div class="step-info"><div class="s-title">MACEE framework assessment</div><div class="s-desc">Evaluate against Mentor/ARK/Command Center/Execution Engine framework. Determine governance tier score.</div></div></div>
+      </div>
+    </div>
+
+    <!-- Cross-supplier: zero criticals -->
+    <div class="oc" onclick="toggleCard(this)">
+      <div class="oc-bar" style="background:var(--green)"></div>
+      <div class="oc-body">
+        <div class="oc-supplier"><div class="cd" style="background:var(--text-3)"></div> All suppliers</div>
+        <div class="oc-top">
+          <div class="oc-title">Zero critical supplier vulnerabilities by Q1 end</div>
+          <div class="oc-tag" style="background:var(--red-s);color:var(--red)">3 remaining</div>
+        </div>
+        <div class="oc-why">Down from 22 across the supply chain at start of quarter. Last 3: <strong>CoreAxis (payment system patch)</strong> and <strong>NorthPoint (2 unpatched edge nodes)</strong>. Both require their internal maintenance windows.</div>
+        <div class="oc-prog"><div class="prog-bar"><div class="prog-fill" style="width:86%;background:var(--green)"></div></div><div class="prog-pct" style="color:var(--green)">86%</div></div>
+        <div class="oc-meta"><span>19 of 22 remediated this quarter</span><span>17 days remaining</span></div>
+      </div>
+      <div class="oc-steps"><div class="s-div"></div>
+        <div class="step"><div class="sd bl">!</div><div class="step-info"><div class="s-title">CoreAxis: payment system patch — awaiting their change window</div><div class="s-desc">Patching requires 4 hours downtime. CoreAxis ops team citing revenue impact on their other clients.</div>
+          <div class="s-why crit"><strong>Why this is stuck:</strong> CoreAxis is deprioritising your remediation request because they have larger clients. Your contract includes an SLA for critical vulnerability remediation within 30 days. That SLA expires in 5 days. If they miss it, you have grounds to invoke penalty clauses — and you should tell them that.</div>
+          <button class="s-btn dan" onclick="event.stopPropagation()">Draft SLA enforcement notice</button>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Momentum -->
+  <div class="sl">Supply chain risk momentum — Q1</div>
+  <div class="mcard">
+    <div class="m-hdr"><div class="m-title">Supply chain remediation</div><div class="m-status" style="color:var(--blue)">Strong progress</div></div>
+    <div class="m-bar"><div class="m-fill" style="width:68%"></div></div>
+    <div class="m-labels"><span>Jan 1</span><span>Mar 31</span></div>
+    <div class="m-grid">
+      <div class="m-stat"><div class="m-stat-n" style="color:var(--green)">19</div><div class="m-stat-l">Supplier vulns fixed</div></div>
+      <div class="m-stat"><div class="m-stat-n" style="color:var(--blue)">3</div><div class="m-stat-l">Active risk outcomes</div></div>
+      <div class="m-stat"><div class="m-stat-n" style="color:var(--green)">1</div><div class="m-stat-l">Clean assessments</div></div>
+      <div class="m-stat"><div class="m-stat-n" style="color:var(--green)">C+</div><div class="m-stat-l">Avg posture (was C)</div></div>
+    </div>
+    <div class="m-note">"19 supplier vulnerabilities remediated, 1 clean assessment delivered, posture improving" — not "22 findings open, 3 SLAs approaching, 8 overdue responses."</div>
+  </div>
+</div></div>
+
+<!-- ===== SUPPLY CHAIN ===== -->
+<div class="view" id="v-chain"><div class="stagger">
+  <div class="ph">
+    <div class="greeting" style="font-size:24px;font-weight:500">Supply chain — security posture</div>
+    <div class="ph-sub">Cross-supplier view of third-party risk by CRI FSP function. Colour encodes maturity: green >80%, amber 50-80%, red <50%.</div>
+  </div>
+
+  <div class="sl">Supplier posture matrix — CRI FSP functions</div>
+  <div class="posture-grid">
+    <div class="posture-row posture-header">
+      <div class="posture-sup" style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-4)">Supplier</div>
+      <div class="posture-fn">Govern</div><div class="posture-fn">Identify</div><div class="posture-fn">Protect</div><div class="posture-fn">Detect</div><div class="posture-fn">Respond</div><div class="posture-fn">Recover</div>
+    </div>
+    <div class="posture-row">
+      <div class="posture-sup"><div class="sup-av" style="background:var(--red-s);color:var(--red-t);width:28px;height:28px;border-radius:6px;font-size:10px">CX</div><div><div style="font-size:13px;font-weight:500">CoreAxis</div><div style="font-size:11px;color:var(--text-3)">Tier-1 · Payments</div></div></div>
+      <div class="posture-fn md">60%</div><div class="posture-fn md">52%</div><div class="posture-fn lo">28%</div><div class="posture-fn md">50%</div><div class="posture-fn lo">35%</div><div class="posture-fn lo">30%</div>
+    </div>
+    <div class="posture-row">
+      <div class="posture-sup"><div class="sup-av" style="background:var(--amber-s);color:var(--amber-t);width:28px;height:28px;border-radius:6px;font-size:10px">NP</div><div><div style="font-size:13px;font-weight:500">NorthPoint</div><div style="font-size:11px;color:var(--text-3)">Tier-1 · IaaS</div></div></div>
+      <div class="posture-fn md">72%</div><div class="posture-fn md">65%</div><div class="posture-fn md">58%</div><div class="posture-fn md">62%</div><div class="posture-fn md">55%</div><div class="posture-fn lo">45%</div>
+    </div>
+    <div class="posture-row">
+      <div class="posture-sup"><div class="sup-av" style="background:var(--green-s);color:var(--green-t);width:28px;height:28px;border-radius:6px;font-size:10px">DV</div><div><div style="font-size:13px;font-weight:500">DataVault</div><div style="font-size:11px;color:var(--text-3)">Tier-2 · Analytics</div></div></div>
+      <div class="posture-fn hi">88%</div><div class="posture-fn hi">85%</div><div class="posture-fn hi">82%</div><div class="posture-fn md">78%</div><div class="posture-fn md">75%</div><div class="posture-fn md">70%</div>
+    </div>
+    <div class="posture-row">
+      <div class="posture-sup"><div class="sup-av" style="background:var(--amber-s);color:var(--amber-t);width:28px;height:28px;border-radius:6px;font-size:10px">SW</div><div><div style="font-size:13px;font-weight:500">Sentinel</div><div style="font-size:11px;color:var(--text-3)">Tier-2 · HR SaaS</div></div></div>
+      <div class="posture-fn md">70%</div><div class="posture-fn md">62%</div><div class="posture-fn md">55%</div><div class="posture-fn md">52%</div><div class="posture-fn lo">48%</div><div class="posture-fn lo">40%</div>
+    </div>
+    <div class="posture-row">
+      <div class="posture-sup"><div class="sup-av" style="background:var(--green-s);color:var(--green-t);width:28px;height:28px;border-radius:6px;font-size:10px">QL</div><div><div style="font-size:13px;font-weight:500">QuantumLeap</div><div style="font-size:11px;color:var(--text-3)">Tier-2 · ML models</div></div></div>
+      <div class="posture-fn hi">80%</div><div class="posture-fn md">75%</div><div class="posture-fn md">72%</div><div class="posture-fn md">68%</div><div class="posture-fn md">65%</div><div class="posture-fn md">58%</div>
+    </div>
+    <div class="posture-row">
+      <div class="posture-sup"><div class="sup-av" style="background:var(--blue-s);color:var(--blue-t);width:28px;height:28px;border-radius:6px;font-size:10px">FR</div><div><div style="font-size:13px;font-weight:500">FortressReach</div><div style="font-size:11px;color:var(--text-3)">Tier-3 · Managed SOC</div></div></div>
+      <div class="posture-fn hi">92%</div><div class="posture-fn hi">90%</div><div class="posture-fn hi">88%</div><div class="posture-fn hi">85%</div><div class="posture-fn hi">82%</div><div class="posture-fn md">78%</div>
+    </div>
+  </div>
+
+  <div class="mtr-card">
+    <div class="sl" style="margin-bottom:16px">Supply chain insight</div>
+    <div class="mtr-insight"><strong>The pattern:</strong> Your Tier-1 suppliers (CoreAxis, NorthPoint) carry the highest business impact AND the weakest security posture. This is your supply chain concentration risk. CoreAxis at 28% Protect is an active threat vector — they handle your payment data with weaker controls than your Tier-3 managed SOC provider. The strategic question: can you contractually enforce improvement, or do you need to begin evaluating alternative payment processors?</div>
+  </div>
+
+  <div class="sl">Supplier responsiveness — remediation velocity</div>
+  <div class="mtr-card">
+    <div class="mtr-row"><div class="mtr-label">FortressReach (SOC)</div><div class="mtr-bar"><div class="mtr-bar-fill" style="width:95%;background:var(--green)"></div></div><div class="mtr-pct" style="color:var(--green)">95%</div></div>
+    <div class="mtr-row"><div class="mtr-label">DataVault (Analytics)</div><div class="mtr-bar"><div class="mtr-bar-fill" style="width:88%;background:var(--green)"></div></div><div class="mtr-pct" style="color:var(--green)">88%</div></div>
+    <div class="mtr-row"><div class="mtr-label">QuantumLeap (ML)</div><div class="mtr-bar"><div class="mtr-bar-fill" style="width:72%;background:var(--amber)"></div></div><div class="mtr-pct" style="color:var(--amber)">72%</div></div>
+    <div class="mtr-row"><div class="mtr-label">Sentinel (HR SaaS)</div><div class="mtr-bar"><div class="mtr-bar-fill" style="width:55%;background:var(--amber)"></div></div><div class="mtr-pct" style="color:var(--amber)">55%</div></div>
+    <div class="mtr-row"><div class="mtr-label">NorthPoint (IaaS)</div><div class="mtr-bar"><div class="mtr-bar-fill" style="width:42%;background:var(--orange)"></div></div><div class="mtr-pct" style="color:var(--orange)">42%</div></div>
+    <div class="mtr-row"><div class="mtr-label">CoreAxis (Payments)</div><div class="mtr-bar"><div class="mtr-bar-fill" style="width:28%;background:var(--red)"></div></div><div class="mtr-pct" style="color:var(--red)">28%</div></div>
+    <div class="mtr-insight crit"><strong>CoreAxis is your weakest link — and your most critical dependency.</strong> Lowest posture, slowest remediation, processes £12M/month in your transactions. The FCA will see this concentration risk immediately. Your leverage: the remediation SLA expires in 5 days, and the contract renewal is in Q3. Start building the business case for an alternative processor in parallel.</div>
+  </div>
+</div></div>
+
+<!-- ===== THREAT ===== -->
+<div class="view" id="v-threat"><div class="stagger">
+  <div class="ph">
+    <div class="greeting" style="font-size:24px;font-weight:500">Threat landscape</div>
+    <div class="ph-sub">Active intelligence mapped to your supply chain. Each threat shows which suppliers are exposed and the downstream risk to your organisation.</div>
+  </div>
+
+  <div class="sl">Threats to your supply chain</div>
+  <div class="tc" style="border-color:rgba(239,68,68,.15)"><div class="oc-bar" style="background:var(--red)"></div>
+    <div class="oc-top" style="margin-bottom:0"><div class="oc-title" style="font-size:15px">Credential stuffing campaign targeting payment processors</div><div class="oc-tag" style="background:var(--red-s);color:var(--red)">Active threat</div></div>
+    <div class="tc-rel"><strong>Supply chain impact:</strong> CoreAxis's API authentication matches the attack pattern in this NCSC advisory exactly. Their missing MFA on service accounts means a successful credential stuff at CoreAxis could give an attacker access to YOUR customer payment data within minutes. This is not a theoretical risk — it's an active campaign targeting the exact supplier type and control weakness in your supply chain.</div>
+    <div class="tc-sups"><span class="tc-sup-pill hi">CoreAxis — direct exposure</span><span class="tc-sup-pill lo">FortressReach — monitoring for you</span></div>
+    <div class="tc-tags"><span class="ttag">MITRE T1110.004</span><span class="ttag">NCSC advisory</span><span class="ttag">2 days ago</span><span class="ttag">Payment processors</span></div>
+  </div>
+
+  <div class="tc"><div class="oc-bar" style="background:var(--orange)"></div>
+    <div class="oc-top" style="margin-bottom:0"><div class="oc-title" style="font-size:15px">Critical vulnerability in widely used cloud infrastructure component</div><div class="oc-tag" style="background:var(--amber-s);color:var(--amber)">Verify exposure</div></div>
+    <div class="tc-rel"><strong>Supply chain impact:</strong> Affects the container orchestration layer used by NorthPoint Cloud. If unpatched, an attacker could escape container isolation and access other tenants' data — including yours. NorthPoint's 2 unpatched edge nodes from your vulnerability tracker may be related. <strong>Verify with NorthPoint immediately and factor into the contract renewal negotiation.</strong></div>
+    <div class="tc-sups"><span class="tc-sup-pill hi">NorthPoint — likely exposed</span><span class="tc-sup-pill md">Sentinel — verify container setup</span></div>
+    <div class="tc-tags"><span class="ttag">CVE-2026-XXXX</span><span class="ttag">CVSS 9.1</span><span class="ttag">Yesterday</span><span class="ttag">Cloud infrastructure</span></div>
+  </div>
+
+  <div class="tc"><div class="oc-bar" style="background:var(--purple)"></div>
+    <div class="oc-top" style="margin-bottom:0"><div class="oc-title" style="font-size:15px">Adversarial attacks on third-party ML models in financial services</div><div class="oc-tag" style="background:var(--purple-s);color:var(--purple-t)">ATLAS</div></div>
+    <div class="tc-rel"><strong>Supply chain impact:</strong> MITRE ATLAS AML.T0051 describes attacks on exactly the type of models QuantumLeap provides — fraud detection and risk scoring. If an adversary poisons QuantumLeap's training data, your fraud detection degrades silently. <strong>This reinforces the urgency of the AI governance assessment</strong> — you need visibility into their model training pipeline before you can assess this risk.</div>
+    <div class="tc-sups"><span class="tc-sup-pill hi">QuantumLeap — direct relevance</span></div>
+    <div class="tc-tags"><span class="ttag">MITRE ATLAS AML.T0051</span><span class="ttag">MITRE ATLAS AML.T0043</span><span class="ttag">Emerging</span><span class="ttag">Financial ML</span></div>
+  </div>
+</div></div>
+
+<!-- ===== GOVERNANCE ===== -->
+<div class="view" id="v-govern"><div class="stagger">
+  <div class="ph">
+    <div class="greeting" style="font-size:24px;font-weight:500">Third-party governance</div>
+    <div class="ph-sub">Supply chain compliance posture. Regulatory frameworks, contractual obligations, and assessment coverage across your supplier portfolio.</div>
+  </div>
+
+  <div class="gov-grid">
+    <div class="port-stat"><div class="port-stat-l">Avg supplier compliance</div><div class="port-stat-n" style="color:var(--amber)">62%</div><div class="port-stat-s">Up from 48% last quarter</div></div>
+    <div class="port-stat"><div class="port-stat-l">Suppliers assessed (Q1)</div><div class="port-stat-n" style="color:var(--blue)">4/6</div><div class="port-stat-s">QuantumLeap + Sentinel pending</div></div>
+    <div class="port-stat"><div class="port-stat-l">Regulatory deadlines</div><div class="port-stat-n" style="color:var(--red)">1</div><div class="port-stat-s">FCA outsourcing review — 18 days</div></div>
+  </div>
+
+  <div class="sl">Compliance readiness by supplier</div>
+  <div class="mtr-card">
+    <div class="mtr-row"><div class="mtr-label">FortressReach — SOC 2</div><div class="mtr-bar"><div class="mtr-bar-fill" style="width:92%;background:var(--green)"></div></div><div class="mtr-pct" style="color:var(--green)">92%</div></div>
+    <div class="mtr-row"><div class="mtr-label">DataVault — ISO 27001</div><div class="mtr-bar"><div class="mtr-bar-fill" style="width:85%;background:var(--green)"></div></div><div class="mtr-pct" style="color:var(--green)">85%</div></div>
+    <div class="mtr-row"><div class="mtr-label">NorthPoint — CRI FSP</div><div class="mtr-bar"><div class="mtr-bar-fill" style="width:60%;background:var(--amber)"></div></div><div class="mtr-pct" style="color:var(--amber)">60%</div></div>
+    <div class="mtr-row"><div class="mtr-label">Sentinel — CRI FSP</div><div class="mtr-bar"><div class="mtr-bar-fill" style="width:52%;background:var(--amber)"></div></div><div class="mtr-pct" style="color:var(--amber)">52%</div></div>
+    <div class="mtr-row"><div class="mtr-label">CoreAxis — FCA cyber</div><div class="mtr-bar"><div class="mtr-bar-fill" style="width:35%;background:var(--red)"></div></div><div class="mtr-pct" style="color:var(--red)">35%</div></div>
+    <div class="mtr-row"><div class="mtr-label">QuantumLeap — EU AI Act</div><div class="mtr-bar"><div class="mtr-bar-fill" style="width:15%;background:var(--red)"></div></div><div class="mtr-pct" style="color:var(--red)">15%</div></div>
+    <div class="mtr-insight"><strong>Your supply chain governance story:</strong> Tier-3 suppliers (FortressReach, DataVault) are well-governed — they've invested in certifications. The risk concentrates in Tier-1 and Tier-2: CoreAxis at 35% FCA readiness is your immediate regulatory exposure, and QuantumLeap at 15% EU AI Act readiness is your emerging strategic risk. Both need different interventions — contractual enforcement for CoreAxis, collaborative governance building for QuantumLeap.</div>
+  </div>
+</div></div>
+
+<!-- ===== REPORTING ===== -->
+<div class="view" id="v-reports"><div class="stagger">
+  <div class="ph">
+    <div class="greeting" style="font-size:24px;font-weight:500">Supply chain risk reporting</div>
+    <div class="ph-sub">Internal reports and regulatory deliverables on your supply chain security posture. Each report frames third-party risk for its target audience.</div>
+  </div>
+
+  <div class="sl">Upcoming deliverables</div>
+  <div class="outcomes">
+    <div class="oc crit" onclick="toggleCard(this)">
+      <div class="oc-bar"></div>
+      <div class="oc-body">
+        <div class="oc-supplier"><div class="cd" style="background:var(--red)"></div> Regulatory deliverable</div>
+        <div class="oc-top">
+          <div class="oc-title">FCA Outsourcing Risk Evidence Package</div>
+          <div class="oc-tag" style="background:var(--red-s);color:var(--red)">Due in 14 days</div>
+        </div>
+        <div class="oc-why">The FCA will review how you manage critical outsourcing arrangements — particularly CoreAxis (payments) and NorthPoint (infrastructure). You need to demonstrate: <strong>a robust TPRM programme</strong>, evidence of ongoing assessment, contractual remediation enforcement, and an exit strategy for concentration risk. The CoreAxis MFA gap is the single biggest exposure.</div>
+        <div class="oc-meta"><span>FCA operational resilience framework</span><span>Evidence package + narrative</span></div>
+      </div>
+      <div class="oc-steps"><div class="s-div"></div>
+        <div class="step"><div class="sd ac">1</div><div class="step-info"><div class="s-title">Build the third-party risk management evidence timeline</div><div class="s-desc">Document every assessment, finding, escalation, and remediation action across CoreAxis and NorthPoint. Show the pattern of diligent oversight — dates, responsible parties, contractual clauses invoked.</div>
+          <button class="s-btn dan" onclick="event.stopPropagation()">Build evidence timeline</button>
+        </div></div>
+        <div class="step"><div class="sd pn">2</div><div class="step-info"><div class="s-title">Draft regulatory narrative</div><div class="s-desc">Frame the CoreAxis situation as "identified, assessed, escalated, contractually enforced, actively remediating" — not "critical supplier with unresolved gaps."</div></div></div>
+      </div>
+    </div>
+
+    <div class="oc spot" onclick="toggleCard(this)">
+      <div class="oc-bar"></div>
+      <div class="oc-body">
+        <div class="oc-supplier"><div class="cd" style="background:var(--blue)"></div> Internal stakeholder</div>
+        <div class="oc-top">
+          <div class="oc-title">Q1 Supply Chain Risk Brief — Risk Committee</div>
+          <div class="oc-tag" style="background:var(--amber-s);color:var(--amber)">Due in 7 days</div>
+        </div>
+        <div class="oc-why">The Risk Committee wants your quarterly assessment of supply chain cyber risk. Key questions: <strong>are we exposed through CoreAxis?</strong>, what's the data residency situation with NorthPoint, and should we be worried about AI supply chain risk with QuantumLeap? Lead with the concentration risk narrative — Tier-1 suppliers carry the highest impact and weakest posture.</div>
+        <div class="oc-meta"><span>Quarterly cadence</span><span>12-slide deck + executive summary</span></div>
+      </div>
+      <div class="oc-steps"><div class="s-div"></div>
+        <div class="step"><div class="sd dn"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></div><div class="step-info"><div class="s-title">Supplier posture data compiled</div><div class="s-desc">All 6 suppliers: assessment results, remediation status, threat landscape mapping — current as of yesterday.</div></div></div>
+        <div class="step"><div class="sd ac">2</div><div class="step-info"><div class="s-title">Draft the supply chain risk narrative</div><div class="s-desc">Frame around concentration risk: "Our most critical suppliers carry our weakest posture." Present the mitigation strategy and contractual enforcement actions underway.</div>
+          <button class="s-btn pri" onclick="event.stopPropagation()">Generate risk brief draft</button>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+</div></div>
+
+<script>
+function nav(el,v){document.querySelectorAll('.rb').forEach(b=>b.classList.remove('on'));el.classList.add('on');document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));const t=document.getElementById('v-'+v);if(t)t.classList.add('on');document.querySelector('.main').scrollTop=0}
+function toggleCard(el){el.classList.toggle('exp')}
+function setMode(el){document.querySelectorAll('.mp button').forEach(b=>b.classList.remove('on'));el.classList.add('on')}
+document.querySelectorAll('.sup-card').forEach(c=>c.addEventListener('click',function(){document.querySelectorAll('.sup-card').forEach(x=>x.classList.remove('on'));this.classList.add('on')}));
+</script>
+</body>
+</html>

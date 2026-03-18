@@ -6,6 +6,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { RoleProvider } from "@/contexts/RoleContext";
 import { OnboardingGuard } from "@/components/layout/OnboardingGuard";
 import { AuthGuard } from "@/components/layout/AuthGuard";
+import { ControlTowerProvider } from "@/contexts/ControlTowerContext";
+import { ControlTowerDrawer } from "@/components/layout/ControlTowerDrawer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,11 +26,14 @@ export default function RootLayout({
       <body className={`${inter.className} min-h-screen flex antialiased bg-background`}>
         <AuthProvider>
           <RoleProvider>
-            <AuthGuard>
-              <OnboardingGuard>
-                {children}
-              </OnboardingGuard>
-            </AuthGuard>
+            <ControlTowerProvider>
+              <AuthGuard>
+                <OnboardingGuard>
+                  {children}
+                  <ControlTowerDrawer />
+                </OnboardingGuard>
+              </AuthGuard>
+            </ControlTowerProvider>
           </RoleProvider>
         </AuthProvider>
       </body>

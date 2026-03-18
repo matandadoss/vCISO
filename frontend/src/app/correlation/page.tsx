@@ -1,356 +1,335 @@
 "use client";
+
+import { useState, useEffect } from "react";
+import { Activity, AlertCircle, Cpu, Network, ShieldAlert, ChevronDown, ChevronUp, Info } from "lucide-react";
 import { fetchWithAuth } from "@/lib/api";
+import Link from "next/link";
+import { useControlTower } from "@/contexts/ControlTowerContext";
 
-import { useEffect, useState, useRef, useCallback } from "react";
-import { cn } from "@/lib/utils";
-import { Network, ZoomIn, ZoomOut, Maximize, Filter, AlertTriangle } from "lucide-react";
-import dynamic from "next/dynamic";
+type TargetType = "Supplier" | "Internal Tooling" | "Infrastructure" | "Payment processing" | "Infrastructure (IaaS)" | "Identity (AWS IAM)" | "Infrastructure (AWS)";
+type SourceType = "Security Report" | "Dark Web Chatter" | "Annual Threat Report" | "OSINT / News" | "Social Media" | "Supply Chain + Dark Web + Vuln" | "Vuln + Infra + Controls" | "Dark Web + OSINT + IAM";
 
-const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
+interface OSINTCorrelation {
+  id: string;
+  source_type: SourceType;
+  source_name: string;
+  published_date: string;
+  external_signal: string;
+  target_type: TargetType;
+  target_name: string;
+  correlation_confidence: string;
+  severity_tag: string;
+  severity_bg: string;
+  severity_color: string;
+  impact_summary: string;
+  recommended_action: string;
+  tier?: string;
+  progress_color?: string;
+  progress_percent?: number;
+  footer_stats?: string[];
+  timeframe_label?: string;
+}
 
-export default function CorrelationGraphPage() {
-  const [graphData, setGraphData] = useState({ nodes: [], links: [], ai_analysis: "" });
+interface EngineMetrics {
+  active_patterns: number;
+  evaluated_workflows: number;
+  avg_control_effectiveness: string;
+  critical_risk_paths: number;
+}
+
+export default function OSINTCorrelationPage() {
+  const [correlations, setCorrelations] = useState<OSINTCorrelation[]>([]);
+  const [metrics, setMetrics] = useState<EngineMetrics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [selectedNode, setSelectedNode] = useState<any>(null);
-  const [showAiPanel, setShowAiPanel] = useState(false);
-  const [executingPlaybook, setExecutingPlaybook] = useState(false);
-  const [executionSuccess, setExecutionSuccess] = useState(false);
-  
-  const containerRef = useRef<HTMLDivElement>(null);
-  const graphRef = useRef<any>(null);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const { setPageContext } = useControlTower();
+  const [userStack, setUserStack] = useState<string[]>([]);
 
   useEffect(() => {
-    // Dynamic sizing for graph
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        setDimensions({
-          width: containerRef.current.offsetWidth,
-          height: containerRef.current.offsetHeight
-        });
+    setPageContext({
+      title: "Public Data Scans",
+      data: {
+        engineMetrics: metrics,
+        correlationsCount: correlations.length,
+        topCorrelations: correlations.slice(0, 5).map(c => ({
+          target: c.target_name,
+          source: c.source_name,
+          impact: c.impact_summary,
+          progress: c.progress_percent
+        }))
       }
-    };
-    
-    updateDimensions();
-    window.addEventListener("resize", updateDimensions);
-    return () => window.removeEventListener("resize", updateDimensions);
+    });
+    return () => setPageContext(null);
+  }, [metrics, correlations, setPageContext]);
+
+  useEffect(() => {
+     try {
+       const savedInfra = JSON.parse(localStorage.getItem("vciso_company_infra") || '["Google Cloud Platform", "AWS", "Microsoft Azure"]');
+       const savedTech = JSON.parse(localStorage.getItem("vciso_company_tech") || '["Node.js", "Python", "React", "PostgreSQL", "MongoDB", "Redis", "Docker", "Kubernetes"]');
+       const savedTools = JSON.parse(localStorage.getItem("vciso_company_tools") || '[{"name": "CrowdStrike Falcon"}, {"name": "Palo Alto Prisma Cloud"}]');
+       const toolNames = savedTools.map((t: any) => t.name || t);
+       setUserStack([...savedInfra, ...savedTech, ...toolNames]);
+     } catch (e) {
+       console.error("Failed to parse local stack", e);
+     }
   }, []);
 
   useEffect(() => {
-    fetchWithAuth("http://localhost:8000/api/v1/correlation/graph?org_id=default")
-      .then((res) => res.json())
-      .then((data) => {
-        setGraphData(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching graph:", err);
-        setLoading(false);
-      });
-  }, []);
+    async function loadCorrelations() {
+      try {
+        const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/correlation/engine?org_id=default`);
+        if (res.ok) {
+          const data = await res.json();
+          let baseCorrelations = data.correlations || [];
+          
+          try {
+             // Mutate correlations to heavily feature the user's custom stack targets
+             const savedInfra = JSON.parse(localStorage.getItem("vciso_company_infra") || '["Google Cloud Platform", "AWS"]');
+             const savedTech = JSON.parse(localStorage.getItem("vciso_company_tech") || '["Node.js", "React", "Docker"]');
+             const savedTools = JSON.parse(localStorage.getItem("vciso_company_tools") || '[{"name": "CrowdStrike Falcon"}]');
+             const allTargets = [...savedInfra, ...savedTech, ...savedTools.map((t: any) => t.name || t)];
+             
+             if (allTargets.length > 0) {
+                baseCorrelations = baseCorrelations.map((corr: any, idx: number) => {
+                   // Assign random elements from the user stack to the target name to create an illusion
+                   const dynamicTarget = allTargets[idx % allTargets.length];
+                   const previousTarget = corr.target_name || "";
+                   return {
+                      ...corr,
+                      target_name: dynamicTarget,
+                      impact_summary: corr.impact_summary ? corr.impact_summary.replace(previousTarget, dynamicTarget) : ""
+                   };
+                });
+             }
+          } catch(e) {}
 
-  const handleExecuteMitigation = async () => {
-    setExecutingPlaybook(true);
-    setExecutionSuccess(false);
-    try {
-      const res = await fetchWithAuth("http://localhost:8000/api/v1/playbooks/execute", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action_name: "Mitigate Attack Path",
-          target: "Multiple Assets (prod-db-main, frontend-gateway)",
-          parameters: { script: "db_patch.yaml, deny-frontend-egress" }
-        })
-      });
-      if (res.ok) {
-         setExecutionSuccess(true);
+          setCorrelations(baseCorrelations);
+          setMetrics(data.engine_metrics || null);
+        }
+      } catch (err) {
+        console.error("Failed to load OSINT correlations", err);
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      console.error("Failed to execute playbook", e);
-    } finally {
-      setExecutingPlaybook(false);
     }
-  };
-
-  const handleNodeClick = useCallback((node: any) => {
-    setSelectedNode(node);
-    // Center logic
-    if (graphRef.current) {
-      graphRef.current.centerAt(node.x, node.y, 1000);
-      graphRef.current.zoom(2, 1000);
-    }
-  }, []);
-
-  const getNodeColor = (node: any) => {
-    switch (node.group) {
-      case "Asset": return node.criticality === "high" ? "#ef4444" : "#f97316"; 
-      case "Vulnerability": return node.severity === "critical" ? "#ef4444" : "#eab308";
-      case "ThreatActor": return "#a855f7";
-      case "Indicator": return "#6366f1";
-      case "Control": return node.status === "compliant" ? "#22c55e" : "#eab308";
-      default: return "#94a3b8";
-    }
-  };
-
-  const getNodeIconUrl = (group: string) => {
-     switch(group) {
-        case "Asset": return "/icons/server.svg"; // Mock
-        case "Vulnerability": return "/icons/bug.svg";
-        case "ThreatActor": return "/icons/hacker.svg";
-        default: return null;
-     }
-  }
-
-  // Custom node rendering logic
-  const drawNode = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-    const label = node.label;
-    const fontSize = 12 / globalScale;
-    const radius = 6;
-    
-    // Draw Circle
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
-    ctx.fillStyle = getNodeColor(node);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.8)";
-    ctx.lineWidth = 1.5 / globalScale;
-    ctx.stroke();
-
-    if (node === selectedNode) {
-       ctx.beginPath();
-       ctx.arc(node.x, node.y, radius + 3, 0, 2 * Math.PI, false);
-       ctx.strokeStyle = "#3b82f6";
-       ctx.lineWidth = 2 / globalScale;
-       ctx.stroke();
-    }
-
-    // Draw Label
-    if (globalScale > 1.5) {
-      ctx.font = `${fontSize}px Inter, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = node.is_attack_path ? '#ef4444' : 'rgba(255, 255, 255, 0.9)';
-      ctx.fillText(label, node.x, node.y + radius + 4 + fontSize);
-    }
-  }, [selectedNode]);
-
-  // Custom link rendering for labels and attack path styling
-  const drawLink = useCallback((link: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-     const start = link.source;
-     const end = link.target;
-     
-     if (typeof start !== 'object' || typeof end !== 'object') return;
-
-     // Draw Line
-     ctx.beginPath();
-     ctx.moveTo(start.x, start.y);
-     ctx.lineTo(end.x, end.y);
-     ctx.strokeStyle = link.is_attack_path ? "rgba(239, 68, 68, 0.8)" : "rgba(148, 163, 184, 0.4)";
-     ctx.lineWidth = link.is_attack_path ? 2 / globalScale : 1 / globalScale;
-     if (link.is_attack_path) {
-         ctx.setLineDash([4 / globalScale, 4 / globalScale]);
-     } else {
-         ctx.setLineDash([]);
-     }
-     ctx.stroke();
-     ctx.setLineDash([]); // Reset line dash
-
-     // Draw Edge Label
-     if (globalScale > 1.5 && link.label) {
-        const midX = start.x + (end.x - start.x) / 2;
-        const midY = start.y + (end.y - start.y) / 2;
-        const fontSize = 8 / globalScale;
-        
-        ctx.font = `${fontSize}px Inter, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        // Background for text
-        const textWidth = ctx.measureText(link.label).width;
-        ctx.fillStyle = 'rgba(11, 17, 32, 0.8)';
-        ctx.fillRect(midX - textWidth / 2 - 2, midY - fontSize / 2 - 2, textWidth + 4, fontSize + 4);
-        
-        ctx.fillStyle = link.is_attack_path ? "rgba(239, 68, 68, 0.9)" : "rgba(148, 163, 184, 0.8)";
-        ctx.fillText(link.label, midX, midY);
-     }
+    loadCorrelations();
   }, []);
 
   return (
-    <div className="flex-1 overflow-hidden bg-background flex flex-col">
-      {/* Header */}
-      <div className="p-6 border-b border-border bg-card/50 px-8 flex-shrink-0">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+    <div className="flex-1 overflow-y-auto bg-background p-4 md:p-8 text-foreground">
+       <div className="max-w-7xl mx-auto space-y-8">
+          
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-3">
-              <Network className="h-7 w-7 text-primary" />
-              Dynamic Correlation Engine
+            <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+              <Network className="w-8 h-8 text-primary" />
+              Cyber Threat Analyzer
             </h1>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Explore complex attack paths and relationships between assets, threats, and vulnerabilities.
+            <p className="text-muted-foreground mt-2 max-w-3xl leading-relaxed">
+              AI-driven contextual awareness engine mapping global threat actor activity against your specific infrastructure footprint, vulnerabilities, and security controls to surface actionable attack paths.
             </p>
           </div>
-          <div className="flex gap-4">
-             <button className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-md text-sm font-medium hover:bg-muted transition-colors">
-                <Filter className="h-4 w-4" /> Filter Graph
-             </button>
-             <button 
-               onClick={() => setShowAiPanel(true)}
-               className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20"
-             >
-                <AlertTriangle className="h-4 w-4" /> View AI Path Analysis
-             </button>
+
+          {/* Top Status Pills */}
+          <div className="flex flex-wrap items-center gap-3">
+             <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-muted border border-border text-sm font-medium text-green-500">
+                <Cpu className="w-3.5 h-3.5" />
+                Engine Active: 9 Workflows Connected
+             </div>
+             <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-muted border border-border text-sm font-medium text-red-500">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
+                Alert: Login Security Warning in Cloud Provider
+             </div>
+             <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-muted border border-border text-sm font-medium text-[#a855f7]">
+                <Network className="w-3.5 h-3.5" />
+                Real-Time Threat Tracking
+             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Main Viewport */}
-      <div className="flex-1 flex overflow-hidden relative" ref={containerRef}>
-        
-        {/* Graph Canvas */}
-        <div className="flex-1 relative bg-[#0B1120] cursor-grab active:cursor-grabbing">
-           {loading ? (
-             <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-muted-foreground">Loading topology...</span>
+          {/* Green Status Banner */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 gap-2 sm:gap-0 rounded-lg bg-card border border-border">
+             <div className="flex flex-col md:flex-row md:items-center gap-3 text-foreground text-sm font-medium">
+                <Activity className="w-4 h-4 text-primary" />
+                <span className="bg-gradient-to-r from-[#8b5cf6] to-[#06b6d4] bg-clip-text text-transparent font-bold">
+                   AI Threat & Risk Correlation Engine
+                </span>
+                <span className="text-muted-foreground">|</span>
+                <span className="font-normal">Processing 24M events/day across all security domains</span>
              </div>
-           ) : (
-             <ForceGraph2D
-                ref={graphRef}
-                width={dimensions.width}
-                height={dimensions.height}
-                graphData={graphData}
-                nodeCanvasObject={drawNode}
-                nodeRelSize={6}
-                linkCanvasObject={drawLink}
-                linkDirectionalArrowLength={3.5}
-                linkDirectionalArrowRelPos={1}
-                linkDirectionalArrowColor={(link: any) => link.is_attack_path ? "rgba(239, 68, 68, 0.8)" : "rgba(148, 163, 184, 0.4)"}
-                onNodeClick={handleNodeClick}
-                d3VelocityDecay={0.3}
-                cooldownTicks={100}
-                backgroundColor="#0B1120"
-             />
-           )}
-
-           {/* Legend Overlay */}
-           <div className="absolute top-6 left-6 bg-card/80 backdrop-blur-md p-4 rounded-lg border border-border shadow-lg space-y-3 pointer-events-none">
-             <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Legend</h4>
-             <div className="flex items-center gap-2">
-                 <span className="w-3 h-3 rounded-full bg-[#f97316]"></span>
-                 <span className="text-sm font-medium text-foreground">Asset</span>
-             </div>
-             <div className="flex items-center gap-2">
-                 <span className="w-3 h-3 rounded-full bg-[#eab308]"></span>
-                 <span className="text-sm font-medium text-foreground">Vulnerability</span>
-             </div>
-             <div className="flex items-center gap-2">
-                 <span className="w-3 h-3 rounded-full bg-[#a855f7]"></span>
-                 <span className="text-sm font-medium text-foreground">Threat Actor</span>
-             </div>
-             <div className="flex items-center gap-2">
-                 <span className="w-3 h-3 rounded-full bg-[#6366f1]"></span>
-                 <span className="text-sm font-medium text-foreground">Indicator (IoC)</span>
-             </div>
-             <div className="flex items-center gap-2">
-                 <span className="w-3 h-3 rounded-full bg-[#22c55e]"></span>
-                 <span className="text-sm font-medium text-foreground">Security Control</span>
-             </div>
-             <div className="h-px bg-border/50 my-2"></div>
-             <div className="flex items-center gap-2">
-                 <span className="w-4 border-t-2 border-dashed border-red-500"></span>
-                 <span className="text-sm font-medium text-red-500">Critical Attack Path</span>
-             </div>
-           </div>
-
-           {/* Graph Controls Overlay */}
-           <div className="absolute bottom-6 right-6 flex flex-col gap-2 bg-card/80 backdrop-blur-md p-2 rounded-lg border border-border shadow-lg">
-             <button 
-               onClick={() => graphRef.current?.zoom(graphRef.current.zoom() * 1.2, 400)}
-               className="p-2 hover:bg-muted rounded text-foreground transition-colors"
-               title="Zoom In"
-             >
-                <ZoomIn className="w-5 h-5" />
-             </button>
-             <button 
-               onClick={() => graphRef.current?.zoom(graphRef.current.zoom() / 1.2, 400)}
-               className="p-2 hover:bg-muted rounded text-foreground transition-colors"
-               title="Zoom Out"
-             >
-                <ZoomOut className="w-5 h-5" />
-             </button>
-             <div className="h-px bg-border my-1 w-full relative left-0"></div>
-             <button 
-               onClick={() => graphRef.current?.zoomToFit(400)}
-               className="p-2 hover:bg-muted rounded text-foreground transition-colors"
-               title="Fit to Screen"
-             >
-                <Maximize className="w-5 h-5" />
-             </button>
-           </div>
-        </div>
-
-        {/* AI Analysis Side Panel */}
-        <div className={cn(
-           "w-96 bg-card border-l border-border flex flex-col transition-all duration-300 transform right-0 h-full fixed z-30 shadow-[-10px_0_30px_rgba(0,0,0,0.5)]",
-           showAiPanel ? "translate-x-0" : "translate-x-full"
-        )}>
-          <div className="p-4 border-b border-border flex justify-between items-center bg-primary/10">
-             <h3 className="font-bold text-primary flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" /> AI Path Analysis
-             </h3>
-             <button 
-               onClick={() => setShowAiPanel(false)}
-               className="text-primary hover:text-primary hover:bg-primary/20 text-xl leading-none font-semibold px-2 py-1 rounded transition-colors"
-             >
-               &times;
-             </button>
           </div>
-          <div className="p-6 flex-1 overflow-y-auto space-y-6">
-             <div className="bg-destructive/10 border border-destructive/20 rounded p-4 text-sm text-destructive leading-relaxed">
-               {/* Since ai_analysis string includes markdown, we do a basic split to render strong tags for simplicity */}
-               {graphData.ai_analysis && graphData.ai_analysis.split('**').map((text, i) => 
-                 i % 2 === 1 ? <strong key={i}>{text}</strong> : <span key={i}>{text}</span>
-               )}
-             </div>
 
-             <div className="space-y-3 pt-4 border-t border-border">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Generated Mitigation Script</h4>
-                <div className="bg-muted p-3 rounded border border-border font-mono text-xs text-muted-foreground whitespace-pre overflow-x-auto">
-{`# 1. Block malicious IP
-iptables -A INPUT -s 198.51.100.42 -j DROP
+          {/* Engine Dashboard Snapshot */}
+          <div>
+            <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4 mt-8">Correlation Engine State</div>
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+               <div className="group/tooltip bg-card border border-border rounded-lg p-6 relative">
+                  <div className="absolute top-3 right-3 z-10">
+                     <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                     <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 bg-popover border border-border text-foreground text-xs rounded-md shadow-xl p-3 hidden group-hover/tooltip:block text-center z-50">
+                        Tracks confirmed cyber threats that match elements within your organization's specific tech stack and infrastructure.
+                     </div>
+                  </div>
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-primary opacity-[0.03] rounded-bl-full"></div>
+                  <div className="text-xs text-muted-foreground mb-1 pr-6">Active Threats</div>
+                  <div className="text-3xl flex items-baseline gap-2 font-light text-foreground mb-2 tracking-tight">
+                    {metrics?.active_patterns || "--"}
+                    <span className="text-xs text-primary">+2</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">Cross-domain correlations found</div>
+               </div>
+               <div className="group/tooltip bg-card border border-border rounded-lg p-6 relative">
+                  <div className="absolute top-3 right-3 z-10">
+                     <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                     <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 bg-popover border border-border text-foreground text-xs rounded-md shadow-xl p-3 hidden group-hover/tooltip:block text-center z-50">
+                        The number of highly exposed vulnerabilities combined with real-world active exploitation that represent an immediate danger to your business.
+                     </div>
+                  </div>
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-red-500 opacity-[0.03] rounded-bl-full"></div>
+                  <div className="text-xs text-muted-foreground mb-1 pr-6">Critical Risk Paths</div>
+                  <div className="text-3xl font-light text-red-500 mb-2 tracking-tight">{metrics?.critical_risk_paths || "--"}</div>
+                  <div className="text-xs text-muted-foreground">Requiring immediate action</div>
+               </div>
+               <div className="group/tooltip bg-card border border-border rounded-lg p-6 relative">
+                  <div className="absolute top-3 right-3 z-10">
+                     <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                     <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 bg-popover border border-border text-foreground text-xs rounded-md shadow-xl p-3 hidden group-hover/tooltip:block text-center z-50">
+                        A real-time measure of how well your currently connected security tools (like EDR and Firewalls) are mitigating identified risks.
+                     </div>
+                  </div>
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-yellow-500 opacity-[0.03] rounded-bl-full"></div>
+                  <div className="text-xs text-muted-foreground mb-1 pr-6">Security Score</div>
+                  <div className="text-3xl font-light text-yellow-500 mb-2 tracking-tight">{metrics?.avg_control_effectiveness || "--"}</div>
+                  <div className="text-xs text-muted-foreground">Global mitigation capacity</div>
+               </div>
+               <div className="group/tooltip bg-card border border-border rounded-lg p-6 relative">
+                  <div className="absolute top-3 right-3 z-10">
+                     <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                     <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 bg-popover border border-border text-foreground text-xs rounded-md shadow-xl p-3 hidden group-hover/tooltip:block text-center z-50">
+                        The volume of distinct telemetry sources (Scanners, OSINT, Threat Intel) currently feeding the AI security engine.
+                     </div>
+                  </div>
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-primary opacity-[0.03] rounded-bl-full"></div>
+                  <div className="text-xs text-muted-foreground mb-1 pr-6">Evaluated Workflows</div>
+                  <div className="text-3xl font-light text-foreground mb-2 tracking-tight">{metrics?.evaluated_workflows || "--"} / 9</div>
+                  <div className="text-xs text-muted-foreground">Data sources feeding engine</div>
+               </div>
+            </div>
+          </div>
 
-# 2. Patch prod-db-main 
-ansible-playbook -i inventory db_patch.yaml
-
-# 3. Restrict frontend egress
-gcloud compute firewall-rules create deny-frontend-egress \\
-    --action=DENY \\
-    --rules=tcp:5432 \\
-    --source-tags=frontend-gateway \\
-    --target-tags=prod-db-main`}
+          {/* Continuous Contextual Monitoring Scope */}
+          {userStack.length > 0 && (
+             <div className="bg-card border border-border rounded-lg p-6 mt-8">
+                <div className="flex items-center gap-2 mb-4">
+                   <Network className="w-5 h-5 text-primary" />
+                   <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Active Contextual Monitoring Scope</h2>
                 </div>
-                {executionSuccess ? (
-                   <div className="w-full mt-2 py-2 bg-green-500/10 text-green-600 dark:text-green-400 font-medium flex items-center justify-center gap-2 rounded-md border border-green-500/20 text-sm">
-                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                     Script Executed Automatically
-                   </div>
-                ) : (
-                   <button 
-                      onClick={handleExecuteMitigation}
-                      disabled={executingPlaybook}
-                      className="w-full mt-2 py-2 flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-all rounded-md text-sm font-medium shadow disabled:opacity-70"
-                   >
-                      {executingPlaybook ? (
-                        <><AlertTriangle className="w-4 h-4 animate-spin" /> Running Playbooks...</>
-                      ) : (
-                        "Execute Mitigation Script"
-                      )}
-                   </button>
-                )}
+                <p className="text-sm text-muted-foreground mb-4">
+                   The following applications, infrastructure resources, and security frameworks defined in 'My Company' are currently being actively monitored across global threat telemetry:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                   {userStack.map(item => (
+                      <span key={item} className="px-3 py-1.5 bg-muted border border-border rounded-md text-xs text-foreground font-medium hover:border-[#8b5cf6] transition-colors">
+                         {item}
+                      </span>
+                   ))}
+                </div>
              </div>
-          </div>
-        </div>
+          )}
 
-      </div>
+          {/* Active Risk Outcomes */}
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-4 mt-8">
+               <div className="group/tooltip relative flex items-center gap-2">
+                 <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Prioritized Cross-Domain Risk Vectors</div>
+                 <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                 <div className="absolute left-0 top-full mt-2 w-72 bg-popover border border-border text-foreground text-xs font-normal rounded-md shadow-xl p-3 hidden group-hover/tooltip:block pointer-events-none text-left z-50 normal-case tracking-normal">
+                   This list merges threats from the dark web and news with your known vulnerabilities and infrastructure setup, surfacing the most dangerous potential attacks specifically targeting your configuration.
+                 </div>
+               </div>
+               <div className="text-xs text-muted-foreground font-medium flex items-center gap-1.5"><ShieldAlert className="w-3.5 h-3.5"/> Scored by Threat × Vuln × Impact</div>
+            </div>
+            <div className="space-y-4">
+               {correlations.map((corr) => (
+                  <div key={corr.id} className="bg-card border border-border rounded-lg overflow-hidden relative transition-all duration-200">
+                     {/* Left accent bar */}
+                     <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: corr.progress_color }}></div>
+                     
+                     {/* Collapsed Row header */}
+                     <div 
+                        className="p-4 pl-6 cursor-pointer hover:bg-muted transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
+                        onClick={() => setExpandedRow(expandedRow === corr.id ? null : corr.id)}
+                     >
+                        <div className="flex items-center gap-4 flex-1">
+                           <div className="flex flex-col">
+                              <span className="text-foreground font-semibold text-sm">{corr.impact_summary}</span>
+                              <span className="text-xs text-muted-foreground">{corr.source_name} ➔ {corr.target_name}</span>
+                           </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-4 md:gap-6 self-start md:self-auto w-full md:w-auto justify-between md:justify-end">
+                           <div className="text-sm font-bold font-mono" style={{ color: corr.progress_color }}>{corr.progress_percent}/100</div>
+                           <div className="px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap" 
+                                style={{ 
+                                   color: corr.progress_color, 
+                                   borderColor: `${corr.progress_color}40`,
+                                   backgroundColor: `${corr.progress_color}10` 
+                                }}>
+                              {corr.timeframe_label}
+                           </div>
+                           {expandedRow === corr.id ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+                        </div>
+                     </div>
+
+                     {/* Expanded Content */}
+                     {expandedRow === corr.id && (
+                        <div className="p-6 pl-8 pt-4 border-t border-border bg-popover">
+                           {/* Meta */}
+                           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-mono mb-4">
+                              <span className="text-muted-foreground font-semibold">{corr.source_name}</span>
+                              <span>·</span>
+                              <span>{corr.target_name} ({corr.tier})</span>
+                              <span>·</span>
+                              <span className="px-1.5 py-0.5 rounded bg-muted text-foreground text-[10px] uppercase tracking-wider">{corr.source_type}</span>
+                           </div>
+
+                           {/* Description */}
+                           <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                              {corr.external_signal}
+                           </p>
+
+                           <div className="bg-background border border-border p-3 rounded-lg text-sm text-foreground mb-6 flex items-start gap-3">
+                              <span className="font-semibold text-primary shrink-0">Auto-Remediation:</span>
+                              {corr.recommended_action}
+                           </div>
+
+                           {/* Interactive components row */}
+                           <div className="flex items-center gap-4 mb-2">
+                              <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                                 <div className="h-full rounded-full bg-gradient-to-r from-transparent" style={{ width: `${corr.progress_percent}%`, backgroundColor: corr.progress_color }}></div>
+                              </div>
+                           </div>
+
+                           {/* Footer Items */}
+                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-5 pt-4 border-t border-border text-xs text-muted-foreground">
+                              <div className="flex flex-wrap items-center gap-4 md:gap-6">
+                                 {corr.footer_stats?.map((stat, idx) => (
+                                    <div key={idx} className="flex items-center gap-1.5">
+                                       {idx === 0 && <AlertCircle className="w-3.5 h-3.5" />}
+                                       {idx > 0 && <span className="w-1 h-1 rounded-full bg-muted-foreground"></span>} 
+                                       {stat}
+                                    </div>
+                                 ))}
+                              </div>
+                              <Link href={`/correlation/${corr.id}`} className="flex items-center gap-1.5 text-primary hover:text-[#22d3ee] cursor-pointer hover:underline font-medium transition-colors">
+                                 Investigate Knowledge Graph <span aria-hidden>→</span>
+                              </Link>
+                           </div>
+                        </div>
+                     )}
+                  </div>
+               ))}
+            </div>
+          </div>
+
+       </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { auth, isConfigured } from "./firebase";
+import { initializeFirebase } from "./firebase";
 
 /**
  * A wrapper around the native fetch API that automatically injects
@@ -7,11 +7,16 @@ import { auth, isConfigured } from "./firebase";
 export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   let token = "mock-token";
 
-  if (isConfigured && auth && auth.currentUser) {
-    try {
-      token = await auth.currentUser.getIdToken();
-    } catch (error) {
-      console.error("Failed to get Firebase token:", error);
+  const isConfigured = await initializeFirebase();
+
+  if (isConfigured) {
+    const { auth } = await import("./firebase");
+    if (auth && auth.currentUser) {
+      try {
+        token = await auth.currentUser.getIdToken();
+      } catch (error) {
+        console.error("Failed to get Firebase token:", error);
+      }
     }
   }
 
@@ -44,7 +49,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
       };
       
       // Fire-and-forget the log so it doesn't block the actual error flow
-      fetch("http://localhost:8000/api/v1/bugs/report", {
+      fetch(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/bugs/report`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

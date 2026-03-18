@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual CISO — Workflow Architecture</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #242836;
+    --border: #2e3348;
+    --accent: #6c5ce7;
+    --accent2: #00cec9;
+    --accent3: #fd79a8;
+    --accent4: #fdcb6e;
+    --accent5: #55efc4;
+    --text: #e4e6ef;
+    --text-dim: #8b8fa3;
+    --danger: #ff6b6b;
+    --warning: #ffa502;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #1a1d27 0%, #2d1b69 50%, #1a1d27 100%);
+    padding: 60px 40px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 50%, rgba(108,92,231,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 50%, rgba(0,206,201,0.06) 0%, transparent 50%);
+    animation: pulse 8s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+  .header h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #6c5ce7, #00cec9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    position: relative;
+    z-index: 1;
+  }
+  .header p {
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    margin-top: 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* NAV */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(15,17,23,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a {
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 14px 16px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .nav a:hover, .nav a.active {
+    color: var(--accent2);
+    border-bottom-color: var(--accent2);
+  }
+
+  /* LAYOUT */
+  .container { max-width: 1400px; margin: 0 auto; padding: 40px 30px; }
+
+  /* SECTION */
+  .section {
+    margin-bottom: 60px;
+    scroll-margin-top: 60px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .section-number {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .card h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card p, .card li { color: var(--text-dim); font-size: 0.92rem; }
+  .card ul { list-style: none; padding-left: 0; }
+  .card ul li {
+    padding: 6px 0;
+    padding-left: 20px;
+    position: relative;
+  }
+  .card ul li::before {
+    content: '›';
+    position: absolute;
+    left: 4px;
+    color: var(--accent2);
+    font-weight: 700;
+  }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  @media (max-width: 900px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* WORKFLOW DIAGRAM */
+  .workflow-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px;
+    margin: 24px 0;
+    overflow-x: auto;
+  }
+  .flow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+  }
+  .flow-node {
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-align: center;
+    min-width: 140px;
+    border: 1px solid;
+  }
+  .flow-arrow {
+    color: var(--text-dim);
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+  .flow-arrow-down {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 1.4rem;
+    margin: 4px 0;
+  }
+
+  /* COLORS */
+  .c-purple { background: rgba(108,92,231,0.15); border-color: rgba(108,92,231,0.4); color: #a29bfe; }
+  .c-teal { background: rgba(0,206,201,0.12); border-color: rgba(0,206,201,0.35); color: #81ecec; }
+  .c-pink { background: rgba(253,121,168,0.12); border-color: rgba(253,121,168,0.35); color: #fd79a8; }
+  .c-yellow { background: rgba(253,203,110,0.12); border-color: rgba(253,203,110,0.35); color: #fdcb6e; }
+  .c-green { background: rgba(85,239,196,0.12); border-color: rgba(85,239,196,0.35); color: #55efc4; }
+  .c-red { background: rgba(255,107,107,0.12); border-color: rgba(255,107,107,0.35); color: #ff6b6b; }
+  .c-blue { background: rgba(116,185,255,0.12); border-color: rgba(116,185,255,0.35); color: #74b9ff; }
+  .c-orange { background: rgba(255,165,2,0.12); border-color: rgba(255,165,2,0.35); color: #ffa502; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* CORRELATION ENGINE */
+  .engine-diagram {
+    background: linear-gradient(135deg, var(--surface) 0%, #1e1535 100%);
+    border: 1px solid rgba(108,92,231,0.3);
+    border-radius: 16px;
+    padding: 40px;
+    margin: 24px 0;
+    position: relative;
+  }
+  .engine-layer {
+    background: rgba(15,17,23,0.5);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 16px 0;
+  }
+  .engine-layer h4 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pipeline-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: var(--surface2);
+    border-radius: 10px;
+    margin: 10px 0;
+  }
+  .step-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .step-content h5 { font-size: 0.92rem; margin-bottom: 4px; }
+  .step-content p { font-size: 0.84rem; color: var(--text-dim); }
+
+  /* TABLE */
+  .data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.88rem;
+  }
+  .data-table th {
+    background: var(--surface2);
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  .data-table th:first-child { border-radius: 8px 0 0 0; }
+  .data-table th:last-child { border-radius: 0 8px 0 0; }
+  .data-table tr:hover td { background: rgba(108,92,231,0.05); }
+
+  /* CALLOUT */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(108,92,231,0.08);
+    padding: 18px 22px;
+    border-radius: 0 10px 10px 0;
+    margin: 16px 0;
+  }
+  .callout.critical {
+    border-left-color: var(--danger);
+    background: rgba(255,107,107,0.08);
+  }
+  .callout p { color: var(--text-dim); font-size: 0.9rem; }
+
+  /* SEPARATOR */
+  .sep {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 50px 0;
+  }
+
+  .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Virtual CISO — Workflow Architecture</h1>
+  <p>Comprehensive security operations workflows with AI-driven threat and risk correlation</p>
+</div>
+
+<nav class="nav">
+  <a href="#overview">Overview</a>
+  <a href="#wf1">Supply Chain</a>
+  <a href="#wf2">Infrastructure</a>
+  <a href="#wf3">Vuln Mgmt</a>
+  <a href="#wf4">Threat Mgmt</a>
+  <a href="#wf5">OSINT</a>
+  <a href="#wf6">Dark Web</a>
+  <a href="#wf7">Controls</a>
+  <a href="#wf8">Gap Analysis</a>
+  <a href="#wf9">Compliance</a>
+  <a href="#correlation">Correlation Engine</a>
+  <a href="#backend">Backend Pipeline</a>
+</nav>
+
+<div class="container">
+
+<!-- ============================================================ -->
+<!-- OVERVIEW -->
+<!-- ============================================================ -->
+<div class="section" id="overview">
+  <div class="section-header">
+    <div class="section-number c-purple">⬡</div>
+    <h2>Architecture Overview</h2>
+  </div>
+
+  <div class="callout">
+    <p><strong>Design Principle:</strong> Every workflow feeds normalized data into a centralized Correlation Engine. The engine uses AI to identify cross-domain risk patterns, prioritize threats by business impact, and generate actionable recommendations — transforming siloed security data into unified situational awareness.</p>
+  </div>
+
+  <div class="workflow-diagram">
+    <div style="text-align:center; margin-bottom: 18px;">
+      <span class="badge c-purple" style="font-size:0.8rem; padding: 6px 14px;">DATA SOURCE WORKFLOWS → NORMALIZATION → CORRELATION ENGINE → DECISION LAYER</span>
+    </div>
+
+    <div class="flow-row">
+      <div class="flow-node c-purple">Supply Chain Risk</div>
+      <div class="flow-node c-teal">Infrastructure Risk</div>
+      <div class="flow-node c-pink">Vuln Management</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-node c-yellow">Threat Management</div>
+      <div class="flow-node c-green">OSINT</div>
+      <div class="flow-node c-red">Dark Web Scanning</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-node c-blue">Controls &amp; Tooling</div>
+      <div class="flow-node c-orange">Gap Analysis</div>
+      <div class="flow-node c-purple">Framework Compliance</div>
+    </div>
+
+    <div class="flow-arrow-down">▼ ▼ ▼</div>
+
+    <div class="flow-row">
+      <div class="flow-node" style="background:rgba(108,92,231,0.3); border-color:rgba(108,92,231,0.6); color:#fff; min-width: 360px; padding: 16px 24px; font-size: 0.95rem;">
+        AI THREAT &amp; RISK CORRELATION ENGINE
+      </div>
+    </div>
+
+    <div class="flow-arrow-down">▼</div>
+
+    <div class="flow-row">
+      <div class="flow-node c-green">Prioritized Risk Register</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-yellow">Executive Dashboards</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-red">Automated Responses</div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ============================================================ -->
+<!-- WF1: SUPPLY CHAIN RISK -->
+<!-- ============================================================ -->
+<div class="section" id="wf1">
+  <div class="section-header">
+    <div class="section-number c-purple">01</div>
+    <h2>Supply Chain Risk Management</h2>
+  </div>
+
+  <p style="color:var(--text-dim); margin-bottom: 24px;">Continuous assessment of third-party, fourth-party, and software supply chain risk posture across all vendor relationships.</p>
+
+  <div class="workflow-diagram">
+    <div class="flow-row">
+      <div class="flow-node c-purple">Vendor Inventory</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-teal">Risk Tiering</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-pink">Assessment</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-yellow">Continuous Monitoring</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-green">Remediation / Accept</div>
+    </div>
+    <div class="flow-arrow-down">▼</div>
+    <div class="flow-row">
+      <div class="flow-node c-red">Feeds → Correlation Engine</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>📥 Inputs</h3>
+      <ul>
+        <li>Vendor/supplier inventory (name, service category, data access level)</li>
+        <li>SBOMs (Software Bill of Materials) for all third-party software</li>
+        <li>SOC 2 / ISO 27001 / penetration test reports from vendors</li>
+        <li>Vendor security questionnaire responses (SIG, CAIQ, custom)</li>
+        <li>External attack surface data on vendor domains and IPs</li>
+        <li>Threat intel feeds mentioning vendor breach indicators</li>
+        <li>Contract SLA and data processing agreement metadata</li>
+        <li>Fourth-party dependency maps (vendor's vendors)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📤 Outputs → Correlation Engine</h3>
+      <ul>
+        <li><strong>Vendor risk scores</strong> — composite rating per vendor (critical/high/medium/low)</li>
+        <li><strong>SBOM vulnerability map</strong> — CVEs inherited through third-party components</li>
+        <li><strong>Concentration risk alerts</strong> — single-point-of-failure vendor dependencies</li>
+        <li><strong>Breach exposure indicators</strong> — vendors with active breach signals</li>
+        <li><strong>Contractual gap flags</strong> — missing DPA clauses, expired certifications</li>
+        <li><strong>Fourth-party risk cascades</strong> — downstream dependency risk chains</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>⚙️ Process Steps</h3>
+    <ul>
+      <li><strong>1. Inventory &amp; Classification</strong> — Maintain a living registry of all vendors. Classify each by data sensitivity (what data they touch), business criticality (impact if unavailable), and access level (network, API, physical).</li>
+      <li><strong>2. Risk Tiering</strong> — Assign each vendor to a tier (Tier 1: critical/high-data-access, Tier 2: moderate, Tier 3: low). Tier determines assessment frequency and depth.</li>
+      <li><strong>3. Initial &amp; Periodic Assessment</strong> — Tier 1: full security assessment (questionnaire + evidence review + pen test results) annually. Tier 2: questionnaire + automated scanning semi-annually. Tier 3: automated external scanning quarterly.</li>
+      <li><strong>4. SBOM Ingestion &amp; CVE Mapping</strong> — Parse SBOMs from vendor software. Cross-reference every component against NVD, OSV, and proprietary vuln databases. Flag critical/high CVEs with no vendor patch timeline.</li>
+      <li><strong>5. Continuous External Monitoring</strong> — Automated scanning of vendor external attack surfaces (SSL posture, open ports, DNS health, data leak detection, darkweb mentions). Feed anomalies into risk score.</li>
+      <li><strong>6. Incident Response Linkage</strong> — When a vendor appears in threat intel or breach databases, auto-escalate. Trigger assessment of exposure scope and contractual notification requirements.</li>
+      <li><strong>7. Remediation Tracking</strong> — Issue risk findings to vendor. Track remediation commitments with deadlines. Escalate overdue items. Accept risk with documented business justification where remediation is not feasible.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ============================================================ -->
+<!-- WF2: INFRASTRUCTURE RISK -->
+<!-- ============================================================ -->
+<div class="section" id="wf2">
+  <div class="section-header">
+    <div class="section-number c-teal">02</div>
+    <h2>Infrastructure Risk (Cloud &amp; On-Prem)</h2>
+  </div>
+
+  <p style="color:var(--text-dim); margin-bottom: 24px;">Continuous posture assessment across AWS, GCP, Azure, and hybrid/on-premise environments — configuration drift, IAM hygiene, network exposure, and resource risk scoring.</p>
+
+  <div class="workflow-diagram">
+    <div class="flow-row">
+      <div class="flow-node c-teal">Asset Discovery</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-purple">Config Assessment</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-pink">IAM Analysis</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-yellow">Network Exposure</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-green">Risk Scoring</div>
+    </div>
+    <div class="flow-arrow-down">▼</div>
+    <div class="flow-row">
+      <div class="flow-node c-red">Feeds → Correlation Engine</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>📥 Inputs</h3>
+      <ul>
+        <li>Cloud provider APIs (AWS Config, GCP Security Command Center, Azure Defender)</li>
+        <li>Infrastructure-as-Code repositories (Terraform, CloudFormation, Pulumi)</li>
+        <li>CSPM (Cloud Security Posture Management) scan results</li>
+        <li>IAM policies, roles, service accounts, and access keys across all providers</li>
+        <li>Network topology — VPCs, security groups, firewall rules, peering configs</li>
+        <li>Container/Kubernetes cluster configs (EKS, GKE, AKS)</li>
+        <li>On-premise asset inventory (CMDB, network scanners)</li>
+        <li>Cloud spend and resource utilization data (orphaned/zombie resources)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📤 Outputs → Correlation Engine</h3>
+      <ul>
+        <li><strong>Asset risk inventory</strong> — every resource with risk score, owner, exposure level</li>
+        <li><strong>Misconfiguration findings</strong> — CIS benchmark violations with severity and blast radius</li>
+        <li><strong>IAM risk map</strong> — over-privileged accounts, stale credentials, lateral movement paths</li>
+        <li><strong>Network exposure report</strong> — publicly exposed services, insecure ingress/egress</li>
+        <li><strong>Drift detection alerts</strong> — IaC vs. actual state divergences</li>
+        <li><strong>Multi-cloud risk comparison</strong> — normalized risk scores across providers</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>⚙️ Process Steps</h3>
+    <ul>
+      <li><strong>1. Multi-Cloud Asset Discovery</strong> — Enumerate all resources across AWS, GCP, Azure via APIs. Correlate with IaC repos to identify unmanaged (shadow) resources. Classify by business function, data sensitivity, and environment (prod/staging/dev).</li>
+      <li><strong>2. Configuration Baseline Assessment</strong> — Evaluate every resource against CIS Benchmarks, provider best practices, and organization-specific policies. Score each finding by exploitability, data exposure risk, and remediation complexity.</li>
+      <li><strong>3. IAM Deep Analysis</strong> — Map all identity-to-permission paths. Identify: over-privileged roles, unused permissions, cross-account trust chains, service account key rotation gaps, and MFA gaps. Build lateral movement graph.</li>
+      <li><strong>4. Network Exposure Mapping</strong> — Analyze all ingress/egress rules. Identify publicly reachable services, unrestricted CIDR blocks, missing WAF/DDoS protections, and VPN/peering misconfigurations. Overlay with known vulnerability data.</li>
+      <li><strong>5. Container &amp; Kubernetes Posture</strong> — Scan cluster configs for RBAC misconfigurations, privileged containers, missing network policies, unpatched node images, and exposed dashboards/APIs.</li>
+      <li><strong>6. Drift Detection &amp; Alerting</strong> — Continuously compare running infrastructure against IaC definitions. Flag manual changes, unauthorized modifications, and configuration regressions. Auto-create remediation tickets.</li>
+      <li><strong>7. Risk Aggregation &amp; Owner Assignment</strong> — Roll up findings into per-resource and per-account risk scores. Map to asset owners. Generate prioritized remediation queues based on business criticality × vulnerability severity × exposure.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ============================================================ -->
+<!-- WF3: VULNERABILITY MANAGEMENT -->
+<!-- ============================================================ -->
+<div class="section" id="wf3">
+  <div class="section-header">
+    <div class="section-number c-pink">03</div>
+    <h2>Vulnerability Management</h2>
+  </div>
+
+  <p style="color:var(--text-dim); margin-bottom: 24px;">End-to-end lifecycle management of vulnerabilities across applications, infrastructure, containers, and code — from discovery through verified remediation.</p>
+
+  <div class="workflow-diagram">
+    <div class="flow-row">
+      <div class="flow-node c-pink">Discovery &amp; Scanning</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-purple">Enrichment</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-teal">Prioritization</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-yellow">Remediation</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-green">Verification</div>
+    </div>
+    <div class="flow-arrow-down">▼</div>
+    <div class="flow-row">
+      <div class="flow-node c-red">Feeds → Correlation Engine</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>📥 Inputs</h3>
+      <ul>
+        <li>Network vulnerability scanners (Nessus, Qualys, Rapid7)</li>
+        <li>Application security testing — SAST, DAST, IAST results</li>
+        <li>Container image scanning (Trivy, Snyk Container, Prisma)</li>
+        <li>Open source dependency scanning (SCA) — Snyk, Dependabot, Grype</li>
+        <li>Cloud-native vulnerability findings (AWS Inspector, GCP SCC)</li>
+        <li>Penetration test and red team findings</li>
+        <li>Bug bounty submissions</li>
+        <li>NVD, EPSS, KEV catalog, vendor advisories</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📤 Outputs → Correlation Engine</h3>
+      <ul>
+        <li><strong>Unified vulnerability inventory</strong> — deduplicated, normalized across all scanners</li>
+        <li><strong>Risk-ranked vulnerability queue</strong> — scored by CVSS × EPSS × asset criticality × exposure</li>
+        <li><strong>Exploit availability flags</strong> — CVEs with known PoC/weaponized exploits</li>
+        <li><strong>Remediation SLA status</strong> — on-track, at-risk, breached per severity tier</li>
+        <li><strong>Attack path overlays</strong> — vulns that chain to create exploitable attack paths</li>
+        <li><strong>Mean-time-to-remediate (MTTR) metrics</strong> — per team, severity, and asset class</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>⚙️ Process Steps</h3>
+    <ul>
+      <li><strong>1. Multi-Source Discovery</strong> — Run scheduled and triggered scans across network, application, container, and code layers. Normalize findings into a common vulnerability data model (CVE, affected asset, severity, evidence).</li>
+      <li><strong>2. Deduplication &amp; Enrichment</strong> — Deduplicate findings across overlapping scanners. Enrich each CVE with: EPSS probability score, KEV catalog status, public exploit availability, vendor patch status, and asset business context.</li>
+      <li><strong>3. Risk-Based Prioritization</strong> — Score = f(CVSS base, EPSS probability, exploit maturity, asset criticality, network exposure, compensating controls). Rank into: Critical (fix in 24h), High (7d), Medium (30d), Low (90d).</li>
+      <li><strong>4. Automated Ticket Generation</strong> — Create remediation tickets in the engineering team's system (Jira, ServiceNow). Include: affected asset, CVE details, fix guidance, priority, SLA deadline, and asset owner assignment.</li>
+      <li><strong>5. Remediation Tracking</strong> — Monitor ticket progress against SLAs. Auto-escalate approaching and breached SLAs to engineering leads and then to CISO. Track exception/risk-acceptance requests with documented business justification.</li>
+      <li><strong>6. Verification Scanning</strong> — After reported fix, trigger targeted rescan to confirm remediation. If vuln persists, reopen ticket with failure evidence. Only close on verified fix.</li>
+      <li><strong>7. Metrics &amp; Trending</strong> — Calculate MTTR, SLA compliance rate, vulnerability density per asset class, and month-over-month trending. Feed into executive dashboards and correlation engine.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ============================================================ -->
+<!-- WF4: THREAT MANAGEMENT -->
+<!-- ============================================================ -->
+<div class="section" id="wf4">
+  <div class="section-header">
+    <div class="section-number c-yellow">04</div>
+    <h2>Threat Management</h2>
+  </div>
+
+  <p style="color:var(--text-dim); margin-bottom: 24px;">Proactive identification, analysis, and response to threats targeting the organization — leveraging threat intelligence, behavioral analytics, and adversary tracking to stay ahead of attackers.</p>
+
+  <div class="workflow-diagram">
+    <div class="flow-row">
+      <div class="flow-node c-yellow">Intel Collection</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-purple">Threat Modeling</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-teal">Detection Engineering</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-pink">Hunt &amp; Validate</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-green">Response &amp; Adapt</div>
+    </div>
+    <div class="flow-arrow-down">▼</div>
+    <div class="flow-row">
+      <div class="flow-node c-red">Feeds → Correlation Engine</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>📥 Inputs</h3>
+      <ul>
+        <li>Commercial threat intel feeds (Recorded Future, Mandiant, CrowdStrike)</li>
+        <li>ISAC/ISAO industry-specific threat sharing</li>
+        <li>MITRE ATT&CK framework TTPs mapped to org's industry</li>
+        <li>SIEM/SOAR alert data and SOC investigation findings</li>
+        <li>EDR/XDR telemetry and behavioral detections</li>
+        <li>Email gateway threat data (phishing campaigns, BEC attempts)</li>
+        <li>Network traffic analytics (DNS, NetFlow, proxy logs)</li>
+        <li>User and entity behavior analytics (UEBA) anomalies</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📤 Outputs → Correlation Engine</h3>
+      <ul>
+        <li><strong>Active threat actor profiles</strong> — groups targeting the org's industry + their TTPs</li>
+        <li><strong>Threat-to-asset mapping</strong> — which assets are targeted by which threat actors</li>
+        <li><strong>IOC feeds</strong> — curated indicators of compromise for detection systems</li>
+        <li><strong>Detection coverage matrix</strong> — ATT&CK techniques with/without detection rules</li>
+        <li><strong>Active campaign alerts</strong> — ongoing campaigns affecting the org or peers</li>
+        <li><strong>Threat trend analysis</strong> — evolving adversary behavior patterns</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>⚙️ Process Steps</h3>
+    <ul>
+      <li><strong>1. Intelligence Collection &amp; Curation</strong> — Aggregate threat data from commercial feeds, open sources, ISACs, and internal telemetry. Filter for relevance to org's industry, geography, technology stack, and threat model.</li>
+      <li><strong>2. Threat Modeling</strong> — Maintain living threat models per critical business process. Map likely adversaries, their TTPs (using MITRE ATT&CK), target assets, and attack paths. Update quarterly and on major architecture changes.</li>
+      <li><strong>3. Detection Engineering</strong> — Write and tune detection rules mapped to ATT&CK techniques. Track detection coverage across the matrix. Prioritize rule development for techniques used by threat actors in step 2. Test rules against purple team exercises.</li>
+      <li><strong>4. Proactive Threat Hunting</strong> — Develop hunt hypotheses based on intel and gaps in detection coverage. Execute hunts using EDR, SIEM, and network data. Document findings — whether threats are discovered or not — to inform detection improvements.</li>
+      <li><strong>5. Incident Linkage &amp; Campaign Tracking</strong> — When incidents occur, attribute to known threat actors or campaigns where possible. Track campaign evolution over time. Share findings back to intel community.</li>
+      <li><strong>6. Response Playbook Maintenance</strong> — Maintain response playbooks for top threat scenarios. Update based on new TTPs, lessons learned from incidents, and changes to the environment.</li>
+      <li><strong>7. Threat Landscape Reporting</strong> — Produce periodic threat landscape briefings for leadership. Highlight changes in threat actor targeting, new TTPs, and recommended defensive investments.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ============================================================ -->
+<!-- WF5: OSINT -->
+<!-- ============================================================ -->
+<div class="section" id="wf5">
+  <div class="section-header">
+    <div class="section-number c-green">05</div>
+    <h2>Open Source Intelligence (OSINT)</h2>
+  </div>
+
+  <p style="color:var(--text-dim); margin-bottom: 24px;">Systematic collection and analysis of publicly available information to identify external threats, brand risks, data exposures, and attack surface elements visible to adversaries.</p>
+
+  <div class="workflow-diagram">
+    <div class="flow-row">
+      <div class="flow-node c-green">Source Identification</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-purple">Collection</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-teal">Analysis &amp; Validation</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-yellow">Alerting</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-pink">Action</div>
+    </div>
+    <div class="flow-arrow-down">▼</div>
+    <div class="flow-row">
+      <div class="flow-node c-red">Feeds → Correlation Engine</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>📥 Inputs</h3>
+      <ul>
+        <li>Public code repositories (GitHub, GitLab, Bitbucket) — leaked secrets, exposed code</li>
+        <li>Paste sites (Pastebin, Ghostbin) — credential dumps, data leaks</li>
+        <li>Social media platforms — employee oversharing, brand impersonation</li>
+        <li>Domain and SSL certificate transparency logs</li>
+        <li>Public cloud storage (S3 buckets, Azure blobs, GCS) — misconfigured access</li>
+        <li>Job postings — technology stack and security tool disclosures</li>
+        <li>Breach databases and credential leak aggregators</li>
+        <li>WHOIS, DNS records, Shodan/Censys scans</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📤 Outputs → Correlation Engine</h3>
+      <ul>
+        <li><strong>Exposed credential alerts</strong> — employee/service credentials found in breaches or pastes</li>
+        <li><strong>Code/secret leak findings</strong> — API keys, tokens, config files in public repos</li>
+        <li><strong>External attack surface map</strong> — all public-facing assets discoverable by adversaries</li>
+        <li><strong>Brand/impersonation threats</strong> — lookalike domains, fake social accounts</li>
+        <li><strong>Technology stack intelligence</strong> — what adversaries can learn about the org's defenses</li>
+        <li><strong>Employee exposure reports</strong> — PII and professional data available for social engineering</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>⚙️ Process Steps</h3>
+    <ul>
+      <li><strong>1. Scope Definition</strong> — Define OSINT collection scope: organization domains, subsidiaries, key personnel, technology keywords, brand terms, IP ranges, and monitored competitors/peers.</li>
+      <li><strong>2. Automated Collection</strong> — Deploy monitoring on: code repos (truffleHog, GitLeaks patterns), paste sites, certificate transparency, domain registrations, social media, cloud storage scanners, and breach databases.</li>
+      <li><strong>3. External Attack Surface Enumeration</strong> — Continuously discover all externally visible assets: subdomains, IPs, open ports, services, technologies. Compare against known asset inventory to identify shadow IT.</li>
+      <li><strong>4. Validation &amp; False Positive Triage</strong> — Validate findings before alerting. Confirm credential leaks are for active accounts. Verify exposed data is legitimate (not honeypots or test data). Classify severity.</li>
+      <li><strong>5. Threat Contextualization</strong> — Correlate OSINT findings with threat intelligence. A leaked credential + an active phishing campaign targeting the org = elevated risk. Link findings to threat actor profiles.</li>
+      <li><strong>6. Remediation Actions</strong> — Credential leaks → force password resets. Secret exposure → rotate keys immediately. Domain impersonation → initiate takedown. Exposed cloud storage → restrict access.</li>
+      <li><strong>7. Continuous Refinement</strong> — Expand monitoring scope based on findings. Add new keywords, domains, and personnel as the organization evolves. Track emerging OSINT sources.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ============================================================ -->
+<!-- WF6: DARK WEB SCANNING -->
+<!-- ============================================================ -->
+<div class="section" id="wf6">
+  <div class="section-header">
+    <div class="section-number c-red">06</div>
+    <h2>Dark Web Scanning &amp; Monitoring</h2>
+  </div>
+
+  <p style="color:var(--text-dim); margin-bottom: 24px;">Focused monitoring of dark web marketplaces, forums, and channels for threats specifically targeting the organization — stolen data, access sales, planned attacks, and credential trading.</p>
+
+  <div class="workflow-diagram">
+    <div class="flow-row">
+      <div class="flow-node c-red">Dark Web Monitoring</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-purple">Mention Detection</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-teal">Threat Assessment</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-yellow">Severity Classification</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-green">Response Actions</div>
+    </div>
+    <div class="flow-arrow-down">▼</div>
+    <div class="flow-row">
+      <div class="flow-node c-red">Feeds → Correlation Engine</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>📥 Inputs</h3>
+      <ul>
+        <li>Dark web marketplace listings (access-as-a-service, data sales)</li>
+        <li>Underground forum posts and private channels (Telegram, Discord, IRC)</li>
+        <li>Ransomware leak sites and victim blogs</li>
+        <li>Credential combo lists and stealer log marketplaces</li>
+        <li>Initial access broker (IAB) listings</li>
+        <li>Exploit marketplaces — zero-day and N-day sales</li>
+        <li>Hacktivism planning channels</li>
+        <li>Dark web paste/data dump sites</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📤 Outputs → Correlation Engine</h3>
+      <ul>
+        <li><strong>Stolen credential alerts</strong> — employee credentials being sold or traded</li>
+        <li><strong>Access sale detections</strong> — network/VPN/RDP access to org being listed for sale</li>
+        <li><strong>Data breach evidence</strong> — org data appearing on leak sites or marketplaces</li>
+        <li><strong>Ransomware targeting signals</strong> — org named on ransomware negotiation or leak sites</li>
+        <li><strong>Threat actor chatter</strong> — discussions mentioning the org, its industry, or key personnel</li>
+        <li><strong>Exploit relevance alerts</strong> — zero-days for technologies in the org's stack</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>⚙️ Process Steps</h3>
+    <ul>
+      <li><strong>1. Monitoring Scope Configuration</strong> — Define keywords, domains, email patterns, executive names, brand terms, and technology identifiers to monitor across dark web sources. Include subsidiary and partner identifiers.</li>
+      <li><strong>2. Continuous Scanning</strong> — Deploy dark web monitoring tools (Flashpoint, DarkOwl, Recorded Future, SpiderFoot) to scan forums, markets, paste sites, leak sites, and messaging channels on a continuous basis.</li>
+      <li><strong>3. Mention Detection &amp; Triage</strong> — When org-related content is detected, auto-classify: (a) direct threat (access sale, data breach), (b) indirect threat (industry targeting, related breach), (c) informational (general chatter). Escalate direct threats immediately.</li>
+      <li><strong>4. Threat Validation</strong> — For direct threats: validate authenticity of claimed data/access. Cross-reference with known breach data, internal logs, and threat intel. Assess if the offering is legitimate or a scam.</li>
+      <li><strong>5. Impact Assessment</strong> — Determine scope: how many credentials, what data types, what access level. Estimate business impact, regulatory notification requirements, and potential adversary capabilities gained.</li>
+      <li><strong>6. Response Coordination</strong> — Credential exposure → mass password reset + MFA enforcement. Access sale → emergency investigation + access revocation. Data breach → legal/compliance notification + IR activation. Threat chatter → elevated monitoring.</li>
+      <li><strong>7. Intelligence Feedback Loop</strong> — Feed dark web findings back into threat management and OSINT workflows. Update threat actor profiles. Refine monitoring keywords based on evolving adversary language and marketplaces.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ============================================================ -->
+<!-- WF7: CONTROLS & TOOLING -->
+<!-- ============================================================ -->
+<div class="section" id="wf7">
+  <div class="section-header">
+    <div class="section-number c-blue">07</div>
+    <h2>Controls, Security Coverage &amp; Tooling</h2>
+  </div>
+
+  <p style="color:var(--text-dim); margin-bottom: 24px;">Inventory and effectiveness assessment of all deployed security controls, tools, and defensive capabilities — ensuring comprehensive coverage across the attack surface.</p>
+
+  <div class="workflow-diagram">
+    <div class="flow-row">
+      <div class="flow-node c-blue">Tool Inventory</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-purple">Coverage Mapping</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-teal">Effectiveness Testing</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-yellow">Health Monitoring</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-green">Optimization</div>
+    </div>
+    <div class="flow-arrow-down">▼</div>
+    <div class="flow-row">
+      <div class="flow-node c-red">Feeds → Correlation Engine</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>📥 Inputs</h3>
+      <ul>
+        <li>Security tool inventory (EDR, SIEM, WAF, DLP, CASB, CSPM, IAM, etc.)</li>
+        <li>Agent deployment and coverage data (% of endpoints, servers, containers)</li>
+        <li>Firewall, WAF, and network security rule sets</li>
+        <li>DLP policy configurations and data classification schemas</li>
+        <li>MFA enrollment and SSO coverage statistics</li>
+        <li>Encryption status — data at rest, in transit, in use</li>
+        <li>Backup and recovery configurations and test results</li>
+        <li>Security awareness training completion and phishing simulation data</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📤 Outputs → Correlation Engine</h3>
+      <ul>
+        <li><strong>Control coverage matrix</strong> — which controls protect which assets/attack vectors</li>
+        <li><strong>Coverage gaps</strong> — assets/segments with missing or degraded controls</li>
+        <li><strong>Tool health status</strong> — agent online rates, policy sync status, license utilization</li>
+        <li><strong>Control effectiveness scores</strong> — based on testing and real-world incident data</li>
+        <li><strong>Defense-in-depth map</strong> — layered controls per attack path</li>
+        <li><strong>Tool overlap/redundancy report</strong> — capabilities shared across multiple tools</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>⚙️ Process Steps</h3>
+    <ul>
+      <li><strong>1. Security Tool Inventory</strong> — Maintain a comprehensive catalog of all security tools: purpose, vendor, deployment scope, license count/usage, owner, and integration points. Include both commercial tools and custom-built capabilities.</li>
+      <li><strong>2. Coverage Mapping</strong> — For each asset class (endpoints, servers, containers, SaaS apps, network segments), document which security controls are deployed. Identify gaps where asset classes lack expected controls.</li>
+      <li><strong>3. ATT&CK-Based Coverage Assessment</strong> — Map every security control to the MITRE ATT&CK techniques it detects or prevents. Generate a heatmap showing defended vs. undefended techniques. Prioritize gaps based on threat model.</li>
+      <li><strong>4. Effectiveness Validation</strong> — Conduct periodic control validation through: purple team exercises, breach and attack simulation (BAS) tools, tabletop exercises, and analysis of controls' performance during real incidents.</li>
+      <li><strong>5. Health &amp; Deployment Monitoring</strong> — Continuously monitor: agent online/offline rates, policy synchronization status, log ingestion volumes (sudden drops = blind spots), and license utilization vs. entitlements.</li>
+      <li><strong>6. Configuration Drift Detection</strong> — Baseline security tool configurations. Alert on policy changes, rule modifications, exclusion additions, and setting changes. Require change approval workflows for security tool configs.</li>
+      <li><strong>7. Optimization &amp; Rationalization</strong> — Identify tool overlap and redundancy. Assess consolidation opportunities. Recommend investments in areas with low coverage or declining effectiveness. Report ROI metrics to leadership.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ============================================================ -->
+<!-- WF8: GAP ANALYSIS -->
+<!-- ============================================================ -->
+<div class="section" id="wf8">
+  <div class="section-header">
+    <div class="section-number c-orange">08</div>
+    <h2>Security Gap Analysis</h2>
+  </div>
+
+  <p style="color:var(--text-dim); margin-bottom: 24px;">Cross-referencing the threat landscape, vulnerability posture, and control coverage to identify where the organization's defenses do not adequately address the risks it faces — the delta between "what we need" and "what we have."</p>
+
+  <div class="workflow-diagram">
+    <div class="flow-row">
+      <div class="flow-node c-orange">Threat Requirements</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-purple">Current State Assessment</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-teal">Gap Identification</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-yellow">Risk Quantification</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-green">Remediation Roadmap</div>
+    </div>
+    <div class="flow-arrow-down">▼</div>
+    <div class="flow-row">
+      <div class="flow-node c-red">Feeds → Correlation Engine</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>📥 Inputs</h3>
+      <ul>
+        <li>Outputs from all other workflows (threat model, vuln data, control coverage, compliance status)</li>
+        <li>Business risk appetite and risk tolerance statements</li>
+        <li>Prior audit findings and remediation status</li>
+        <li>Industry benchmarking data (peer comparison)</li>
+        <li>Insurance requirements and carrier feedback</li>
+        <li>Board/executive risk directives</li>
+        <li>M&A target security assessment data</li>
+        <li>Regulatory change notifications</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📤 Outputs → Correlation Engine</h3>
+      <ul>
+        <li><strong>Gap register</strong> — every identified gap with severity, affected assets, and risk exposure</li>
+        <li><strong>Risk-ranked remediation roadmap</strong> — prioritized initiatives with cost, effort, timeline</li>
+        <li><strong>Quick wins list</strong> — high-impact, low-effort gaps that can be closed immediately</li>
+        <li><strong>Investment justification packages</strong> — business cases for major security investments</li>
+        <li><strong>Residual risk report</strong> — risk remaining after planned remediation</li>
+        <li><strong>Maturity progression tracking</strong> — gap closure trend over time</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>⚙️ Process Steps</h3>
+    <ul>
+      <li><strong>1. Aggregate Cross-Workflow Data</strong> — Pull current state from: threat management (what we face), vulnerability management (what's exposed), controls inventory (what we defend with), compliance (what we must satisfy). This is the foundation — it requires output from every other workflow.</li>
+      <li><strong>2. Define "Required State"</strong> — Based on threat model, risk appetite, regulatory requirements, and industry best practices, define what security capabilities, controls, and maturity levels the org needs. Map to frameworks (NIST CSF, CIS Controls).</li>
+      <li><strong>3. Current vs. Required Comparison</strong> — Systematically compare current state against required state across every domain: identity, endpoint, network, cloud, data, application, incident response, governance. Identify deltas.</li>
+      <li><strong>4. Gap Severity Assessment</strong> — For each gap: what threat actors could exploit it, what assets are at risk, what's the maximum business impact, and what's the likelihood of exploitation given current threat landscape. Use the correlation engine's risk scores.</li>
+      <li><strong>5. Remediation Option Analysis</strong> — For each gap, define 2-3 remediation options ranging from low-cost/compensating to comprehensive/strategic. Estimate cost, effort, timeline, and residual risk for each option.</li>
+      <li><strong>6. Prioritized Roadmap Construction</strong> — Build a phased remediation roadmap: Phase 1 (0-30 days) critical gaps and quick wins, Phase 2 (30-90 days) high-priority, Phase 3 (90-365 days) strategic. Align with budget cycles.</li>
+      <li><strong>7. Continuous Gap Tracking</strong> — Monitor gap closure progress. Re-assess quarterly as threat landscape, business environment, and control posture evolve. Recalibrate roadmap based on new data.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ============================================================ -->
+<!-- WF9: COMPLIANCE -->
+<!-- ============================================================ -->
+<div class="section" id="wf9">
+  <div class="section-header">
+    <div class="section-number c-purple">09</div>
+    <h2>Security Framework Compliance</h2>
+  </div>
+
+  <p style="color:var(--text-dim); margin-bottom: 24px;">Continuous assessment and evidence management for regulatory requirements and security frameworks — automating compliance mapping, evidence collection, and audit readiness across all applicable standards.</p>
+
+  <div class="workflow-diagram">
+    <div class="flow-row">
+      <div class="flow-node c-purple">Framework Mapping</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-teal">Control Mapping</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-pink">Evidence Collection</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-yellow">Gap Identification</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node c-green">Audit Readiness</div>
+    </div>
+    <div class="flow-arrow-down">▼</div>
+    <div class="flow-row">
+      <div class="flow-node c-red">Feeds → Correlation Engine</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>📥 Inputs</h3>
+      <ul>
+        <li>Applicable frameworks — NIST CSF 2.0, SOC 2, ISO 27001, PCI DSS, HIPAA, GDPR, CMMC, etc.</li>
+        <li>Regulatory requirements based on industry and geography</li>
+        <li>Control-to-framework mapping tables (CCM, UCF, or custom)</li>
+        <li>Evidence artifacts — policies, configurations, screenshots, logs, test results</li>
+        <li>Prior audit reports and findings</li>
+        <li>Control effectiveness data from workflow 7 (Controls & Tooling)</li>
+        <li>Policy and procedure document repository</li>
+        <li>Customer and partner contractual security requirements</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>📤 Outputs → Correlation Engine</h3>
+      <ul>
+        <li><strong>Compliance posture scores</strong> — per-framework compliance percentage and maturity level</li>
+        <li><strong>Cross-framework control mapping</strong> — shared controls satisfying multiple frameworks</li>
+        <li><strong>Compliance gap register</strong> — unmet requirements with severity and remediation owner</li>
+        <li><strong>Evidence freshness report</strong> — stale/missing evidence requiring refresh</li>
+        <li><strong>Audit readiness score</strong> — estimated audit outcome based on current evidence state</li>
+        <li><strong>Regulatory change impact assessments</strong> — new requirements mapped to existing controls</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>⚙️ Process Steps</h3>
+    <ul>
+      <li><strong>1. Framework Scope Definition</strong> — Identify all applicable frameworks based on: industry (PCI for payments, HIPAA for healthcare), geography (GDPR for EU data), contracts (SOC 2 for SaaS), and voluntary commitments (ISO 27001). Maintain a regulatory change monitoring process.</li>
+      <li><strong>2. Unified Control Mapping</strong> — Create a unified control framework that maps the org's security controls to requirements across all applicable frameworks. Use a common control ID schema so one control can satisfy multiple framework requirements simultaneously.</li>
+      <li><strong>3. Automated Evidence Collection</strong> — Where possible, automate evidence gathering: CSPM screenshots, access review exports, scan reports, policy version control, training completion records. Store with timestamps and chain of custody.</li>
+      <li><strong>4. Continuous Compliance Monitoring</strong> — Rather than point-in-time assessments, continuously monitor control implementation status. Flag when a control drifts out of compliance (config change, expired certification, overdue review).</li>
+      <li><strong>5. Gap Analysis &amp; Remediation</strong> — Identify framework requirements not met by current controls. Prioritize by: regulatory penalty risk, audit timeline, customer impact, and effort to remediate. Link to gap analysis workflow (#8).</li>
+      <li><strong>6. Audit Preparation &amp; Support</strong> — Before audits: validate all evidence is current, pre-test control effectiveness, prepare responses for common auditor questions. During audits: provide organized evidence packages. After: track findings to closure.</li>
+      <li><strong>7. Reporting &amp; Trend Analysis</strong> — Generate compliance dashboards showing posture across all frameworks. Track maturity progression over time. Report to board on regulatory risk exposure and compliance investment ROI.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ============================================================ -->
+<!-- CORRELATION ENGINE -->
+<!-- ============================================================ -->
+<div class="section" id="correlation">
+  <div class="section-header">
+    <div class="section-number" style="background:rgba(108,92,231,0.3); color:#fff;">★</div>
+    <h2>AI Threat &amp; Risk Correlation Engine</h2>
+  </div>
+
+  <div class="callout critical">
+    <p><strong>The Core Differentiator:</strong> This is the heart of the virtual CISO platform. Every workflow above generates domain-specific intelligence in isolation. The Correlation Engine breaks down these silos, finds cross-domain risk patterns invisible to any single workflow, and produces a unified risk picture that drives prioritized decision-making.</p>
+  </div>
+
+  <div class="engine-diagram">
+    <h3 style="text-align:center; font-size: 1.2rem; margin-bottom: 24px; color: #a29bfe;">Cross-Domain Correlation Architecture</h3>
+
+    <!-- Layer 1: Data Ingestion -->
+    <div class="engine-layer">
+      <h4 style="color: var(--accent2);">⬡ Layer 1 — Data Ingestion &amp; Normalization</h4>
+      <p style="color: var(--text-dim); font-size: 0.88rem; margin-bottom: 16px;">All nine workflow outputs are ingested, deduplicated, and normalized into a common data model using shared taxonomies.</p>
+      <div class="grid-3" style="gap: 10px;">
+        <div class="flow-node c-purple" style="font-size:0.75rem;">Supply Chain Risk Data</div>
+        <div class="flow-node c-teal" style="font-size:0.75rem;">Infrastructure Risk Data</div>
+        <div class="flow-node c-pink" style="font-size:0.75rem;">Vulnerability Data</div>
+        <div class="flow-node c-yellow" style="font-size:0.75rem;">Threat Intel Data</div>
+        <div class="flow-node c-green" style="font-size:0.75rem;">OSINT Data</div>
+        <div class="flow-node c-red" style="font-size:0.75rem;">Dark Web Data</div>
+        <div class="flow-node c-blue" style="font-size:0.75rem;">Controls Data</div>
+        <div class="flow-node c-orange" style="font-size:0.75rem;">Gap Analysis Data</div>
+        <div class="flow-node c-purple" style="font-size:0.75rem;">Compliance Data</div>
+      </div>
+    </div>
+
+    <!-- Layer 2: Correlation Rules -->
+    <div class="engine-layer">
+      <h4 style="color: var(--accent3);">⬡ Layer 2 — Cross-Domain Correlation Rules</h4>
+      <p style="color: var(--text-dim); font-size: 0.88rem; margin-bottom: 16px;">AI-driven pattern matching across datasets to surface compound risks invisible to individual workflows.</p>
+
+      <div class="card" style="background: var(--surface); margin: 12px 0;">
+        <h3 style="font-size: 0.95rem;">Key Correlation Patterns</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Correlation</th>
+              <th>Datasets Combined</th>
+              <th>Risk Insight</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Exploit Path Detection</strong></td>
+              <td>Vuln + Infrastructure + Controls</td>
+              <td>Vulnerability on a public-facing asset with no WAF/EDR coverage = active exploit path</td>
+            </tr>
+            <tr>
+              <td><strong>Threat-Vuln Alignment</strong></td>
+              <td>Threat Intel + Vuln + OSINT</td>
+              <td>Active threat actor using CVE-XXXX + that CVE exists unpatched in our environment = imminent risk</td>
+            </tr>
+            <tr>
+              <td><strong>Supply Chain Cascade</strong></td>
+              <td>Supply Chain + Dark Web + Vuln</td>
+              <td>Vendor breach detected on dark web + inherited SBOM vulns from that vendor = compound exposure</td>
+            </tr>
+            <tr>
+              <td><strong>Detection Blind Spot</strong></td>
+              <td>Threat Intel + Controls + Gap Analysis</td>
+              <td>Top threat actor uses technique T1055 + no detection rule exists + no control covers it = critical gap</td>
+            </tr>
+            <tr>
+              <td><strong>Credential Chain</strong></td>
+              <td>Dark Web + OSINT + Infrastructure IAM</td>
+              <td>Employee credential on dark web + that identity has admin access to production + no MFA = critical chain</td>
+            </tr>
+            <tr>
+              <td><strong>Compliance Impact Path</strong></td>
+              <td>Compliance + Vuln + Infrastructure</td>
+              <td>PCI-scoped server has unpatched critical vuln + failed CIS benchmark = compliance violation with penalty risk</td>
+            </tr>
+            <tr>
+              <td><strong>Lateral Movement Risk</strong></td>
+              <td>Infrastructure IAM + Vuln + Controls</td>
+              <td>Over-privileged service account + vulnerable host it authenticates to + no network segmentation = lateral path</td>
+            </tr>
+            <tr>
+              <td><strong>Brand Attack Convergence</strong></td>
+              <td>OSINT + Dark Web + Threat Intel</td>
+              <td>Lookalike domain registered + phishing kit sold on dark web + industry phishing campaign active = imminent brand attack</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Layer 3: Risk Scoring -->
+    <div class="engine-layer">
+      <h4 style="color: var(--accent4);">⬡ Layer 3 — Unified Risk Scoring &amp; Prioritization</h4>
+      <p style="color: var(--text-dim); font-size: 0.88rem; margin-bottom: 16px;">Every correlated finding receives a composite risk score incorporating threat likelihood, vulnerability exposure, control effectiveness, and business impact.</p>
+
+      <div class="card" style="background: var(--surface);">
+        <h3 style="font-size: 0.95rem;">Composite Risk Score Formula</h3>
+        <div style="background: var(--surface2); padding: 20px; border-radius: 10px; font-family: monospace; font-size: 0.9rem; margin: 12px 0; color: var(--accent2); line-height: 2;">
+          <div><strong>Risk Score</strong> = Threat_Likelihood × Vulnerability_Exposure × (1 - Control_Effectiveness) × Business_Impact</div>
+          <div style="color: var(--text-dim); font-size: 0.82rem; margin-top: 12px;">
+            Where:<br>
+            &nbsp;&nbsp;Threat_Likelihood = f(active threat actors, campaign activity, dark web signals, EPSS)<br>
+            &nbsp;&nbsp;Vulnerability_Exposure = f(CVSS, exploit availability, network exposure, asset count)<br>
+            &nbsp;&nbsp;Control_Effectiveness = f(control coverage %, tool health, detection validation, defense depth)<br>
+            &nbsp;&nbsp;Business_Impact = f(data sensitivity, revenue dependency, regulatory scope, brand exposure)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Layer 4: Output -->
+    <div class="engine-layer">
+      <h4 style="color: var(--accent5);">⬡ Layer 4 — Decision Support &amp; Output</h4>
+      <div class="grid-2" style="gap: 12px; margin-top: 12px;">
+        <div class="card" style="background: var(--surface);">
+          <h3>Executive Outputs</h3>
+          <ul>
+            <li>Unified Risk Dashboard — single pane of glass for all security risk</li>
+            <li>Top 10 Correlated Risks — highest-impact cross-domain findings</li>
+            <li>Board-ready risk summary with trend lines</li>
+            <li>Risk-adjusted security investment recommendations</li>
+            <li>Peer comparison and maturity benchmarking</li>
+          </ul>
+        </div>
+        <div class="card" style="background: var(--surface);">
+          <h3>Operational Outputs</h3>
+          <ul>
+            <li>Prioritized action queue for security teams</li>
+            <li>Automated incident enrichment packets</li>
+            <li>Remediation recommendations with expected risk reduction</li>
+            <li>Control investment recommendations ranked by risk reduction per dollar</li>
+            <li>Automated alerts for critical cross-domain risk events</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ============================================================ -->
+<!-- BACKEND PIPELINE -->
+<!-- ============================================================ -->
+<div class="section" id="backend">
+  <div class="section-header">
+    <div class="section-number" style="background:rgba(0,206,201,0.3); color:#81ecec;">⚙</div>
+    <h2>Backend AI Correlation Pipeline</h2>
+  </div>
+
+  <div class="callout">
+    <p><strong>Purpose:</strong> This section defines the technical backend workflow for how the AI correlation engine actually processes data — from raw ingestion through to correlated insights. This is the "how it works under the hood" reference for engineering and AI/ML teams building the platform.</p>
+  </div>
+
+  <!-- Pipeline Steps -->
+  <div class="engine-diagram" style="background: linear-gradient(135deg, var(--surface) 0%, #0d2b2a 100%); border-color: rgba(0,206,201,0.3);">
+    <h3 style="text-align:center; font-size: 1.15rem; margin-bottom: 28px; color: #81ecec;">AI Correlation Pipeline — Step-by-Step</h3>
+
+    <div class="pipeline-step">
+      <div class="step-num" style="background: var(--accent2); color: #000;">1</div>
+      <div class="step-content">
+        <h5>Data Ingestion &amp; Connector Layer</h5>
+        <p>Standardized connectors pull data from each workflow's output via APIs, webhooks, or scheduled batch jobs. Supported formats: STIX/TAXII for threat intel, SARIF for vuln scanners, CloudEvents for real-time infra alerts, CSV/JSON for vendor assessments. Each connector handles authentication, rate limiting, pagination, and error retry. Raw data lands in a staging data lake (S3/GCS) partitioned by source and timestamp.</p>
+        <div class="tag-row">
+          <span class="badge c-teal">API Connectors</span>
+          <span class="badge c-purple">Webhook Receivers</span>
+          <span class="badge c-yellow">Batch Importers</span>
+          <span class="badge c-green">Schema Validators</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <div class="step-num" style="background: var(--accent2); color: #000;">2</div>
+      <div class="step-content">
+        <h5>Normalization &amp; Entity Resolution</h5>
+        <p>Raw data is transformed into a unified schema. Entity resolution links references to the same asset, identity, or vulnerability across different sources (e.g., an IP address in a vuln scan, an AWS instance ID in infrastructure data, and a hostname in threat intel all resolve to the same asset entity). Uses fuzzy matching, deterministic rules, and ML-based entity linking. Output: a normalized entity graph stored in a graph database (Neo4j / Neptune).</p>
+        <div class="tag-row">
+          <span class="badge c-teal">Schema Mapping</span>
+          <span class="badge c-purple">Entity Dedup</span>
+          <span class="badge c-yellow">Graph Construction</span>
+          <span class="badge c-pink">Identity Resolution</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <div class="step-num" style="background: var(--accent2); color: #000;">3</div>
+      <div class="step-content">
+        <h5>Enrichment &amp; Context Layering</h5>
+        <p>Each entity in the graph is enriched with business context: asset owner, business unit, data classification, environment (prod/dev), regulatory scope (PCI, HIPAA, GDPR), revenue attribution, and SLA requirements. This context layer transforms raw technical findings into business-relevant risk data. Sources: CMDB, HR directory, data classification catalog, financial systems.</p>
+        <div class="tag-row">
+          <span class="badge c-teal">Business Context</span>
+          <span class="badge c-purple">Asset Ownership</span>
+          <span class="badge c-orange">Data Classification</span>
+          <span class="badge c-red">Regulatory Tagging</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <div class="step-num" style="background: var(--accent2); color: #000;">4</div>
+      <div class="step-content">
+        <h5>AI Correlation Engine (Core)</h5>
+        <p>The heart of the system. Runs three correlation mechanisms in parallel:</p>
+        <p><strong>(a) Rule-Based Correlations:</strong> Deterministic rules for known-good correlation patterns (e.g., "IF dark_web_credential_match AND iam_admin_role AND no_mfa THEN critical_alert"). Fast, explainable, low false-positive.</p>
+        <p><strong>(b) Graph-Based Pattern Detection:</strong> Traverses the entity graph to discover multi-hop risk paths (e.g., vendor breach → SBOM vuln → production system → PCI data). Uses graph algorithms (shortest path, centrality, community detection) to find high-risk clusters.</p>
+        <p><strong>(c) LLM-Powered Contextual Analysis:</strong> For nuanced correlations that require understanding context, an LLM analyzes combined findings and generates: natural language risk narratives, non-obvious connection identification, recommended response actions, and executive summary generation. The LLM operates on pre-processed, structured data — not raw feeds.</p>
+        <div class="tag-row">
+          <span class="badge c-red">Rule Engine</span>
+          <span class="badge c-purple">Graph Traversal</span>
+          <span class="badge c-teal">LLM Analysis</span>
+          <span class="badge c-yellow">Parallel Execution</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <div class="step-num" style="background: var(--accent2); color: #000;">5</div>
+      <div class="step-content">
+        <h5>Risk Scoring &amp; Prioritization</h5>
+        <p>Each correlated finding receives a composite score using the formula from Layer 3 above. The scoring model is a weighted ensemble combining: deterministic scoring (CVSS, EPSS, CWSS), ML-based scoring (trained on historical incident data to predict exploitability), and business impact multipliers (from enrichment layer). Scores are normalized to 0-100 and bucketed into Critical (&gt;85), High (70-85), Medium (40-70), Low (&lt;40). Deduplication ensures the same risk isn't counted multiple times from different correlation paths.</p>
+        <div class="tag-row">
+          <span class="badge c-red">Composite Scoring</span>
+          <span class="badge c-orange">ML Prediction</span>
+          <span class="badge c-green">Deduplication</span>
+          <span class="badge c-blue">Bucketing</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <div class="step-num" style="background: var(--accent2); color: #000;">6</div>
+      <div class="step-content">
+        <h5>Alert Routing &amp; Action Orchestration</h5>
+        <p>Critical and high findings trigger automated workflows: create tickets in Jira/ServiceNow with full correlation context, send Slack/Teams alerts to asset owners and security team, enrich existing SIEM/SOAR incidents with correlation data, trigger automated response playbooks for known patterns (e.g., auto-disable compromised credential). Routing rules determine: who gets notified, what channel, what urgency, and whether automated response is warranted.</p>
+        <div class="tag-row">
+          <span class="badge c-purple">Ticket Creation</span>
+          <span class="badge c-yellow">Notification</span>
+          <span class="badge c-red">Auto-Response</span>
+          <span class="badge c-teal">SOAR Integration</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <div class="step-num" style="background: var(--accent2); color: #000;">7</div>
+      <div class="step-content">
+        <h5>Dashboard &amp; Reporting Layer</h5>
+        <p>Real-time dashboards for three audiences: (1) Security Operations — live correlated risk feed, filterable by domain, severity, asset. (2) Security Leadership — risk trending, SLA compliance, program metrics, investment ROI. (3) Executive/Board — business risk posture, peer benchmarking, regulatory exposure, key risk indicators. All dashboards pull from the scored and correlated data store with sub-minute refresh for operational views.</p>
+        <div class="tag-row">
+          <span class="badge c-green">Real-Time Dashboards</span>
+          <span class="badge c-purple">Executive Reports</span>
+          <span class="badge c-orange">Trend Analysis</span>
+          <span class="badge c-blue">API Endpoints</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-step">
+      <div class="step-num" style="background: var(--accent2); color: #000;">8</div>
+      <div class="step-content">
+        <h5>Feedback Loop &amp; Model Improvement</h5>
+        <p>Closed-loop learning: track which correlated findings led to real incidents, which were false positives, and which recommendations were actioned. Feed outcomes back into: (a) correlation rule tuning — adjust weights for rules that produce too many FPs, (b) ML model retraining — improve scoring accuracy based on actual outcomes, (c) LLM prompt refinement — improve narrative quality and recommendation relevance, (d) workflow input tuning — request different/better data from source workflows. Quarterly model performance reviews with precision/recall metrics.</p>
+        <div class="tag-row">
+          <span class="badge c-teal">ML Retraining</span>
+          <span class="badge c-purple">Rule Tuning</span>
+          <span class="badge c-yellow">Prompt Refinement</span>
+          <span class="badge c-pink">Performance Metrics</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Flow Diagram -->
+  <div class="card" style="margin-top: 24px;">
+    <h3>🔄 Pipeline Execution Cadences</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Pipeline Stage</th>
+          <th>Cadence</th>
+          <th>Latency Target</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Data Ingestion</td>
+          <td>Real-time (webhooks) + 15-min batch</td>
+          <td>&lt; 2 minutes for webhooks</td>
+          <td>Critical sources (dark web, threat intel) prioritized for real-time</td>
+        </tr>
+        <tr>
+          <td>Normalization &amp; Entity Resolution</td>
+          <td>Triggered on ingestion</td>
+          <td>&lt; 5 minutes</td>
+          <td>Incremental graph updates, full rebuild nightly</td>
+        </tr>
+        <tr>
+          <td>Enrichment</td>
+          <td>Triggered on new/changed entities</td>
+          <td>&lt; 3 minutes</td>
+          <td>Business context cached, refreshed daily</td>
+        </tr>
+        <tr>
+          <td>Rule-Based Correlation</td>
+          <td>Real-time (stream processing)</td>
+          <td>&lt; 30 seconds</td>
+          <td>CEP engine (Flink/Kafka Streams) for immediate pattern matching</td>
+        </tr>
+        <tr>
+          <td>Graph Correlation</td>
+          <td>Every 15 minutes</td>
+          <td>&lt; 10 minutes</td>
+          <td>Incremental traversal of recently updated subgraphs</td>
+        </tr>
+        <tr>
+          <td>LLM Analysis</td>
+          <td>On-demand + hourly batch</td>
+          <td>&lt; 60 seconds per finding</td>
+          <td>Triggered for Critical/High findings; batch for trend analysis</td>
+        </tr>
+        <tr>
+          <td>Risk Scoring</td>
+          <td>Triggered on new correlations</td>
+          <td>&lt; 5 seconds per finding</td>
+          <td>Lightweight scoring model, near real-time</td>
+        </tr>
+        <tr>
+          <td>Alert Routing</td>
+          <td>Real-time</td>
+          <td>&lt; 15 seconds from scoring</td>
+          <td>Critical findings: immediate. High: within 5 minutes.</td>
+        </tr>
+        <tr>
+          <td>Dashboard Refresh</td>
+          <td>Operational: 1 min. Executive: 1 hour</td>
+          <td>—</td>
+          <td>Materialized views for fast query performance</td>
+        </tr>
+        <tr>
+          <td>Model Retraining</td>
+          <td>Weekly (automated) + monthly (reviewed)</td>
+          <td>—</td>
+          <td>Automated A/B testing of new model versions</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tech Stack -->
+  <div class="card" style="margin-top: 20px;">
+    <h3>🏗️ Recommended Technology Stack</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Technology Options</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Data Lake</td>
+          <td>S3 / GCS + Apache Iceberg</td>
+          <td>Raw and processed data storage with time-travel</td>
+        </tr>
+        <tr>
+          <td>Stream Processing</td>
+          <td>Apache Kafka + Flink</td>
+          <td>Real-time ingestion and rule-based correlation</td>
+        </tr>
+        <tr>
+          <td>Graph Database</td>
+          <td>Neo4j / Amazon Neptune</td>
+          <td>Entity graph for relationship-based correlation</td>
+        </tr>
+        <tr>
+          <td>Analytical Database</td>
+          <td>ClickHouse / BigQuery / Snowflake</td>
+          <td>Fast aggregation queries for dashboards and reporting</td>
+        </tr>
+        <tr>
+          <td>ML Platform</td>
+          <td>MLflow + SageMaker / Vertex AI</td>
+          <td>Model training, versioning, and serving</td>
+        </tr>
+        <tr>
+          <td>LLM Orchestration</td>
+          <td>LangChain / custom + Claude API</td>
+          <td>Contextual analysis, narrative generation, recommendations</td>
+        </tr>
+        <tr>
+          <td>Orchestration</td>
+          <td>Temporal / Apache Airflow</td>
+          <td>Pipeline scheduling and workflow management</td>
+        </tr>
+        <tr>
+          <td>API Layer</td>
+          <td>FastAPI / GraphQL</td>
+          <td>Dashboard and integration API endpoints</td>
+        </tr>
+        <tr>
+          <td>Dashboard</td>
+          <td>Grafana / Superset / Custom React</td>
+          <td>Visualization and interactive exploration</td>
+        </tr>
+        <tr>
+          <td>Alert Routing</td>
+          <td>PagerDuty / Opsgenie + custom</td>
+          <td>Multi-channel notification and escalation</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- FOOTER -->
+<div style="text-align: center; padding: 40px 0; color: var(--text-dim); font-size: 0.85rem;">
+  <p>Virtual CISO Workflow Architecture — Version 1.0</p>
+  <p style="margin-top: 6px;">All workflows converge through the AI Correlation Engine to deliver unified, actionable security intelligence.</p>
+</div>
+
+</div><!-- container -->
+
+</body>
+</html>

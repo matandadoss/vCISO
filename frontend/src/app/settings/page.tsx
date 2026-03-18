@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings, Shield, Cpu, Users, Bell, Key, Rss, ArrowRight, Building } from "lucide-react";
+import { Settings, Shield, Cpu, Users, Bell, Key, Rss, ArrowRight, Building, Database, Zap, Terminal, BookOpen } from "lucide-react";
 import Link from "next/link";
 
 const settingModules = [
@@ -13,7 +13,7 @@ const settingModules = [
   },
   {
     title: "Threat Intelligence Feeds",
-    description: "Manage inbound IoC streams, vulnerability feeds, and subscription status.",
+    description: "Manage inbound threat signal streams, vulnerability feeds, and subscription status.",
     icon: <Rss className="h-6 w-6 text-orange-500" />,
     href: "/settings/threat-feeds",
     status: "Active"
@@ -30,6 +30,13 @@ const settingModules = [
     description: "Connect external SaaS platforms, cloud providers, and ticketing systems.",
     icon: <Key className="h-6 w-6 text-purple-500" />,
     href: "/settings/integrations",
+    status: "Active"
+  },
+  {
+    title: "Data Workflows",
+    description: "Manage automated data ingestion connectors and synchronization schedules.",
+    icon: <Database className="h-6 w-6 text-sky-500" />,
+    href: "/settings/workflows",
     status: "Active"
   },
   {
@@ -52,6 +59,20 @@ const settingModules = [
     icon: <Building className="h-6 w-6 text-indigo-500" />,
     href: "/settings/subscription",
     status: "Active"
+  },
+  {
+    title: "Playbooks (SOAR)",
+    description: "Configure automated response actions, security orchestrations, and workflow bindings.",
+    icon: <Zap className="h-6 w-6 text-yellow-500" />,
+    href: "/playbooks",
+    status: "Active"
+  },
+  {
+    title: "Audit Trail",
+    description: "Review comprehensive system logs, administrative actions, and compliance events.",
+    icon: <Terminal className="h-6 w-6 text-gray-500" />,
+    href: "/audit-trail",
+    status: "Active"
   }
 ];
 
@@ -65,10 +86,10 @@ export default function SettingsHubPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
               <Settings className="h-8 w-8 text-primary" />
-              Settings
+              Control Panel
             </h1>
             <p className="text-muted-foreground mt-2 text-lg">
-              Central configuration hub for the Virtual CISO platform.
+              Central configuration and operations hub for the Virtual CISO platform.
             </p>
           </div>
         </div>

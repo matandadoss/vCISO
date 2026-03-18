@@ -2,7 +2,7 @@
 import { fetchWithAuth } from "@/lib/api";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, ShieldAlert, FileWarning, Clock } from "lucide-react";
+import { AlertTriangle, ShieldAlert, FileWarning, Clock, Info } from "lucide-react";
 
 interface AttentionItem {
   id: string;
@@ -20,7 +20,7 @@ export function WhatNeedsAttention() {
   useEffect(() => {
     async function fetchAttentionItems() {
       try {
-        const response = await fetchWithAuth('http://localhost:8000/api/v1/dashboard/attention?org_id=default');
+        const response = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/dashboard/attention?org_id=default`);
         if (!response.ok) {
           throw new Error('Failed to fetch attention items');
         }
@@ -60,8 +60,14 @@ export function WhatNeedsAttention() {
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
+    <div className="relative bg-card border border-border rounded-lg p-6 flex flex-col h-full">
+      <div className="absolute top-4 right-4 group/tooltip z-10">
+        <Info className="w-4 h-4 text-muted-foreground cursor-help opacity-50 hover:opacity-100 transition-opacity" />
+        <div className="absolute right-0 top-full mt-2 w-56 bg-zinc-900 border border-zinc-800 text-zinc-100 text-xs rounded shadow-lg p-3 hidden group-hover/tooltip:block pointer-events-none text-left font-normal leading-relaxed z-[60]">
+          An automated to-do list prioritizing the most urgent security tasks that require your review or action today.
+        </div>
+      </div>
+      <div className="flex items-center justify-between mb-4 pr-6">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           What Needs My Attention Today
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-destructive/10 text-[10px] font-medium text-destructive">

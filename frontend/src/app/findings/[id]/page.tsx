@@ -66,7 +66,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
   useEffect(() => {
     async function fetchFinding() {
       try {
-        const res = await fetchWithAuth(`http://localhost:8000/api/v1/findings/${unwrappedParams.id}?org_id=default`);
+        const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/findings/${unwrappedParams.id}?org_id=default`);
         if (!res.ok) throw new Error("Failed to fetch finding details");
         const data = await res.json();
         setFinding(data);
@@ -90,7 +90,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
       if (action === "accept-risk") body = { justification: "Mitigating controls in place via WAF.", expiration_date: "2024-12-31" };
       if (action === "ticket") body = { integration: "jira", priority: "High" };
 
-      const res = await fetchWithAuth(`http://localhost:8000/api/v1/findings/${finding.id}/${action}?org_id=default`, {
+      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/findings/${finding.id}/${action}?org_id=default`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -316,7 +316,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
               </h3>
               <div className="space-y-2">
                 {finding.mitre_attack.map(mitre => (
-                  <div key={mitre.id} className="flex items-center justify-between p-2 rounded-md border border-border/50 hover:bg-accent transition-colors cursor-help">
+                  <div key={mitre.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 p-2 rounded-md border border-border/50 hover:bg-accent transition-colors cursor-help">
                     <div className="flex flex-col">
                       <span className="text-xs font-semibold text-foreground">{mitre.id}</span>
                       <span className="text-xs text-muted-foreground line-clamp-1" title={mitre.name}>{mitre.name}</span>
@@ -338,8 +338,8 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
                 <div className="space-y-3">
                   {finding.compliance_controls.map((ctrl, idx) => (
                     <div key={idx} className="flex flex-col gap-1 p-3 rounded-md border border-border/50 bg-accent/20">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-foreground bg-background px-2 py-0.5 rounded border">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+                        <span className="text-xs font-bold text-foreground bg-background px-2 py-0.5 rounded border w-fit">
                           {ctrl.framework}
                         </span>
                         <span className="text-xs font-mono text-muted-foreground">{ctrl.control}</span>

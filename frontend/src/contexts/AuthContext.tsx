@@ -6,14 +6,20 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
-  signOut as firebaseSignOut
+  signOut as firebaseSignOut,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail
 } from "firebase/auth";
-import { auth, isConfigured } from "@/lib/firebase";
+import { initializeFirebase } from "@/lib/firebase";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, pass: string) => Promise<void>;
+  signUpWithEmail: (email: string, pass: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   getToken: () => Promise<string | null>;
   isMock: boolean;
@@ -23,6 +29,9 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   signInWithGoogle: async () => {},
+  signInWithEmail: async () => {},
+  signUpWithEmail: async () => {},
+  resetPassword: async () => {},
   signOut: async () => {},
   getToken: async () => null,
   isMock: false,
@@ -33,29 +42,48 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [configured, setConfigured] = useState(false);
 
   useEffect(() => {
-    // If Firebase isn't configured, we just finish loading and stay unauthenticated
-    // until the user clicks the "Bypass Login" button.
-    if (!isConfigured) {
-       setLoading(false);
-       return;
-    }
+    let unsubscribe: any = null;
 
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
+    const initAuth = async () => {
+      const isSuccess = await initializeFirebase();
+      setConfigured(isSuccess);
 
-    return () => unsubscribe();
+      if (!isSuccess) {
+        // App running without Firebase keys
+        setLoading(false);
+        return;
+      }
+
+      // Dynamic import to get the highly-initialized auth instance safely
+      const { auth } = await import("@/lib/firebase");
+      unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        setUser(currentUser);
+        setLoading(false);
+      });
+    };
+
+    initAuth();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const signInWithGoogle = async () => {
     try {
-      if (!isConfigured) {
-        setUser({ uid: "mock-123", email: "demo@vciso.local", displayName: "Demo User", getIdToken: async () => "mock-token" } as any);
+      if (!configured) {
+        // In local developer mode ONLY!
+        if (process.env.NODE_ENV !== "production") {
+          setUser({ uid: "mock-123", email: "demo@vciso.local", displayName: "Demo User", getIdToken: async () => "mock-token" } as any);
+        } else {
+           throw new Error("Firebase Authentication is strictly required in production domains.");
+        }
         return;
       }
+      const { auth } = await import("@/lib/firebase");
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (error) {
@@ -64,12 +92,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signUpWithEmail = async (email: string, pass: string) => {
+    try {
+      if (!configured) {
+        if (process.env.NODE_ENV !== "production") {
+          setUser({ uid: "mock-123", email, displayName: "Demo User", getIdToken: async () => "mock-token" } as any);
+        } else {
+           throw new Error("Firebase Authentication is strictly required in production domains.");
+        }
+        return;
+      }
+      const { auth } = await import("@/lib/firebase");
+      await createUserWithEmailAndPassword(auth, email, pass);
+    } catch (error) {
+      console.error("Error signing up with email", error);
+      throw error;
+    }
+  };
+
+  const signInWithEmail = async (email: string, pass: string) => {
+    try {
+      if (!configured) {
+        if (process.env.NODE_ENV !== "production") {
+          setUser({ uid: "mock-123", email, displayName: "Demo User", getIdToken: async () => "mock-token" } as any);
+        } else {
+           throw new Error("Firebase Authentication is strictly required in production domains.");
+        }
+        return;
+      }
+      const { auth } = await import("@/lib/firebase");
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (error) {
+      console.error("Error signing in with email", error);
+      throw error;
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      if (!configured) {
+        return; // Mock success
+      }
+      const { auth } = await import("@/lib/firebase");
+      await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+      console.error("Error resetting password", error);
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     try {
-      if (!isConfigured) {
+      if (!configured) {
         setUser(null);
         return;
       }
+      const { auth } = await import("@/lib/firebase");
       await firebaseSignOut(auth);
     } catch (error) {
       console.error("Error signing out", error);
@@ -87,7 +165,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut, getToken, isMock: !isConfigured }}>
+    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword, signOut, getToken, isMock: !configured }}>
       {children}
     </AuthContext.Provider>
   );

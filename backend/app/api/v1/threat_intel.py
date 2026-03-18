@@ -60,6 +60,31 @@ async def list_threat_actors(
         org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
         
     stmt = select(ThreatActor).where(ThreatActor.org_id == org_uuid)
+    
+    # Check if we need to auto-seed threat actors
+    check_stmt = select(func.count()).select_from(stmt.subquery())
+    existing_count = (await db.execute(check_stmt)).scalar() or 0
+    
+    if existing_count == 0:
+        default_actors = [
+            ("Scattered Spider", "Financially motivated threat group known for social engineering attacks against IT helpdesks.", ThreatSophistication.advanced),
+            ("FIN7", "Cybercriminal group primarily targeting the retail and hospitality sectors to steal financial data.", ThreatSophistication.intermediate),
+            ("Lazarus Group", "State-sponsored actor associated with cyber espionage and financial theft.", ThreatSophistication.advanced)
+        ]
+        
+        for name, desc, soph in default_actors:
+            new_actor = ThreatActor(
+                id=uuid.uuid4(),
+                org_id=org_uuid,
+                name=name,
+                description=desc,
+                sophistication=soph,
+                active=True,
+                first_seen=datetime.utcnow()
+            )
+            db.add(new_actor)
+        await db.commit()
+    
     if active is not None:
         stmt = stmt.where(ThreatActor.active == active)
         
@@ -162,32 +187,131 @@ async def list_dark_web_alerts(
 @router.get("/breach-reports", response_model=dict)
 async def list_breach_reports(
     org_id: str,
-    limit: int = 50,
+    limit: int = 4,
     offset: int = 0
 ):
-    reports = [
+    all_reports = [
         {
-            "id": str(uuid.uuid4()),
+            "id": "br-1",
+            "title": "Change Healthcare Ransomware Incident (2024)",
+            "date": "2024-02-21",
+            "summary": "ALPHV/BlackCat deployed ransomware on Change Healthcare's systems, causing nationwide pharmacy and hospital billing outages.",
+            "threat_actor": "ALPHV/BlackCat",
+            "industry": "Healthcare",
+            "simulation_query": "Simulate the ALPHV Change Healthcare ransomware attack on our network."
+        },
+        {
+            "id": "br-2",
+            "title": "Snowflake Credential Stuffing Campaign (2024)",
+            "date": "2024-05-15",
+            "summary": "UNS and UNC5537 compromised hundreds of Snowflake customer environments using stolen credentials bypassing accounts lacking MFA.",
+            "threat_actor": "UNC5537",
+            "industry": "Cloud/Data Services",
+            "simulation_query": "Simulate Snowflake MFA bypass and unchecked credential stuffing."
+        },
+        {
+            "id": "br-3",
+            "title": "AnyDesk Production Network Breach (2024)",
+            "date": "2024-02-02",
+            "summary": "Attackers breached AnyDesk's production systems, stealing source code and private code signing keys.",
+            "threat_actor": "Unknown",
+            "industry": "Software",
+            "simulation_query": "Simulate supply chain attack via compromised code signing certificates."
+        },
+        {
+            "id": "br-4",
+            "title": "Microsoft Midnight Blizzard Exchange Breach (2024)",
+            "date": "2024-01-12",
+            "summary": "Russian state-sponsored actor used a password spray attack to compromise a legacy, non-MFA test tenant account, eventually accessing corporate email accounts including senior leadership.",
+            "threat_actor": "Midnight Blizzard (APT29)",
+            "industry": "Technology",
+            "simulation_query": "Simulate password spraying against legacy identity tenants."
+        },
+        {
+            "id": "br-5",
+            "title": "Ivanti Connect Secure Zero-Days (2024)",
+            "date": "2024-01-10",
+            "summary": "Multiple threat actors, including suspected Chinese state-sponsored groups, exploited zero-day vulnerabilities in Ivanti VPN devices to bypass authentication.",
+            "threat_actor": "Multiple APTs",
+            "industry": "Networking",
+            "simulation_query": "Simulate edge VPN authentication bypass exploits."
+        },
+        {
+            "id": "br-6",
+            "title": "Okta Support System Breach (2023)",
+            "date": "2023-10-20",
+            "summary": "Threat actor gained access to Okta's customer support system using stolen credentials and stole HAR files containing session tokens of 134 customers.",
+            "threat_actor": "Unknown",
+            "industry": "Identity Provider",
+            "simulation_query": "Simulate session token theft and replay from support environments."
+        },
+        {
+            "id": "br-7",
             "title": "MGM Resorts Ransomware Attack (2023)",
             "date": "2023-09-11",
             "summary": "Scattered Spider compromised Okta Identity provider via social engineering the IT Helpdesk, leading to lateral movement, vSphere compromise, and ransomware deployment.",
             "threat_actor": "Scattered Spider",
             "industry": "Hospitality",
-            "simulation_query": "Simulate the 2023 MGM Ransomware Attack against our architecture to see if we are vulnerable."
+            "simulation_query": "Simulate the 2023 MGM Ransomware Attack against our architecture."
         },
         {
-            "id": str(uuid.uuid4()),
-            "title": "Target Supply Chain Breach (2013)",
-            "date": "2013-11-27",
-            "summary": "Attackers stole network credentials from a third-party HVAC vendor, gaining access to the corporate network and subsequently laterally moving to the Point of Sale (POS) network.",
-            "threat_actor": "Financially Motivated",
-            "industry": "Retail",
-            "simulation_query": "Simulate the Target supply chain HVAC breach against our architecture."
+            "id": "br-8",
+            "title": "Caesars Entertainment Ransomware (2023)",
+            "date": "2023-09-07",
+            "summary": "Similar to MGM, Scattered Spider used social engineering against an outsourced IT support vendor to breach the network and demand a massive ransom.",
+            "threat_actor": "Scattered Spider",
+            "industry": "Hospitality",
+            "simulation_query": "Simulate outsourced IT vendor social engineering compromise."
+        },
+        {
+            "id": "br-9",
+            "title": "MOVEit Transfer Mass Exploitation (2023)",
+            "date": "2023-05-27",
+            "summary": "cl0p ransomware gang exploited a zero-day SQL injection vulnerability in Progress MOVEit Transfer to steal data from thousands of organizations globally.",
+            "threat_actor": "cl0p",
+            "industry": "Software",
+            "simulation_query": "Simulate unauthenticated SQL injection on managed file transfer edge devices."
+        },
+        {
+            "id": "br-10",
+            "title": "3CX Supply Chain Attack (2023)",
+            "date": "2023-03-22",
+            "summary": "North Korean hackers successfully compromised the 3CX desktop app via an earlier supply chain breach of Trading Technologies, trojanizing the application update servers.",
+            "threat_actor": "Lazarus Group",
+            "industry": "Telecommunications",
+            "simulation_query": "Simulate nested supply chain software update trojan."
+        },
+        {
+            "id": "br-11",
+            "title": "LastPass Source Code and Vault Breach (2022)",
+            "date": "2022-08-11",
+            "summary": "Threat actor gained access to LastPass's developer environment, stole source code, and subsequently used it to target a senior DevOps engineer and steal encrypted customer password vaults.",
+            "threat_actor": "Unknown",
+            "industry": "Security",
+            "simulation_query": "Simulate developer environment breach and subsequent employee targeting."
+        },
+        {
+            "id": "br-12",
+            "title": "SolarWinds Sunburst (2020)",
+            "date": "2020-12-13",
+            "summary": "Russian intelligence injected malware into SolarWinds Orion updates, compromising thousands of government and enterprise networks globally.",
+            "threat_actor": "APT29",
+            "industry": "IT Management",
+            "simulation_query": "Simulate IT monitoring software supply chain compromise."
         }
     ]
+    
+    # Sort descending by date to ensure the most recent is always first
+    all_reports.sort(key=lambda x: x["date"], reverse=True)
+    
+    paginated_reports = all_reports[offset:offset+limit]
+    
     return {
-        "items": reports,
-        "total": len(reports)
+        "items": paginated_reports,
+        "total": len(all_reports),
+        "limit": limit,
+        "offset": offset,
+        "has_more": offset + limit < len(all_reports)
     }
 
 from app.db.session import get_db

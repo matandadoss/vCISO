@@ -10,17 +10,17 @@ steps:
 
   # Step 2: Build Docker images
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/vciso/backend:${SHORT_SHA}', './backend']
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/vciso/backend:${_SHORT_SHA}', './backend']
 
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/vciso/frontend:${SHORT_SHA}', './frontend']
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/vciso/frontend:${_SHORT_SHA}', './frontend']
 
   # Step 3: Push to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/vciso/backend:${SHORT_SHA}']
+    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/vciso/backend:${_SHORT_SHA}']
 
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/vciso/frontend:${SHORT_SHA}']
+    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/vciso/frontend:${_SHORT_SHA}']
 
   # Step 4: Deploy to Cloud Run (Blue-Green) - Stub implementation
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -35,7 +35,9 @@ steps:
   # Step 6: Notify Slack
   - name: 'ubuntu'
     entrypoint: 'bash'
-    args: ['-c', 'echo "Notifying Slack..."']
+    args: ['-c', 'echo "Notifying Slack for ${_ENV}..."']
 
 substitutions:
   _REGION: us-central1
+  _ENV: dev
+  _SHORT_SHA: latest

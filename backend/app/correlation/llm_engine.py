@@ -139,7 +139,7 @@ class LLMCorrelationEngine:
 
         request = AIRequest(
             system_prompt=load_prompt("vciso_chat_system"),
-            user_prompt=self._build_chat_prompt(question, db_context),
+            user_prompt=self._build_chat_prompt(question, db_context, context.page_context),
             tier=classification.tier,
             metadata={"workflow": "chat"},
         )
@@ -190,5 +190,7 @@ class LLMCorrelationEngine:
     async def _load_context(self, context_needed: list, org_id: str):
         return {"stub": True}
 
-    def _build_chat_prompt(self, question: str, db_context: dict) -> str:
+    def _build_chat_prompt(self, question: str, db_context: dict, page_context: Optional[str] = None) -> str:
+        if page_context:
+            return f"Context: The user is currently reviewing the following page data:\n{page_context}\n\nUser Question: {question}"
         return question

@@ -3,18 +3,29 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { ShieldAlert, LogIn, AlertCircle } from "lucide-react";
+import { ShieldAlert, LogIn, AlertCircle, Mail, Key } from "lucide-react";
 import { isConfigured } from "@/lib/firebase";
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export default function LoginPage() {
-  const { user, signInWithGoogle, loading, isMock } = useAuth();
+  const { user, signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword, loading, isMock } = useAuth();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [mode, setMode] = useState<"signin" | "signup" | "reset">("signin");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   useEffect(() => {
-    // If the user becomes authenticated, redirect to the dashboard
+    // If the user becomes authenticated, determine where to route them
     if (!loading && user) {
-      router.push("/");
+      const hasCompletedSetup = localStorage.getItem(`vCISO_Setup_${user.uid}`);
+      if (hasCompletedSetup === "true") {
+        router.push("/"); // Standard dashboard
+      } else {
+        router.push("/setup"); // First-time onboarding flow
+      }
     }
   }, [user, loading, router]);
 
@@ -25,6 +36,36 @@ export default function LoginPage() {
       // On success, useEffect above will handle the redirect
     } catch (err: any) {
       setError(err.message || "Failed to sign in. Please try again.");
+    }
+  };
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+    if (!email) {
+      setError("Please enter your email.");
+      return;
+    }
+    if (mode !== "reset" && !password) {
+      setError("Please enter your password.");
+      return;
+    }
+    if ((mode === "signup" || mode === "reset") && !turnstileToken && process.env.NODE_ENV === "production") {
+      setError("Please complete the security challenge.");
+      return;
+    }
+    try {
+      setError(null);
+      if (mode === "signup") {
+        await signUpWithEmail(email, password);
+      } else if (mode === "signin") {
+        await signInWithEmail(email, password);
+      } else if (mode === "reset") {
+        await resetPassword(email);
+        setMessage("Password reset email sent (if account exists).");
+      }
+    } catch (err: any) {
+      setError(err.message || `Failed to ${mode}. Please try again.`);
     }
   };
 
@@ -68,8 +109,12 @@ export default function LoginPage() {
         <div className="bg-card py-10 px-6 sm:px-10 border border-border rounded-xl shadow-2xl backdrop-blur-sm">
           
           <div className="mb-6 flex flex-col items-center text-center">
-             <h3 className="text-xl font-bold text-foreground mb-1">Authenticate</h3>
-             <p className="text-sm text-muted-foreground">Sign in to access your organization's security dashboard.</p>
+             <h3 className="text-xl font-bold text-foreground mb-1">
+               {mode === "signin" ? "Authenticate" : mode === "signup" ? "Create Account" : "Reset Password"}
+             </h3>
+             <p className="text-sm text-muted-foreground">
+               {mode === "reset" ? "Enter your email to receive a reset link." : "Sign in to access your organization's security dashboard."}
+             </p>
           </div>
 
           {!isConfigured && (
@@ -87,13 +132,80 @@ export default function LoginPage() {
               {error}
             </div>
           )}
+          {message && (
+            <div className="mb-6 p-3 bg-green-500/10 border border-green-500/20 rounded-md text-green-600 dark:text-green-400 text-sm text-center">
+              {message}
+            </div>
+          )}
 
           <div className="space-y-4">
+            <form onSubmit={handleEmailAuth} className="space-y-4">
+              <div>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                     <Mail className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent sm:text-sm"
+                    placeholder="Email address"
+                    required
+                  />
+                </div>
+              </div>
+              {mode !== "reset" && (
+                <div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                       <Key className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="block w-full pl-10 pr-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent sm:text-sm"
+                      placeholder="Password"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {(mode === "signup" || mode === "reset") && (
+                <div className="flex justify-center my-4">
+                   <Turnstile 
+                     siteKey="1x00000000000000000000AA" 
+                     onSuccess={(token) => setTurnstileToken(token)}
+                   />
+                </div>
+              )}
+              
+              <button
+                type="submit"
+                className="w-full flex justify-center items-center gap-3 py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background"
+              >
+                 <LogIn className="w-5 h-5" />
+                 {mode === "signin" ? "Sign In" : mode === "signup" ? "Create Account" : "Send Reset Link"}
+              </button>
+            </form>
+
+            <div className="relative pt-2 pb-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-card text-muted-foreground">Or</span>
+              </div>
+            </div>
+
              <button
+                type="button"
                 onClick={handleSignIn}
-                className="w-full flex justify-center items-center gap-3 py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background"
+                className="w-full flex justify-center items-center gap-3 py-2.5 px-4 border border-border rounded-lg shadow-sm text-sm font-medium text-foreground bg-background hover:bg-muted/50 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background"
              >
-                {isConfigured ? (
+                 {isConfigured ? (
                   <>
                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -106,10 +218,33 @@ export default function LoginPage() {
                 ) : (
                   <>
                     <LogIn className="w-5 h-5" />
-                    Bypass Login (Developer Mode)
+                    {process.env.NODE_ENV !== "production" ? "Bypass Login" : "Demo Login"}
                   </>
                 )}
              </button>
+             
+             <div className="text-center mt-4 pt-2 flex flex-col gap-2">
+               {mode === "signin" && (
+                 <button 
+                   type="button"
+                   onClick={() => setMode("reset")}
+                   className="text-sm text-primary hover:underline bg-transparent border-none p-0 cursor-pointer focus:outline-none"
+                 >
+                   Forgot your password?
+                 </button>
+               )}
+               <button 
+                 type="button"
+                 onClick={() => {
+                   setMode(mode === "signin" ? "signup" : "signin");
+                   setTurnstileToken(null);
+                   setError(null);
+                 }}
+                 className="text-sm text-primary hover:underline bg-transparent border-none p-0 cursor-pointer focus:outline-none"
+               >
+                 {mode === "signin" ? "Need an account? Sign up" : "Already have an account? Sign in"}
+               </button>
+             </div>
           </div>
           
           <div className="mt-8 text-center text-xs text-muted-foreground flex flex-col gap-1">

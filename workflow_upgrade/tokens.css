@@ -1,0 +1,275 @@
+/* ============================================================
+   MERIDIAN DESIGN SYSTEM — TOKENS
+   Outcome-driven cybersecurity interface
+   
+   These tokens encode the visual language. Every component
+   references these — never hardcode colours, spacing, or
+   typography values directly.
+   ============================================================ */
+
+:root {
+  /* ──────────────────────────────────────────────────────────
+     COLOUR SYSTEM
+     
+     Cognitive principle: Pre-attentive processing
+     The brain decodes colour in <200ms — before conscious thought.
+     Every colour in this system encodes exactly ONE semantic meaning.
+     Never use colour decoratively. Never mix meanings.
+     ────────────────────────────────────────────────────────── */
+
+  /* Surfaces — depth hierarchy (darkest = deepest) */
+  --surface-deep:       #06080D;    /* App background / void */
+  --surface-base:       #0B0F18;    /* Rail, sidebars, structural chrome */
+  --surface-raised:     #111827;    /* Cards at rest, inset containers */
+  --surface-card:       #151C2C;    /* Primary card background */
+  --surface-hover:      #1A2236;    /* Interactive hover state */
+  --surface-glass:      rgba(17, 24, 39, 0.65);  /* Glassmorphism panels */
+  --surface-glass-border: rgba(255, 255, 255, 0.06);
+
+  /* Text — luminance hierarchy */
+  --text-primary:       #F1F5F9;    /* Headlines, active labels */
+  --text-secondary:     #94A3B8;    /* Body copy, descriptions */
+  --text-tertiary:      #64748B;    /* Metadata, timestamps, hints */
+  --text-dim:           #475569;    /* Disabled, placeholder, chrome labels */
+
+  /* Borders — subtlety hierarchy */
+  --border-subtle:      rgba(255, 255, 255, 0.06);   /* Card edges, dividers */
+  --border-default:     rgba(255, 255, 255, 0.08);   /* Input borders at rest */
+  --border-strong:      rgba(255, 255, 255, 0.12);   /* Hover states, emphasis */
+  --border-focus:       rgba(59, 130, 246, 0.40);    /* Focus rings */
+
+  /* ──────────────────────────────────────────────────────────
+     SEMANTIC COLOUR — each colour = one meaning
+     
+     Blue    = Progress, active, interactive, "you are here"
+     Cyan    = Informational highlights, data accents
+     Green   = Resolved, safe, passed, momentum
+     Amber   = Warning, approaching deadline, needs attention
+     Orange  = High severity, elevated risk
+     Red     = Critical, blocking, failed, immediate action
+     Purple  = Intelligence, AI/ML, supplementary insight
+     ────────────────────────────────────────────────────────── */
+
+  /* Blue — progress & active state */
+  --accent-blue:        #3B82F6;
+  --accent-blue-soft:   rgba(59, 130, 246, 0.12);
+  --accent-blue-glow:   rgba(59, 130, 246, 0.25);
+  --accent-blue-deep:   #1E40AF;
+  --accent-blue-text:   #93C5FD;
+
+  /* Cyan — informational accent */
+  --accent-cyan:        #22D3EE;
+  --accent-cyan-soft:   rgba(34, 211, 238, 0.10);
+
+  /* Green — resolved & safe */
+  --semantic-success:       #10B981;
+  --semantic-success-soft:  rgba(16, 185, 129, 0.12);
+  --semantic-success-glow:  rgba(16, 185, 129, 0.20);
+  --semantic-success-text:  #6EE7B7;
+
+  /* Amber — warning & approaching */
+  --semantic-warning:       #EAB308;
+  --semantic-warning-soft:  rgba(234, 179, 8, 0.12);
+  --semantic-warning-text:  #FDE047;
+
+  /* Orange — high severity */
+  --semantic-high:          #F97316;
+  --semantic-high-soft:     rgba(249, 115, 22, 0.12);
+
+  /* Red — critical & blocking */
+  --semantic-critical:      #EF4444;
+  --semantic-critical-soft: rgba(239, 68, 68, 0.12);
+  --semantic-critical-glow: rgba(239, 68, 68, 0.20);
+  --semantic-critical-text: #FCA5A5;
+
+  /* Purple — intelligence & AI/ML */
+  --semantic-info:          #8B5CF6;
+  --semantic-info-soft:     rgba(139, 92, 246, 0.12);
+  --semantic-info-text:     #C4B5FD;
+
+
+  /* ──────────────────────────────────────────────────────────
+     TYPOGRAPHY
+     
+     Cognitive principle: Perceptual channelling
+     Three font families create three distinct cognitive channels:
+     - Display/Body (Outfit): narrative, outcomes, human language
+     - Serif (Newsreader): editorial emphasis, philosophical text
+     - Mono (JetBrains Mono): data, metrics, timestamps, codes
+     
+     The brain recognises font pattern shifts and automatically
+     categorises content before reading it.
+     ────────────────────────────────────────────────────────── */
+
+  --font-display:   'Outfit', system-ui, -apple-system, sans-serif;
+  --font-body:      'Outfit', system-ui, -apple-system, sans-serif;
+  --font-serif:     'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-mono:      'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+
+  /* Type scale — intentionally constrained */
+  --text-xs:    11px;     /* Badges, overlines, fine metadata */
+  --text-sm:    12px;     /* Step descriptions, secondary info */
+  --text-base:  13px;     /* Body copy, card descriptions */
+  --text-md:    14px;     /* Subheadings, header descriptions */
+  --text-lg:    15px;     /* Card titles, section headers */
+  --text-xl:    16px;     /* Outcome titles */
+  --text-2xl:   22px;     /* View titles */
+  --text-3xl:   28px;     /* Page greeting / hero text */
+  --text-stat:  32px;     /* Large stat numbers */
+
+  /* Font weights — only four, each with a purpose */
+  --weight-light:     300;  /* Secondary text, descriptions — reduces visual pull */
+  --weight-regular:   400;  /* Body copy default */
+  --weight-medium:    500;  /* Titles, labels, emphasis */
+  --weight-bold:      600;  /* Stats, grades, critical numbers */
+
+  /* Letter spacing */
+  --tracking-tight:   -0.02em;   /* Headlines */
+  --tracking-normal:  0;          /* Body */
+  --tracking-wide:    0.01em;     /* Tags, buttons */
+  --tracking-caps:    0.12em;     /* Section labels, overlines */
+
+  /* Line heights */
+  --leading-tight:    1.2;    /* Headlines, stats */
+  --leading-snug:     1.4;    /* Card titles */
+  --leading-normal:   1.55;   /* Step descriptions */
+  --leading-relaxed:  1.65;   /* Body paragraphs */
+
+
+  /* ──────────────────────────────────────────────────────────
+     SPACING
+     
+     Cognitive principle: Chunking & Gestalt proximity
+     Consistent spacing creates perceptual groups. Items close
+     together are perceived as related. Larger gaps signal new
+     cognitive units. The brain "chunks" information into 
+     manageable groups of 3-5 items.
+     ────────────────────────────────────────────────────────── */
+
+  --space-1:    4px;
+  --space-2:    8px;
+  --space-3:    12px;
+  --space-4:    16px;
+  --space-5:    20px;
+  --space-6:    24px;
+  --space-8:    32px;
+  --space-10:   40px;
+  --space-12:   48px;
+
+  /* Semantic spacing */
+  --gap-tight:      8px;     /* Items within a group (tags, pills) */
+  --gap-default:    12px;    /* Standard gap between related items */
+  --gap-loose:      16px;    /* Gap between card sections */
+  --gap-section:    24px;    /* Between distinct content sections */
+  --gap-page:       32px;    /* Major page sections */
+
+  --padding-card:       22px 24px;    /* Standard card padding */
+  --padding-card-lg:    24px 28px;    /* Large card padding */
+  --padding-input:      16px 20px;    /* Input field padding */
+  --padding-button:     7px 18px;     /* Button padding */
+  --padding-badge:      4px 12px;     /* Badge/tag padding */
+  --padding-chip:       7px 14px;     /* Status chip padding */
+
+
+  /* ──────────────────────────────────────────────────────────
+     BORDERS & RADII
+     
+     Cognitive principle: Enclosure (Gestalt)
+     Borders define cognitive boundaries. Rounded corners
+     signal interactive or grouped elements. Sharp corners
+     signal structural or editorial containers.
+     ────────────────────────────────────────────────────────── */
+
+  --radius-xs:    6px;     /* Small buttons, step dots */
+  --radius-sm:    8px;     /* Input fields, small cards */
+  --radius:       12px;    /* Standard cards, panels */
+  --radius-lg:    16px;    /* Primary outcome cards */
+  --radius-xl:    20px;    /* Hero containers */
+  --radius-pill:  99px;    /* Tags, badges, status chips */
+
+  --border-width-subtle:  0.5px;    /* Default card borders */
+  --border-width-accent:  2px;      /* Focus rings, emphasis borders */
+  --border-width-bar:     3px;      /* Left accent bar on cards */
+
+
+  /* ──────────────────────────────────────────────────────────
+     MOTION
+     
+     Cognitive principle: Temporal attention capture
+     Motion draws the eye. Use it intentionally:
+     - Entrances: staggered fade-up (narrative sequence)
+     - Interactions: spring easing (physical, satisfying)
+     - Data: smooth easing (measurable change)
+     - Ambient: slow drift (alive but non-distracting)
+     ────────────────────────────────────────────────────────── */
+
+  --ease-out:       cubic-bezier(0.16, 1, 0.3, 1);       /* Content entrances */
+  --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);   /* Bouncy interactions */
+  --ease-smooth:    cubic-bezier(0.4, 0, 0.2, 1);        /* Data transitions */
+  
+  --duration-fast:      150ms;    /* Hover states, micro-interactions */
+  --duration-normal:    250ms;    /* Standard transitions */
+  --duration-slow:      350ms;    /* Content reveals, panel slides */
+  --duration-entrance:  500ms;    /* Staggered entrances */
+  --duration-ambient:   20s;      /* Background ambient motion */
+
+  --stagger-delay:      50ms;     /* Delay between staggered children */
+
+
+  /* ──────────────────────────────────────────────────────────
+     EFFECTS
+     ────────────────────────────────────────────────────────── */
+
+  --shadow-card-hover:    0 8px 32px rgba(0, 0, 0, 0.25);
+  --shadow-card-active:   0 4px 16px rgba(0, 0, 0, 0.20);
+  --shadow-button:        0 2px 8px rgba(59, 130, 246, 0.25);
+  --shadow-button-hover:  0 4px 16px rgba(59, 130, 246, 0.35);
+  --shadow-glow-blue:     0 0 20px rgba(59, 130, 246, 0.3);
+  --shadow-glow-green:    0 0 12px rgba(16, 185, 129, 0.2);
+  --shadow-glow-red:      0 0 12px rgba(239, 68, 68, 0.2);
+
+  --blur-glass:           8px;
+
+
+  /* ──────────────────────────────────────────────────────────
+     LAYOUT
+     ────────────────────────────────────────────────────────── */
+
+  --rail-width:       72px;
+  --sidebar-width:    220px;
+  --main-max-width:   960px;
+  --card-accent-width: 3px;
+}
+
+
+/* ============================================================
+   GOOGLE FONTS IMPORT
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Newsreader:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  font-size: 15px;
+  background: var(--surface-deep);
+}
+
+body {
+  font-family: var(--font-body);
+  font-weight: var(--weight-light);
+  color: var(--text-primary);
+  background: var(--surface-deep);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: var(--leading-relaxed);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }

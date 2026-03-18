@@ -27,11 +27,16 @@ export default function VendorRiskPage() {
   const [inspectingVendor, setInspectingVendor] = useState<Vendor | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [report, setReport] = useState<InspectionReport | null>(null);
+  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  
+  const filteredVendors = vendors.filter(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   useEffect(() => {
     async function fetchVendors() {
       try {
-        const res = await fetchWithAuth("http://localhost:8000/api/v1/vendors");
+        const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/vendors`);
         const data = await res.json();
         setVendors(data || []);
       } catch (err) {
@@ -48,7 +53,7 @@ export default function VendorRiskPage() {
     setReportLoading(true);
     setReport(null);
     try {
-      const res = await fetchWithAuth(`http://localhost:8000/api/v1/vendors/${vendor.id}/inspect`);
+      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/vendors/${vendor.id}/inspect`);
       const data = await res.json();
       if (res.ok && data.status === "success") {
         setReport(data.report);
@@ -95,9 +100,9 @@ export default function VendorRiskPage() {
   return (
     <div className="flex-1 overflow-hidden bg-background flex">
       {/* Main Content Area */}
-      <div className={cn("flex-1 overflow-y-auto p-8 transition-all duration-300", inspectingVendor ? "mr-96" : "")}>
+      <div className={cn("flex-1 overflow-y-auto p-4 md:p-8 transition-all duration-300", inspectingVendor ? "md:mr-96" : "")}>
         <div className="max-w-7xl mx-auto space-y-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
                 <Building2 className="w-8 h-8 text-primary" />
@@ -107,13 +112,34 @@ export default function VendorRiskPage() {
                 Track third-party supply chain risk, map partner technology stacks, and run AI threat predictive inspections.
               </p>
             </div>
-            <div className="flex gap-4 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input 
-                type="text" 
-                placeholder="Search vendors..." 
-                className="pl-9 pr-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary w-64"
-              />
+            <div className="flex gap-4 relative w-full xl:w-auto">
+              <div className="relative w-full xl:w-auto">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input 
+                  type="text" 
+                  autoComplete="off"
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.target.value); setShowSearchSuggestions(true); }}
+                  onFocus={() => setShowSearchSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 200)}
+                  placeholder="Search vendors..." 
+                  className="pl-9 pr-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary w-full md:w-64"
+                />
+                
+                {showSearchSuggestions && searchQuery && vendors.filter(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()) && v.name.toLowerCase() !== searchQuery.toLowerCase()).length > 0 && (
+                   <ul className="absolute top-full left-0 z-10 w-full bg-background border border-border mt-1 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                       {vendors.filter(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()) && v.name.toLowerCase() !== searchQuery.toLowerCase()).map(v => (
+                           <li 
+                              key={v.id} 
+                              onMouseDown={(e) => { e.preventDefault(); setSearchQuery(v.name); setShowSearchSuggestions(false); }} 
+                              className="px-3 py-2 text-sm text-foreground hover:bg-muted cursor-pointer"
+                           >
+                              {v.name}
+                           </li>
+                       ))}
+                   </ul>
+                )}
+              </div>
             </div>
           </div>
 
@@ -122,7 +148,7 @@ export default function VendorRiskPage() {
                <span className="animate-pulse text-muted-foreground font-medium">Loading vendor ecosystem...</span>
              </div>
           ) : (
-            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-card border border-border rounded-xl shadow-sm overflow-x-auto">
                <table className="w-full text-left border-collapse">
                  <thead>
                    <tr className="border-b border-border bg-muted/30">
@@ -135,7 +161,7 @@ export default function VendorRiskPage() {
                    </tr>
                  </thead>
                  <tbody className="divide-y divide-border">
-                   {vendors.map(vendor => (
+                   {filteredVendors.map(vendor => (
                      <tr key={vendor.id} className="hover:bg-muted/10 transition-colors group">
                        <td className="py-4 px-6 font-medium text-foreground flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
@@ -193,7 +219,7 @@ export default function VendorRiskPage() {
 
       {/* AI Inspection Slide-Over Panel */}
       <div className={cn(
-         "fixed top-0 right-0 h-full w-96 bg-card border-l border-border shadow-2xl transition-transform duration-300 transform z-20 flex flex-col",
+         "fixed top-0 right-0 h-full w-full md:w-96 bg-card border-l border-border shadow-2xl transition-transform duration-300 transform z-50 flex flex-col",
          inspectingVendor ? "translate-x-0" : "translate-x-full"
       )}>
          <div className="p-6 border-b border-border bg-muted/20 flex justify-between items-start">

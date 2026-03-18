@@ -25,7 +25,7 @@ export default function FindingsPage() {
         const offset = (page - 1) * limit;
         
         // Build base URL
-        let url = `http://localhost:8000/api/v1/findings?org_id=default&limit=${limit}&offset=${offset}`;
+        let url = `${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/findings?org_id=default&limit=${limit}&offset=${offset}`;
         
         // Append filters if they exist
         if (severityFilter) url += `&severity=${severityFilter}`;
@@ -57,16 +57,16 @@ export default function FindingsPage() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-background p-8">
+    <div className="flex-1 overflow-y-auto bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Findings & Alerts</h1>
             <p className="text-muted-foreground mt-1">
               Review and remediate security issues detected across all workflows.
             </p>
           </div>
-             <div className="flex gap-4">
+             <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
               <select 
                 value={statusFilter}
                 onChange={handleStatusChange}
@@ -74,7 +74,7 @@ export default function FindingsPage() {
               >
                 <option value="">All Statuses</option>
                 <option value="new">New</option>
-                <option value="triaged">Triaged</option>
+                <option value="triaged">Reviewed</option>
                 <option value="in_progress">In Progress</option>
                 <option value="resolved">Resolved</option>
                 <option value="accepted">Risk Accepted</option>
@@ -95,7 +95,7 @@ export default function FindingsPage() {
             </div>
         </div>
 
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
+        <div className="bg-card border border-border rounded-lg overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-muted text-muted-foreground">
               <tr>
@@ -104,7 +104,7 @@ export default function FindingsPage() {
                 <th className="px-6 py-4 font-medium uppercase tracking-wider">Risk Score</th>
                 <th className="px-6 py-4 font-medium uppercase tracking-wider">Status</th>
                 <th className="px-6 py-4 font-medium uppercase tracking-wider">Detected</th>
-                <th className="px-6 py-4 font-medium uppercase tracking-wider">SLA</th>
+                <th className="px-6 py-4 font-medium uppercase tracking-wider">Fix Deadline</th>
                 <th className="px-6 py-4 font-medium uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
@@ -157,7 +157,7 @@ export default function FindingsPage() {
           
           {/* Pagination Controls */}
           {total > limit && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-card">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 px-6 py-4 border-t border-border bg-card">
               <span className="text-sm text-muted-foreground">
                 Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, total)} of {total} findings
               </span>

@@ -1,4 +1,4 @@
-'use client' // Error components must be Client Components
+﻿'use client' // Error components must be Client Components
 
 import { useEffect, useState } from 'react'
 import { AlertTriangle, Home, RefreshCw, TerminalSquare } from 'lucide-react'
@@ -26,7 +26,7 @@ export default function Error({
         };
         
         // Use basic fetch to avoid cyclic dependencies in case api.ts is broken
-        const res = await fetch("http://localhost:8000/api/v1/bugs/report", {
+        const res = await fetch(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/bugs/report`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"

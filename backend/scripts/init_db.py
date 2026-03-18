@@ -81,6 +81,85 @@ async def init_db():
         )
         session.add(cr2)
         
+        # Seed OWASP Top 10
+        owasp_id = uuid.uuid4()
+        cf_owasp = ComplianceFramework(
+            id=owasp_id,
+            org_id=test_org_id,
+            framework_name="OWASP Top 10",
+            version="2021",
+            applicable=True,
+            overall_compliance_pct=100.0,
+            last_assessed=datetime.datetime.utcnow(),
+            next_assessment_due=datetime.datetime.utcnow() + datetime.timedelta(days=365)
+        )
+        session.add(cf_owasp)
+
+        # Seed CIS Controls
+        cis_id = uuid.uuid4()
+        cf_cis = ComplianceFramework(
+            id=cis_id,
+            org_id=test_org_id,
+            framework_name="CIS",
+            version="v8",
+            applicable=True,
+            overall_compliance_pct=100.0,
+            last_assessed=datetime.datetime.utcnow(),
+            next_assessment_due=datetime.datetime.utcnow() + datetime.timedelta(days=365)
+        )
+        session.add(cf_cis)
+
+        # Seed NIST CSF
+        nist_id = uuid.uuid4()
+        cf_nist = ComplianceFramework(
+            id=nist_id,
+            org_id=test_org_id,
+            framework_name="NIST CSF",
+            version="2.0",
+            applicable=True,
+            overall_compliance_pct=100.0,
+            last_assessed=datetime.datetime.utcnow(),
+            next_assessment_due=datetime.datetime.utcnow() + datetime.timedelta(days=365)
+        )
+        session.add(cf_nist)
+
+        # Seed Threat Actors
+        ta1_id = uuid.uuid4()
+        ta1 = ThreatActor(
+            id=ta1_id,
+            org_id=test_org_id,
+            name="Scattered Spider",
+            description="Financially motivated threat group known for social engineering attacks against IT helpdesks.",
+            sophistication=ThreatSophistication.advanced,
+            active=True,
+            first_seen=datetime.datetime.utcnow()
+        )
+        session.add(ta1)
+
+        ta2_id = uuid.uuid4()
+        ta2 = ThreatActor(
+            id=ta2_id,
+            org_id=test_org_id,
+            name="FIN7",
+            description="Cybercriminal group primarily targeting the retail and hospitality sectors to steal financial data.",
+            sophistication=ThreatSophistication.intermediate,
+            active=True,
+            first_seen=datetime.datetime.utcnow()
+        )
+        session.add(ta2)
+
+        ta3_id = uuid.uuid4()
+        ta3 = ThreatActor(
+            id=ta3_id,
+            org_id=test_org_id,
+            name="Lazarus Group",
+            description="State-sponsored actor associated with cyber espionage and financial theft.",
+            sophistication=ThreatSophistication.advanced,
+            active=True,
+            first_seen=datetime.datetime.utcnow()
+        )
+        session.add(ta3)
+
         # Seed Findings
         f1 = Finding(
             id=uuid.uuid4(),

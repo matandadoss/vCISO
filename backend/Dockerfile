@@ -9,8 +9,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the remaining source code
 COPY . .
 
+# Enforce production environment to disable mock-tokens in auth.py
+ENV ENV=production
+
 # Expose the standard port used by Cloud Run
 EXPOSE 8000
 
-# Start the FastAPI server using Uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start the FastAPI server using Uvicorn, respecting the PORT env var
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
