@@ -47,29 +47,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let unsubscribe: any = null;
 
+    // Failsafe: if the entire initAuth async chain hangs (e.g. unresolving fetch or import), aggressively unlock.
+    const failsafeTimer = setTimeout(() => {
+      console.warn("AuthContext initialization failsafe triggered! The async chain hung.");
+      setLoading(false);
+    }, 5000);
+
     const initAuth = async () => {
       try {
         const isSuccess = await initializeFirebase();
         setConfigured(isSuccess);
 
         if (!isSuccess) {
-          // App running without Firebase keys
+          clearTimeout(failsafeTimer);
           setLoading(false);
           return;
         }
 
-        // Dynamic import to get the highly-initialized auth instance safely
         const { auth } = await import("@/lib/firebase");
         unsubscribe = onAuthStateChanged(auth, (currentUser) => {
           setUser(currentUser);
+          clearTimeout(failsafeTimer);
           setLoading(false);
         });
         
-        // Failsafe timeout: if onAuthStateChanged doesn't fire within 5s, unlock the UI
-        setTimeout(() => setLoading(false), 5000);
       } catch (error) {
         console.error("Auth initialization failed fundamentally:", error);
         setConfigured(false);
+        clearTimeout(failsafeTimer);
         setLoading(false);
       }
     };
@@ -77,6 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
 
     return () => {
+      clearTimeout(failsafeTimer);
       if (unsubscribe) unsubscribe();
     };
   }, []);
