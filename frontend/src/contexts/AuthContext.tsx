@@ -48,21 +48,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let unsubscribe: any = null;
 
     const initAuth = async () => {
-      const isSuccess = await initializeFirebase();
-      setConfigured(isSuccess);
+      try {
+        const isSuccess = await initializeFirebase();
+        setConfigured(isSuccess);
 
-      if (!isSuccess) {
-        // App running without Firebase keys
+        if (!isSuccess) {
+          // App running without Firebase keys
+          setLoading(false);
+          return;
+        }
+
+        // Dynamic import to get the highly-initialized auth instance safely
+        const { auth } = await import("@/lib/firebase");
+        unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+          setUser(currentUser);
+          setLoading(false);
+        });
+        
+        // Failsafe timeout: if onAuthStateChanged doesn't fire within 5s, unlock the UI
+        setTimeout(() => setLoading(false), 5000);
+      } catch (error) {
+        console.error("Auth initialization failed fundamentally:", error);
+        setConfigured(false);
         setLoading(false);
-        return;
       }
-
-      // Dynamic import to get the highly-initialized auth instance safely
-      const { auth } = await import("@/lib/firebase");
-      unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        setUser(currentUser);
-        setLoading(false);
-      });
     };
 
     initAuth();
