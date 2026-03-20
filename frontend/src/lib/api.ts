@@ -49,7 +49,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
       };
       
       // Fire-and-forget the log so it doesn't block the actual error flow
-      fetch(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/bugs/report`, {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/bugs/report`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

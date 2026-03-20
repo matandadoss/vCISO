@@ -28,7 +28,7 @@ export default function ComplianceWorkflowPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/meridian/governance`);
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/meridian/governance`);
         if (res.ok) {
            const json = await res.json();
            setData(json);

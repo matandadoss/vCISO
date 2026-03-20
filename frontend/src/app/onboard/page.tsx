@@ -35,7 +35,7 @@ export default function OnboardPage() {
     setStep(4); // Move to baseline generation step
     
     try {
-      await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/onboarding/complete`, {
+      await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/onboarding/complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ organization: org, integrations, frameworks })

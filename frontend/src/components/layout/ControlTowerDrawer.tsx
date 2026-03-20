@@ -54,7 +54,7 @@ export function ControlTowerDrawer() {
 
     try {
       // Send to backend with context
-      const response = await fetch(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/chat/sessions/default-session/stream`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/sessions/default-session/stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

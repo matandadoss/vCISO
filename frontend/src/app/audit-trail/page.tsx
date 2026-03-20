@@ -22,7 +22,7 @@ export default function AuditTrailPage() {
   useEffect(() => {
     async function fetchAuditTrail() {
        try {
-         const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/playbooks/audit`);
+         const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/playbooks/audit`);
          const data = await res.json();
          setLogs(data.audit_trail || []);
        } catch (e) {

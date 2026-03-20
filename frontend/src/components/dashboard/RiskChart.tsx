@@ -25,7 +25,7 @@ export function RiskChart() {
     async function fetchRiskTrends() {
       try {
         // Fetch data from the FastAPI backend endpoint. Added default org_id for now.
-        const response = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/dashboard/trends?org_id=default`);
+        const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/dashboard/trends?org_id=default`);
         if (!response.ok) {
           throw new Error('Failed to fetch risk trends');
         }

@@ -28,7 +28,7 @@ export default function IntegrationsPage() {
     setMagicLoading(true);
     setMagicResult(null);
     try {
-      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/integrations/magic-connect`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/integrations/magic-connect`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ raw_text: magicText })
@@ -52,7 +52,7 @@ export default function IntegrationsPage() {
   useEffect(() => {
     async function fetchIntegrations() {
       try {
-        const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/integrations`);
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/integrations`);
         const data = await res.json();
         setIntegrations(data.integrations || []);
       } catch (err) {
@@ -68,7 +68,7 @@ export default function IntegrationsPage() {
     setToggling(id);
     const action = currentStatus === "connected" ? "disconnect" : "connect";
     try {
-      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/integrations/toggle`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/integrations/toggle`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ integration_id: id, action })

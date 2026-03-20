@@ -26,7 +26,7 @@ export default function CompliancePage() {
 
   useEffect(() => {
     // Fetch Frameworks
-    fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/compliance/frameworks?org_id=default`)
+    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/compliance/frameworks?org_id=default`)
       .then((res) => res.json())
       .then((data) => {
         setFrameworks(data.items || []);
@@ -46,7 +46,7 @@ export default function CompliancePage() {
      if (!selectedFramework) return;
      
      setLoading(true);
-     fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/compliance/frameworks/${selectedFramework.id}/requirements?org_id=default`)
+     fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/compliance/frameworks/${selectedFramework.id}/requirements?org_id=default`)
       .then((res) => res.json())
       .then((data) => {
         setRequirements(data.items || []);
@@ -64,7 +64,7 @@ export default function CompliancePage() {
     
     setIsSubmitting(true);
     try {
-      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/compliance/frameworks`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/compliance/frameworks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

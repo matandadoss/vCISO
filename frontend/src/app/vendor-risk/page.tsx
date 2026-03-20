@@ -36,7 +36,7 @@ export default function VendorRiskPage() {
   useEffect(() => {
     async function fetchVendors() {
       try {
-        const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/vendors`);
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/vendors`);
         const data = await res.json();
         setVendors(data || []);
       } catch (err) {
@@ -53,7 +53,7 @@ export default function VendorRiskPage() {
     setReportLoading(true);
     setReport(null);
     try {
-      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/vendors/${vendor.id}/inspect`);
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/vendors/${vendor.id}/inspect`);
       const data = await res.json();
       if (res.ok && data.status === "success") {
         setReport(data.report);

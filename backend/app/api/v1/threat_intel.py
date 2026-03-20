@@ -61,18 +61,19 @@ async def list_threat_actors(
         
     stmt = select(ThreatActor).where(ThreatActor.org_id == org_uuid)
     
-    # Check if we need to auto-seed threat actors
-    check_stmt = select(func.count()).select_from(stmt.subquery())
-    existing_count = (await db.execute(check_stmt)).scalar() or 0
+    # Fetch all existing actor names for this org to dynamically upsert into existing accounts
+    existing_names_res = await db.execute(select(ThreatActor.name).where(ThreatActor.org_id == org_uuid))
+    existing_names = set(name for (name,) in existing_names_res.all())
     
-    if existing_count == 0:
-        default_actors = [
-            ("Scattered Spider", "Financially motivated threat group known for social engineering attacks against IT helpdesks.", ThreatSophistication.advanced),
-            ("FIN7", "Cybercriminal group primarily targeting the retail and hospitality sectors to steal financial data.", ThreatSophistication.intermediate),
-            ("Lazarus Group", "State-sponsored actor associated with cyber espionage and financial theft.", ThreatSophistication.advanced)
-        ]
-        
-        for name, desc, soph in default_actors:
+    default_actors = [
+        ("Scattered Spider", "Financially motivated threat group known for social engineering attacks against IT helpdesks.", ThreatSophistication.advanced),
+        ("FIN7", "Cybercriminal group primarily targeting the retail and hospitality sectors to steal financial data.", ThreatSophistication.intermediate),
+        ("Lazarus Group", "State-sponsored actor associated with cyber espionage and financial theft.", ThreatSophistication.advanced)
+    ]
+    
+    added_any = False
+    for name, desc, soph in default_actors:
+        if name not in existing_names:
             new_actor = ThreatActor(
                 id=uuid.uuid4(),
                 org_id=org_uuid,
@@ -83,6 +84,9 @@ async def list_threat_actors(
                 first_seen=datetime.utcnow()
             )
             db.add(new_actor)
+            added_any = True
+            
+    if added_any:
         await db.commit()
     
     if active is not None:
@@ -94,9 +98,22 @@ async def list_threat_actors(
     stmt = stmt.limit(limit).offset(offset)
     result = await db.execute(stmt)
     actors = result.scalars().all()
-    
+    items = []
+    for a in actors:
+        soph_val = a.sophistication.value if hasattr(a.sophistication, 'value') else a.sophistication
+        items.append({
+            "id": str(a.id),
+            "name": a.name,
+            "description": a.description,
+            "sophistication": soph_val,
+            "active": a.active,
+            "relevance_score": "High" if soph_val in ("nation_state", "advanced") else "Medium",
+            "first_seen": a.first_seen.isoformat() if a.first_seen else None,
+            "last_updated": a.last_updated.isoformat() if a.last_updated else None
+        })
+
     return {
-        "items": actors,
+        "items": items,
         "total": total,
         "limit": limit,
         "offset": offset

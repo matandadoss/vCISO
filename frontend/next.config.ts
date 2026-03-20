@@ -6,12 +6,10 @@ const secureHeaders = [
   { key: "X-XSS-Protection", value: "1; mode=block" },
   { key: "X-Frame-Options", value: "SAMEORIGIN" }, // Prevent clickjacking
   { key: "X-Content-Type-Options", value: "nosniff" },
-  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://vciso-backend-7gkk7pkdya-uc.a.run.app https://securetoken.googleapis.com https://identitytoolkit.googleapis.com wss: ws:;" }
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" }
 ];
 
 const nextConfig: NextConfig = {
-  reactCompiler: true,
   async headers() {
     return [
       {

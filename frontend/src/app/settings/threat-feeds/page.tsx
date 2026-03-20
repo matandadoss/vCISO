@@ -22,7 +22,7 @@ export default function ThreatFeedsSettingsPage() {
   useEffect(() => {
     async function fetchFeeds() {
       try {
-        const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/threat-intel/feeds?org_id=default`);
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/feeds?org_id=default`);
         if (res.ok) {
           const data = await res.json();
           setFeeds(data);
@@ -50,7 +50,7 @@ export default function ThreatFeedsSettingsPage() {
     setSaveSuccess(false);
     try {
       const activeFeedIds = feeds.filter(f => f.is_active).map(f => f.id);
-      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/threat-intel/feeds?org_id=default`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/feeds?org_id=default`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ feed_ids: activeFeedIds }),

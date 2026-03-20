@@ -13,7 +13,7 @@ export function WorkflowDashboardOverview() {
   useEffect(() => {
     async function loadData() {
       try {
-        const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/meridian/command`);
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/meridian/command`);
         if (res.ok) {
            const json = await res.json();
            setData(json);

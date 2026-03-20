@@ -20,7 +20,7 @@ export function WhatNeedsAttention() {
   useEffect(() => {
     async function fetchAttentionItems() {
       try {
-        const response = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/dashboard/attention?org_id=default`);
+        const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/dashboard/attention?org_id=default`);
         if (!response.ok) {
           throw new Error('Failed to fetch attention items');
         }

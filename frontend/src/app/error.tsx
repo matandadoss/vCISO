@@ -26,7 +26,7 @@ export default function Error({
         };
         
         // Use basic fetch to avoid cyclic dependencies in case api.ts is broken
-        const res = await fetch(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/bugs/report`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/bugs/report`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"

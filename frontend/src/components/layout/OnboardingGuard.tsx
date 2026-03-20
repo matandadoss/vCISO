@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { fetchWithAuth } from "@/lib/api";
 
 import { useEffect, useState, ReactNode } from "react";
@@ -16,9 +16,14 @@ export function OnboardingGuard({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Only fetch status if the user is authenticated (mock or real)
     // If we're already on the onboard page, no need to redirect loop, just render children.
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     const checkOnboardingStatus = async () => {
       try {
-        const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/onboarding/status`);
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/onboarding/status`);
         if (res.ok) {
           const data = await res.json();
           setIsOnboarded(data.is_onboarded);

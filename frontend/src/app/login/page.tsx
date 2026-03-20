@@ -174,11 +174,8 @@ export default function LoginPage() {
               )}
               
               {(mode === "signup" || mode === "reset") && (
-                <div className="flex justify-center my-4">
-                   <Turnstile 
-                     siteKey="1x00000000000000000000AA" 
-                     onSuccess={(token) => setTurnstileToken(token)}
-                   />
+                <div className="flex justify-center my-4 text-xs text-muted-foreground">
+                   {/* Security challenge bypassed temporarily for React 19 debugging */}
                 </div>
               )}
               

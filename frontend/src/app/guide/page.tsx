@@ -1,278 +1,279 @@
-import { 
-  BookOpen, 
-  LayoutDashboard, 
-  MessageSquare, 
-  AlertTriangle, 
-  ShieldCheck, 
-  Building2, 
-  History, 
-  Crosshair, 
-  GlobeLock, 
-  Swords, 
-  GitMerge, 
-  Zap, 
-  Database, 
-  Link2, 
-  Settings,
-  BriefcaseBusiness,
-  MousePointerClick
-} from "lucide-react";
 import React from "react";
-
-interface GuideItem {
-  id: string;
-  title: string;
-  icon: React.ElementType;
-  description: string;
-  usage: string;
-  businessBenefit: string;
-  example: string;
-}
-
-interface GuideSectionData {
-  title: string;
-  items: GuideItem[];
-}
-
-const guideData: GuideSectionData[] = [
-  {
-    title: "Overview",
-    items: [
-      {
-        id: "dashboard",
-        title: "Command Dashboard",
-        icon: LayoutDashboard,
-        description: "The central nervous system of the Virtual CISO platform, providing a real-time, consolidated view of your organization's entire security and compliance posture.",
-        usage: "As a daily starting point, review the Overall Security Score, Compliance Posture, and Threat Level. Focus immediate attention on the 'Active Risk Outcomes' and the 'Task Priority' feed which outlines urgent items requiring action.",
-        businessBenefit: "Reduces cognitive load by condensing millions of data points into a single, actionable pane of glass. It aligns technical security metrics directly with business risk, enabling executives to make rapid, informed decisions without needing to parse complex logs.",
-        example: "A CISO notices the Threat Level jumps to 'Elevated'. They immediately look at the 'Active Risk Outcomes' card which highlights a critical zero-day vulnerability in a core asset, allowing them to triage it instantly."
-      },
-      {
-        id: "vciso-chat",
-        title: "vCISO Chat",
-        icon: MessageSquare,
-        description: "An AI-powered, conversational interface that acts as your dedicated Chief Information Security Officer, trained on your specific organizational data, policies, and global threat intelligence.",
-        usage: "Interact using natural language to query the system about complex security concepts, request summaries of recent incidents, ask for compliance guidance, or translate technical vulnerabilities into business impact.",
-        businessBenefit: "Democratizes cybersecurity expertise. It empowers non-technical executives to understand deeply technical risks and provides IT teams with instant, expert-level guidance on remediation, drastically reducing the time spent researching solutions.",
-        example: "User asks: 'We are expanding to the EU next month. What are our top three gaps for GDPR compliance right now?' The AI vCISO instantly analyzes the compliance maps and provides a prioritized list."
-      }
-    ]
-  },
-  {
-    title: "Risk & Compliance",
-    items: [
-      {
-        id: "findings",
-        title: "Findings Management",
-        icon: AlertTriangle,
-        description: "A centralized ledger of all discovered vulnerabilities, misconfigurations, and security gaps across your entire infrastructure, prioritized dynamically by business risk.",
-        usage: "Review the prioritized list of findings. Click into individual findings to view the root cause, affected assets, and recommended remediation steps. Use the interface to assign tasks to team members or initiate automated playbooks.",
-        businessBenefit: "Prevents 'alert fatigue' by intelligently prioritizing issues based on actual business context rather than just technical severity (CVSS). Ensures that the most critical risks to the business are addressed first.",
-        example: "A finding for 'Publicly exposed S3 bucket containing PII' is flagged as Critical. An analyst clicks 'Auto-Remediate' to trigger a SOAR playbook that immediately makes the bucket private."
-      },
-      {
-        id: "compliance",
-        title: "Automated Compliance",
-        icon: ShieldCheck,
-        description: "A continuous compliance monitoring engine that maps your technical controls and policies against major regulatory frameworks (SOC 2, ISO 27001, HIPAA, GDPR).",
-        usage: "Add desired frameworks and monitor the overall completion percentage. Review individual controls that are 'Failing' or require manual evidence gathering. Connect integrations to automatically satisfy technical controls.",
-        businessBenefit: "Transforms compliance from an expensive, painful annual audit into a continuous, automated process. Dramatically reduces the time and cost required to achieve and maintain certifications, accelerating enterprise sales cycles.",
-        example: "The platform automatically verifies that encryption at rest is enabled on all databases, instantly checking off the corresponding SOC 2 requirement without manual human verification."
-      },
-      {
-        id: "vendor-risk",
-        title: "Vendor Risk Management (Supply Chain)",
-        icon: Building2,
-        description: "An AI-driven analysis tool that assesses the security posture and potential blast radius of third-party vendors and external software dependencies.",
-        usage: "Add new vendors before signing contracts. Review the AI-generated inspection reports detailing their tech stack, recent breaches, financial stability, and overall risk rating before approving procurement.",
-        businessBenefit: "Protects the organization from third-party breaches (Supply Chain attacks). Ensures that you are not inheriting catastrophic risk through the software and partners you utilize.",
-        example: "Before purchasing a new HR tool, the system scans the vendor, identifies a history of data breaches and weak SSL configurations, and flags the procurement as 'High Risk', prompting a security review."
-      },
-      {
-        id: "audit-trail",
-        title: "Immutable Audit Trail",
-        icon: History,
-        description: "A secure, undeletable cryptographic ledger recording every action, change, and automated event that occurs within the Virtual CISO platform.",
-        usage: "Use the search and filter functions to investigate past actions, verify who approved specific risk exceptions, or track the timeline of automated playbook executions during an incident.",
-        businessBenefit: "Ensures complete accountability and non-repudiation. Critical for post-incident forensics and provides guaranteed proof of actions and approvals required by auditors and regulatory bodies.",
-        example: "During an audit, an inspector asks why a firewall rule was changed. The CISO pulls up the Audit Trail to prove that the change was approved by the CTO and executed automatically via a verified playbook."
-      }
-    ]
-  },
-  {
-    title: "Threat Operations",
-    items: [
-      {
-        id: "threat-intel",
-        title: "Threat Intelligence feed",
-        icon: Crosshair,
-        description: "A real-time aggregator of global cybersecurity threat intel, automatically mapped against your internal asset inventory to determine relevance.",
-        usage: "Monitor exactly what new malware, threat actors, and vulnerabilities are actively being exploited globally. Look for alerts where the system explicitly states 'Your organization is vulnerable'.",
-        businessBenefit: "Shifts security from reactive to proactive. Instead of waiting to be attacked, the organization is warned ahead of time about emerging campaigns that target their specific infrastructure.",
-        example: "A new critical vulnerability in a specific VPN software is announced globally. The Threat Intel page instantly cross-references your inventory, flags that you use that VPN, and raises an emergency alert."
-      },
-      {
-        id: "osint-risk",
-        title: "Public Data Scans (Correlation)",
-        icon: GlobeLock,
-        description: "An advanced correlation engine that synthesizes data from multiple domains (external exposure, internal vulnerabilities, identity risks) to uncover complex multi-stage attack paths.",
-        usage: "Review the 'Executive Action View' for synthesized, prioritized threats. Read the 'Blast Radius' analysis to understand exactly what business units or data are at risk from a specific vector.",
-        businessBenefit: "Uncovers 'invisible' risks that isolated security tools miss. By connecting the dots between separate minor issues, it prevents catastrophic chain-reaction breaches.",
-        example: "The engine notices an employee's leaked password on the dark web (Dark Web), notes they lack MFA (Identity), and sees they have access to the production database (Infrastructure). It correlates these into a critical 'Account Takeover' threat."
-      },
-      {
-        id: "ai-pentest",
-        title: "Continuous AI Pentesting",
-        icon: Swords,
-        description: "Automated, safe, adversarial simulation where AI agents attempt to ethically hack your internal and external perimeters to prove vulnerabilities exist.",
-        usage: "Schedule continuous assessments or run on-demand scenarios (e.g., 'Phishing Simulation', 'External Perimeter Breach'). Review the resulting 'Execution Flow' graphs and remediation instructions.",
-        businessBenefit: "Replaces expensive, point-in-time human penetration testing with continuous, 24/7 validation. Provides mathematical proof of vulnerabilities rather than theoretical risks.",
-        example: "The AI Pentester successfully exploits a misconfigured API endpoint, accesses a simulated secure database, and generates a report proving the vulnerability is real, forcing the engineering team to prioritize the fix."
-      },
-      {
-        id: "what-if",
-        title: "What-If Simulator",
-        icon: GitMerge,
-        description: "A sandbox environment allowing you to model infrastructure changes or security policy updates and mathematically predict their impact on your security posture before deployment.",
-        usage: "Input a proposed architectural change, such as migrating a database to a new cloud subnet or disabling a specific firewall rule. Run the simulation to view the predicted change to your Overall Security Score.",
-        businessBenefit: "Prevents self-inflicted wounds and disastrous misconfigurations. Allows engineering teams to move fast and deploy changes with confidence knowing they won't accidentally break security.",
-        example: "A developer wants to open port 22 on a production server. The simulator warns that this change will expose the server to a known threat group, causing the team to use a secure VPN instead."
-      }
-    ]
-  },
-  {
-    title: "Automation & Data",
-    items: [
-      {
-        id: "playbooks",
-        title: "SOAR Playbooks",
-        icon: Zap,
-        description: "Security Orchestration, Automation, and Response. A visual workflow builder to automate repetitive security actions and incident responses.",
-        usage: "Create 'If This, Then That' rules. Use the visual editor to map out automated responses, such as isolating a compromised laptop from the network or locking a user's account.",
-        businessBenefit: "Responds to cyber threats at machine speed, drastically reducing the 'time-to-containment' during a breach. Frees up human analysts from performing repetitive, manual tasks.",
-        example: "A playbook is triggered when ransomware is detected: It automatically revokes the user's IAM privileges, snapshots the infected virtual machine, and pages the incident response team at 2 AM."
-      },
-      {
-        id: "data-workflows",
-        title: "Data Workflows",
-        icon: Database,
-        description: "The data ingestion pipelines responsible for securely pulling, normalizing, and storing logs and metrics from your various cloud providers and security tools.",
-        usage: "Used by IT administrators to monitor the health and throughput of data streams flowing into the platform from external sources.",
-        businessBenefit: "Ensures the vCISO brain has the high-fidelity, real-time data it needs to accurately protect the organization. Unifies fragmented data silos into a single source of truth.",
-        example: "An administrator checks the workflows to ensure AWS CloudTrail logs are successfully importing at a rate of 500 events per second."
-      },
-      {
-        id: "integrations",
-        title: "Integrations Hub",
-        icon: Link2,
-        description: "The directory of external API connectors, allowing the Virtual CISO platform to interface directly with your existing corporate technology stack.",
-        usage: "Navigate here to authenticate and connect new tools like Google Workspace, AWS, GitHub, Slack, or CrowdStrike using secure OAuth or API keys.",
-        businessBenefit: "Maximizes the value of your existing security investments by orchestrating them through a central intelligence hub. Enables automated remediation across your entire tech stack.",
-        example: "By connecting the Slack integration, the platform can immediately message the #security-ops channel whenever a Critical finding is discovered."
-      }
-    ]
-  },
-  {
-    title: "System",
-    items: [
-      {
-        id: "settings",
-        title: "Platform Settings",
-        icon: Settings,
-        description: "Administrative controls for managing the Virtual CISO platform environment.",
-        usage: "Manage user access and roles (RBAC), view platform health, configure notification preferences, and monitor AI token usage and budget.",
-        businessBenefit: "Provides the necessary governance and cost-controls over the platform itself, ensuring only authorized personnel have access to sensitive security data.",
-        example: "The CISO uses this page to grant a new independent auditor 'Read-Only' access to the compliance modules."
-      }
-    ]
-  }
-];
+import { ChevronRight } from "lucide-react";
 
 export default function UserGuidePage() {
   return (
-    <div className="flex-1 overflow-y-auto bg-background/50 p-6 lg:p-10 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
-      <div className="max-w-6xl mx-auto space-y-12 pb-16">
+    <div className="flex-1 overflow-y-auto bg-background p-6 lg:p-12 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+      <div className="max-w-4xl mx-auto space-y-12 pb-24">
         
-        {/* Header Section */}
-        <div className="relative overflow-hidden rounded-2xl bg-card border border-border p-8 md:p-12 shadow-sm">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-primary/10 blur-3xl rounded-full pointer-events-none"></div>
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-                <BookOpen className="w-4 h-4" /> Comprehensive Documentation
-              </div>
-              <h1 className="text-4xl font-extrabold tracking-tight text-foreground">
-                Platform User Guide
-              </h1>
-              <p className="text-xl text-muted-foreground mt-4 max-w-2xl leading-relaxed">
-                A definitive manual covering the capabilities, usage models, and business benefits of every module within the Virtual CISO platform.
-              </p>
-            </div>
+        {/* Antigravity Style Header */}
+        <div className="space-y-4">
+          <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-foreground">
+            Virtual CISO Documentation
+          </h1>
+          <p className="text-xl text-muted-foreground leading-relaxed">
+            Welcome to the Virtual Chief Information Security Officer (vCISO) platform. This manual is designed to help business executives, risk officers, and technical operators navigate the system, understand the diverse risk dimensions monitored by the platform, and execute strategic remediation.
+          </p>
+        </div>
+
+        <hr className="border-border/50" />
+
+        {/* Section: Dashboard */}
+        <div className="space-y-6">
+          <div className="flex items-center text-sm font-medium text-muted-foreground gap-1.5 mb-2">
+            Dashboard <ChevronRight className="w-4 h-4" /> Overview
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Overview</h2>
+          <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
+            <p className="text-base leading-relaxed">
+              The <strong>Dashboard</strong> is your organization's central command center, providing a real-time, aggregated snapshot of your active risk landscape. It distills millions of telemetry points into a single, comprehensive <strong>Overall Security Score</strong>.
+            </p>
+            <p className="text-base leading-relaxed">
+              From a business perspective, this score acts much like a corporate credit rating; a high, stable score demonstrates strong resilience against threats that could impact revenue, brand trust, or regulatory compliance. Operationally, it surfaces critical system outages or disconnected data pipelines directly to the top of your feed, ensuring that your team is never flying blind.
+            </p>
+            <p className="text-base leading-relaxed">
+              <strong>Note:</strong> Executives should log in daily to monitor the top-level score and review the <strong>Recent Findings</strong> feed. If high-severity alerts populate, utilize the quick-action buttons to pivot into specific modules for technical remediation.
+            </p>
           </div>
         </div>
 
-        {/* Content Sections */}
-        <div className="space-y-16">
-          {guideData.map((section, index) => (
-            <section key={section.title} className="space-y-6">
-              <div className="flex items-center gap-4 border-b border-border/50 pb-4">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted text-foreground font-bold text-sm">
-                  {index + 1}
-                </div>
-                <h2 className="text-2xl font-bold text-foreground tracking-tight">{section.title}</h2>
-              </div>
-              
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {section.items.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <div key={item.id} className="group relative bg-card border border-border rounded-xl p-6 transition-all hover:shadow-md hover:border-primary/30 flex flex-col h-full overflow-hidden">
-                      {/* Decorative gradient on hover */}
-                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-primary/0 to-transparent group-hover:via-primary/50 transition-all duration-500"></div>
-                      
-                      <div className="flex items-start gap-4 mb-5">
-                        <div className="p-3 bg-muted rounded-lg text-primary group-hover:bg-primary/10 transition-colors">
-                          <Icon className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-bold text-foreground">{item.title}</h3>
-                        </div>
-                      </div>
+        <hr className="border-border/50" />
 
-                      <div className="space-y-5 flex-1 text-sm md:text-base">
-                        <div>
-                          <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                            <BookOpen className="w-3.5 h-3.5" /> What It Does
-                          </h4>
-                          <p className="text-foreground/90 leading-relaxed">{item.description}</p>
-                        </div>
+        {/* Section: Findings */}
+        <div className="space-y-6">
+          <div className="flex items-center text-sm font-medium text-muted-foreground gap-1.5 mb-2">
+            Risk <ChevronRight className="w-4 h-4" /> Findings
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Findings</h2>
+          <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
+            <p className="text-base leading-relaxed">
+              The <strong>Findings</strong> module acts as your continuously updated, dynamically prioritized vulnerability management queue. It intelligently ingests raw security logs from across your cloud and endpoint environments and distills them into distinct, actionable tickets.
+            </p>
+            <p className="text-base leading-relaxed">
+              This module fundamentally addresses cyber risk by identifying explicit technical flaws—such as unpatched software, exposed databases, or permissive <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">AWS</code> firewall rules—that threat actors actively scan for. By grouping these alerts based on the <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">MITRE ATT&CK</code> framework and scoring them by severity, it vastly reduces operational alert fatigue.
+            </p>
+            
+            <h3 className="text-xl font-bold mt-6 mb-3">Triage Workflow</h3>
+            <ol className="list-decimal list-outside ml-5 space-y-2 text-base leading-relaxed marker:text-muted-foreground font-medium text-foreground/90">
+              <li>Navigate to the <strong>Findings</strong> tab on the left sidebar.</li>
+              <li>Sort the table by the <strong>Severity</strong> column (prioritize <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">Critical</code> and <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">High</code>).</li>
+              <li>Click a specific finding row to open the details pane.</li>
+              <li>Review the <strong>Root Cause Analysis</strong> and the exact assets affected.</li>
+              <li>Click <strong>Run Automated Action</strong> (if available) or follow the manual remediation steps to securely close the vulnerability.</li>
+            </ol>
+          </div>
+        </div>
 
-                        <div>
-                          <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                            <MousePointerClick className="w-3.5 h-3.5" /> How To Use It
-                          </h4>
-                          <p className="text-foreground/80 leading-relaxed">{item.usage}</p>
-                        </div>
+        <hr className="border-border/50" />
 
-                        <div className="bg-muted/50 rounded-lg p-4 border border-border/50 mt-auto">
-                          <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary mb-2">
-                            <BriefcaseBusiness className="w-3.5 h-3.5" /> Business & Risk Benefit
-                          </h4>
-                          <p className="text-foreground/90 leading-relaxed mb-3">{item.businessBenefit}</p>
-                          
-                          <div className="pt-3 border-t border-border/50">
-                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Example Scenario</span>
-                            <p className="text-muted-foreground italic leading-relaxed text-sm">"{item.example}"</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+        {/* Section: Compliance */}
+        <div className="space-y-6">
+          <div className="flex items-center text-sm font-medium text-muted-foreground gap-1.5 mb-2">
+            Risk <ChevronRight className="w-4 h-4" /> Compliance
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Compliance</h2>
+          <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
+            <p className="text-base leading-relaxed">
+              The <strong>Compliance</strong> tracker functions as an automated internal auditor, continuously measuring your environment against strict global regulatory frameworks such as <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">SOC 2</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">ISO 27001</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">HIPAA</code>, and <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">PCI-DSS</code>.
+            </p>
+            <p className="text-base leading-relaxed">
+              Maintaining robust compliance prevents catastrophic regulatory fines, failed external audits, and the subsequent loss of lucrative enterprise contracts that demand strict security adherence. It also drastically replaces manual, error-prone spreadsheet audits with continuous, evidence-backed API monitoring.
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-3">Enabling Frameworks</h3>
+            <ol className="list-decimal list-outside ml-5 space-y-2 text-base leading-relaxed marker:text-muted-foreground font-medium text-foreground/90">
+              <li>Navigate to the <strong>Compliance</strong> module.</li>
+              <li>Under the <strong>Available Frameworks</strong> list, locate the standard required by your industry.</li>
+              <li>Click <strong>Enable Framework</strong>.</li>
+              <li>Allow up to 15 minutes for the AI engine to map your deployed security controls against the framework requirements.</li>
+              <li>View your live readiness percentage and click <strong>Export Report</strong> to seamlessly provide cryptographic proof to external auditors.</li>
+            </ol>
+          </div>
+        </div>
+
+        <hr className="border-border/50" />
+
+        {/* Section: Vendor Risk */}
+        <div className="space-y-6">
+          <div className="flex items-center text-sm font-medium text-muted-foreground gap-1.5 mb-2">
+            Risk <ChevronRight className="w-4 h-4" /> Vendor Risk
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Vendor Risk</h2>
+          <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
+            <p className="text-base leading-relaxed">
+              The <strong>Vendor Risk</strong> module executes AI-driven, continuous background checks and security posture evaluations on third-party suppliers actively integrated into your corporate workflows.
+            </p>
+            <p className="text-base leading-relaxed">
+              When your organization relies on external vendors, a breach of their systems grants hackers an implicit backdoor access into your proprietary data. This module identifies cyber risk by tracking whether a software vendor is currently experiencing a known outage, a dark-web data leak, or historically poor security hygiene.
+            </p>
+            <p className="text-base leading-relaxed">
+              <strong>Note:</strong> Before your organization procures or connects a new SaaS tool, add the vendor's domain to this module. Procurement teams should enforce strict policies rejecting software that receives a <strong>High Risk</strong> rating.
+            </p>
+          </div>
+        </div>
+
+        <hr className="border-border/50" />
+
+        {/* Section: Threat Intel */}
+        <div className="space-y-6">
+          <div className="flex items-center text-sm font-medium text-muted-foreground gap-1.5 mb-2">
+            Threat Operations <ChevronRight className="w-4 h-4" /> Threat Intel
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Threat Intel</h2>
+          <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
+            <p className="text-base leading-relaxed">
+              The <strong>Threat Intel</strong> dashboard acts as your proactive early-warning radar. It continuously monitors global cyber activity, zero-day vulnerability disclosures, and state-sponsored hacker campaigns, instantly cross-referencing these external events against your known internal tech stack.
+            </p>
+            <p className="text-base leading-relaxed">
+              By alerting you the second a zero-day vulnerability is announced that impacts a software version you actively use, this module significantly decreases your "Time to Patch".
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-3">Responding to Campaigns</h3>
+            <ol className="list-decimal list-outside ml-5 space-y-2 text-base leading-relaxed marker:text-muted-foreground font-medium text-foreground/90">
+              <li>Monitor this page for critical <strong>"Your business is affected"</strong> banners.</li>
+              <li>Select an active campaign (e.g., <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">Log4Shell</code> or <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">MoveIT</code>).</li>
+              <li>Read the AI's plain-English breakdown of the threat actor's methodology.</li>
+              <li>Review the auto-generated list of vulnerable internal hostname assets.</li>
+              <li>Click <strong>Block IoCs</strong> to instantly propagate malicious IP addresses to your firewall.</li>
+            </ol>
+          </div>
+        </div>
+
+        <hr className="border-border/50" />
+
+        {/* Section: Cyber Threat Analyzer */}
+        <div className="space-y-6">
+          <div className="flex items-center text-sm font-medium text-muted-foreground gap-1.5 mb-2">
+            Threat Operations <ChevronRight className="w-4 h-4" /> Cyber Threat Analyzer
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Cyber Threat Analyzer</h2>
+          <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
+            <p className="text-base leading-relaxed">
+              Powered by an advanced correlation engine processing over 24 million events daily, the <strong>Cyber Threat Analyzer</strong> maps global threat actor activity directly against your specific infrastructure footprint to surface highly actionable attack paths.
+            </p>
+            <p className="text-base leading-relaxed">
+              This engine bridges the gap between raw data and executive decision-making. It calculates business risk by estimating financial impact, operational risk by determining if an attack disrupts pipelines, and cyber risk by combining CVSS severity with proof of active exploitation. The engine aggregates telemetry across critical domains including OSINT, Dark Web Chatter, Supply Chain, and Cloud Infrastructure (<code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">AWS</code>/<code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">GCP</code>).
+            </p>
+            <p className="text-base leading-relaxed">
+              <strong>Note:</strong> Expand any identified attack path in the UI to reveal the exact chronological origin of the threat. For advanced triage, click <strong>Investigate Knowledge Graph</strong> to visually trace the attack path from the external threat actor directly to your internal database.
+            </p>
+          </div>
+        </div>
+
+        <hr className="border-border/50" />
+
+        {/* Section: Security Testing */}
+        <div className="space-y-6">
+          <div className="flex items-center text-sm font-medium text-muted-foreground gap-1.5 mb-2">
+            Threat Operations <ChevronRight className="w-4 h-4" /> Security Testing
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Security Testing</h2>
+          <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
+            <p className="text-base leading-relaxed">
+              The <strong>Security Testing</strong> module launches safe, simulated, continuous ethical hacking engagements against your external attack surface to discover logical flaws before criminals do.
+            </p>
+            <p className="text-base leading-relaxed">
+              This continuous validation replaces expensive point-in-time annual human penetration tests, ensuring your organization mathematically validates that firewalls, WAFs, and intrusion detection systems actually function correctly.
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-3">Scheduling an Assessment</h3>
+            <ol className="list-decimal list-outside ml-5 space-y-2 text-base leading-relaxed marker:text-muted-foreground font-medium text-foreground/90">
+              <li>Navigate to the <strong>Security Testing</strong> workspace.</li>
+              <li>Click <strong>+ New Campaign</strong>.</li>
+              <li>Select an attack library (e.g., <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">OWASP Top 10 Web Exploits</code>).</li>
+              <li>Set the engagement cadence to <strong>Weekly</strong>.</li>
+              <li>Once the simulation finishes, assign the successfully breached pathways as high-priority tickets to your engineering team.</li>
+            </ol>
+          </div>
+        </div>
+
+        <hr className="border-border/50" />
+
+        {/* Section: My Company */}
+        <div className="space-y-6">
+          <div className="flex items-center text-sm font-medium text-muted-foreground gap-1.5 mb-2">
+            Console <ChevronRight className="w-4 h-4" /> My Company
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">My Company</h2>
+          <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
+            <p className="text-base leading-relaxed">
+              The <strong>My Company</strong> page defines the global context for the AI engine. Here, you establish your organizational footprint, including your specific industry, cloud providers, and operational zones.
+            </p>
+            <p className="text-base leading-relaxed">
+              Accurately maintaining this profile prevents the AI engine from generating false positives. If your profile incorrectly states you use <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">Azure</code> instead of <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">AWS</code>, the system may suppress critical AWS specific vulnerability alerts.
+            </p>
+            <p className="text-base leading-relaxed">
+              <strong>Note:</strong> Whenever a new core technology is culturally adopted, your IT administrators must accurately update this profile so the AI engine can dynamically adjust its 24/7 monitoring capabilities.
+            </p>
+          </div>
+        </div>
+
+        <hr className="border-border/50" />
+
+        {/* Section: Control Panel */}
+        <div className="space-y-6">
+          <div className="flex items-center text-sm font-medium text-muted-foreground gap-1.5 mb-2">
+            Console <ChevronRight className="w-4 h-4" /> Control Panel
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Control Panel</h2>
+          <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
+            <p className="text-base leading-relaxed">
+              The <strong>Control Panel</strong> is the central configuration and operations hub for the platform. Improper configuration here represents a severe insider threat vector. Administrator access to this panel must be tightly controlled using Role-Based Access Control (RBAC).
+            </p>
+            <p className="text-base leading-relaxed">
+              The Control Panel houses the following critical integration cards:
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-2">AI & Platform Foundations</h3>
+            <p className="text-base leading-relaxed mb-4">
+              Configure the underlying AI models (e.g. <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">GPT-4</code> or <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">Claude 3.5 Sonnet</code>), routing protocols, and API cost management features.
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-2">Threat Intelligence Feeds</h3>
+            <p className="text-base leading-relaxed mb-4">
+              Manage inbound threat signal streams. Toggling premium feeds (such as <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">FS-ISAC</code> for finance) ensures the platform digests intelligence tailored to your sector.
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-2">User Management & RBAC</h3>
+            <p className="text-base leading-relaxed mb-4">
+              Invite team members and assign strict platform roles (<code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">CISO</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">SOC_ANALYST</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">AUDITOR</code>). Ensure engineers have permissions to execute scripts, while executives receive read-only reporting access.
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-2">Integrations & API Keys</h3>
+            <p className="text-base leading-relaxed mb-4">
+              Securely connect external platforms like <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">Jira</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">CrowdStrike</code>, or <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">AWS</code>. Providing valid API keys ensures the AI retains continuous telemetry flow from your network.
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-2">Data Workflows</h3>
+            <p className="text-base leading-relaxed mb-4">
+              Manage automated data ingestion connectors and synchronization schedules. Maintaining healthy cron-schedules ensures the platform pipeline is never blind to active attacks.
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-2">Notifications & Alerts</h3>
+            <p className="text-base leading-relaxed mb-4">
+              Set up global SLA rules, <strong>Slack</strong> webhooks, email summaries, and <strong>PagerDuty</strong> escalations to ensure critical alerts reach the correct on-call engineer instantly.
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-2">General Security</h3>
+            <p className="text-base leading-relaxed mb-4">
+              Configure platform-wide Single Sign-On (SSO), enforce Multi-Factor Authentication (MFA), and define session timeouts to defend against account takeover vectors.
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-2">Subscription & Service Tier</h3>
+            <p className="text-base leading-relaxed mb-4">
+              Manage your active financial subscription plan, upgrade your tier, and review billing statements to ensure continuity of the security service.
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-2">Playbooks (SOAR)</h3>
+            <p className="text-base leading-relaxed mb-4">
+              Configure automated response actions (SOAR). By automatically neutralizing low-level threats (like isolating a laptop exhibiting malware signatures via ED integrations), you drastically alleviate operational burden.
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-2">Audit Trail</h3>
+            <p className="text-base leading-relaxed mb-4">
+              Review comprehensive, immutable system logs containing every administrative action and compliance event. This provides cryptographic accountability, which is mandatory for passing regulatory audits.
+            </p>
+          </div>
         </div>
 
       </div>

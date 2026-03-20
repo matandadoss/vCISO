@@ -24,7 +24,7 @@ export default function WorkflowsPage() {
 
   const fetchWorkflows = async () => {
     try {
-      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/workflows`);
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/workflows`);
       const data = await res.json();
       setWorkflows(data);
     } catch (e) {
@@ -42,7 +42,7 @@ export default function WorkflowsPage() {
 
   const handleToggle = async (id: string) => {
     try {
-      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/workflows/${id}/toggle`, { method: "POST" });
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/workflows/${id}/toggle`, { method: "POST" });
       if (res.ok) {
         toast.success("Workflow toggled successfully");
         fetchWorkflows();
@@ -54,7 +54,7 @@ export default function WorkflowsPage() {
 
   const handleRun = async (id: string) => {
     try {
-      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/workflows/${id}/run`, { method: "POST" });
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/workflows/${id}/run`, { method: "POST" });
       if (res.ok) {
         toast.success("Workflow sync started");
         fetchWorkflows();

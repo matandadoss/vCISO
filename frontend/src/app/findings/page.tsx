@@ -25,7 +25,7 @@ export default function FindingsPage() {
         const offset = (page - 1) * limit;
         
         // Build base URL
-        let url = `${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/findings?org_id=default&limit=${limit}&offset=${offset}`;
+        let url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/findings?org_id=default&limit=${limit}&offset=${offset}`;
         
         // Append filters if they exist
         if (severityFilter) url += `&severity=${severityFilter}`;

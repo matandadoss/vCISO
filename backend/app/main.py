@@ -66,3 +66,7 @@ app.include_router(bugs.router, prefix="/api/v1") # Open/loose auth for bug repo
 @app.get("/")
 async def root():
     return {"message": "vCISO API Operational"}
+
+@app.get("/api/v1/health")
+async def health_check():
+    return {"status": "healthy"}

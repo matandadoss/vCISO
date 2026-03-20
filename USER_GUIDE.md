@@ -1,83 +1,171 @@
-# Virtual CISO Platform - Executive How-To Guide
-
-Welcome to your Virtual Chief Information Security Officer (vCISO). This platform is designed for business leaders to manage risk without needing a technical degree. Below is a simple breakdown of every page in the left menu and exactly how to use it.
+# Virtual CISO Documentation
 
 ---
 
-## 1. Overview
+*Dashboard > Overview*
 
-### Dashboard (`/`)
-* **What it is:** Your daily health check.
-* **How to use it:** Log in every morning and look at the "Overall Security Score" at the top. If the number is green and high (like a credit score), your business is safe. If the number drops, look at the "Recent Findings" box below it to see what broke overnight.
+## Overview
 
-### Platform Guide (`/guide`)
-* **What it is:** The page you are currently reading.
-* **How to use it:** Come back to this page whenever you forget what a certain button or page does, or when you are training a new employee on how to use the system.
+The **Dashboard** is your organization's central command center, providing a real-time, aggregated snapshot of your active risk landscape. It distills millions of telemetry points into a single, comprehensive **Overall Security Score**.
 
-### vCISO Chat (`/chat`)
-* **What it is:** Your personal security advisor.
-* **How to use it:** Type questions into the chat box exactly as if you were texting a human expert. For example, type "Is my database secure?" or "How do I pass a SOC 2 audit?". The AI understands plain English and will guide you step-by-step.
+From a business perspective, this score acts much like a corporate credit rating; a high, stable score demonstrates strong resilience against threats that could impact revenue, brand trust, or regulatory compliance. Operationally, it surfaces critical system outages or disconnected data pipelines directly to the top of your feed, ensuring that your team is never flying blind.
+
+**Note:** Executives should log in daily to monitor the top-level score and review the **Recent Findings** feed. If high-severity alerts populate, utilize the quick-action buttons to pivot into specific modules for technical remediation.
 
 ---
 
-## 2. Risk & Compliance
+*Risk > Findings*
 
-### Findings (`/findings`)
-* **What it is:** Your prioritized to-do list for fixing problems.
-* **How to use it:** Review this list weekly. Look at the items marked "Critical" in red. Click the "View" button next to a critical finding. You will see an explanation of the problem. Click "Assign" to send the problem to your IT person, or click "Auto-Remediate" to let the software fix it for you automatically.
+## Findings
 
-### Compliance (`/compliance`)
-* **What it is:** Your automated auditor.
-* **How to use it:** If a major client demands you meet standard security regulations (like HIPAA or PCI), click the "Add Framework" button to track it. The page will give you a percentage score. When the score hits 100%, you are ready to pass the audit and close the deal.
+The **Findings** module acts as your continuously updated, dynamically prioritized vulnerability management queue. It intelligently ingests raw security logs from across your cloud and endpoint environments and distills them into distinct, actionable tickets.
 
-### Vendor Risk (`/vendor-risk`)
-* **What it is:** Background checks on the software you buy.
-* **How to use it:** Before your company buys a new software subscription from a third-party vendor, add the vendor's name here. Click "Analyze" and the AI will scan the internet to see if that vendor has a history of getting hacked. Do not buy software from vendors with a "High Risk" score.
+This module fundamentally addresses cyber risk by identifying explicit technical flaws—such as unpatched software, exposed databases, or permissive `AWS` firewall rules—that threat actors actively scan for. By grouping these alerts based on the `MITRE ATT&CK` framework and scoring them by severity, it vastly reduces operational alert fatigue.
 
-### Audit Trail (`/audit-trail`)
-* **What it is:** The security camera for the app.
-* **How to use it:** You generally don't need to check this daily. If something goes wrong and you need to know *who* pushed a button and *when* they did it, open this page. You can search by employee name to see everything they clicked on.
+### Triage Workflow
+
+1. Navigate to the **Findings** tab on the left sidebar.
+2. Sort the table by the **Severity** column (prioritize `Critical` and `High`).
+3. Click a specific finding row to open the details pane.
+4. Review the **Root Cause Analysis** and the exact assets affected.
+5. Click **Run Automated Action** (if available) or follow the manual remediation steps to securely close the vulnerability.
 
 ---
 
-## 3. Threat Operations
+*Risk > Compliance*
 
-### Threat Intel (`/threat-intel`)
-* **What it is:** The neighborhood watch.
-* **How to use it:** This page shows what hackers are currently doing in the wild. Look at the top alert. If the system says "Your business is affected," it means you use a software program that hackers are currently breaking into globally. Assign it to your IT team immediately.
+## Compliance
 
-### Correlation Graph (`/correlation`)
-* **What it is:** A map of how a hacker would break in.
-* **How to use it:** This looks like a spider web connecting red and green dots. Instead of reading boring logs, follow the red lines with your finger. If a red line connects from the internet all the way to your customer database, it means you have an open door that needs to be closed. Read the "AI Assessment" text box for plain English instructions on where to break the line.
+The **Compliance** tracker functions as an automated internal auditor, continuously measuring your environment against strict global regulatory frameworks such as `SOC 2`, `ISO 27001`, `HIPAA`, and `PCI-DSS`.
 
-### AI Pentesting (`/pentest`)
-* **What it is:** Simulated ethical hacking.
-* **How to use it:** Once a week, click the "Start New Assessment" button. Our AI will pretend to be a criminal and try to break into your systems exactly like a real hacker would. When it finishes, read its report. If it successfully broke in, it will show you exactly how it did it so you can fix the lock.
+Maintaining robust compliance prevents catastrophic regulatory fines, failed external audits, and the subsequent loss of lucrative enterprise contracts that demand strict security adherence. It also drastically replaces manual, error-prone spreadsheet audits with continuous, evidence-backed API monitoring.
 
-### What-If Simulator (`/simulator`)
-* **What it is:** A safe playground for testing.
-* **How to use it:** Before your engineers install a new database or change a major firewall rule, use this page. Type in what they plan to do and click "Simulate." The AI will warn you if this planned change will accidentally open a door for hackers.
+### Enabling Frameworks
+
+1. Navigate to the **Compliance** module.
+2. Under the **Available Frameworks** list, locate the standard required by your industry.
+3. Click **Enable Framework**. 
+4. Allow up to 15 minutes for the AI engine to map your deployed security controls against the framework requirements.
+5. View your live readiness percentage and click **Export Report** to seamlessly provide cryptographic proof to external auditors.
 
 ---
 
-## 4. Automation & Data
+*Risk > Vendor Risk*
 
-### Playbooks (SOAR) (`/playbooks`)
-* **What it is:** Auto-pilot for emergencies.
-* **How to use it:** Think of these like smart-home rules (e.g., "If someone opens the window, turn on the alarm"). Click "Create Rule". You can tell the system: "If a hacker logs in from Russia, instantly lock their account and text my phone." Once you set these rules, they run 24/7 without you doing anything.
+## Vendor Risk
 
-### Data Workflows (`/workflows`)
-* **What it is:** Connecting the plumbing.
-* **How to use it:** This is a technical page primarily for your IT team. It tells the platform how to pull logs from your cloud providers. You do not need to check this page daily unless the Dashboard tells you a data source has disconnected.
+The **Vendor Risk** module executes AI-driven, continuous background checks and security posture evaluations on third-party suppliers actively integrated into your corporate workflows.
 
-### Integrations Hub (`/integrations`)
-* **What it is:** Linking your tools together.
-* **How to use it:** Find the logos of all the business tools you currently use (like Slack, Google Cloud, AWS, or Jira). Click "Connect" on each one. This allows the vCISO platform to see everything happening in your business and automatically send messages to your team if a problem happens.
+When your organization relies on external vendors, a breach of their systems grants hackers an implicit backdoor access into your proprietary data. This module identifies cyber risk by tracking whether a software vendor is currently experiencing a known outage, a dark-web data leak, or historically poor security hygiene.
+
+**Note:** Before your organization procures or connects a new SaaS tool, add the vendor's domain to this module. Procurement teams should enforce strict policies rejecting software that receives a **High Risk** rating.
 
 ---
 
-## 5. System
+*Threat Operations > Threat Intel*
 
-### Settings (`/settings`)
-* **What it is:** Your billing and admin controls.
-* **How to use it:** Use this page to add new employee accounts or check how much the AI usage is costing you this month.
+## Threat Intel
+
+The **Threat Intel** dashboard acts as your proactive early-warning radar. It continuously monitors global cyber activity, zero-day vulnerability disclosures, and state-sponsored hacker campaigns, instantly cross-referencing these external events against your known internal tech stack.
+
+By alerting you the second a zero-day vulnerability is announced that impacts a software version you actively use, this module significantly decreases your "Time to Patch".
+
+### Responding to Campaigns
+
+1. Monitor this page for critical **"Your business is affected"** banners.
+2. Select an active campaign (e.g., `Log4Shell` or `MoveIT`).
+3. Read the AI's plain-English breakdown of the threat actor's methodology.
+4. Review the auto-generated list of vulnerable internal hostname assets.
+5. Click **Block IoCs** to instantly propagate malicious IP addresses to your firewall.
+
+---
+
+*Threat Operations > Cyber Threat Analyzer*
+
+## Cyber Threat Analyzer
+
+Powered by an advanced correlation engine processing over 24 million events daily, the **Cyber Threat Analyzer** maps global threat actor activity directly against your specific infrastructure footprint to surface highly actionable attack paths.
+
+This engine bridges the gap between raw data and executive decision-making. It calculates business risk by estimating financial impact, operational risk by determining if an attack disrupts pipelines, and cyber risk by combining CVSS severity with proof of active exploitation. The engine aggregates telemetry across critical domains including OSINT, Dark Web Chatter, Supply Chain, and Cloud Infrastructure (`AWS`/`GCP`).
+
+**Note:** Expand any identified attack path in the UI to reveal the exact chronological origin of the threat. For advanced triage, click **Investigate Knowledge Graph** to visually trace the attack path from the external threat actor directly to your internal database.
+
+---
+
+*Threat Operations > Security Testing*
+
+## Security Testing
+
+The **Security Testing** module launches safe, simulated, continuous ethical hacking engagements against your external attack surface to discover logical flaws before criminals do.
+
+This continuous validation replaces expensive point-in-time annual human penetration tests, ensuring your organization mathematically validates that firewalls, WAFs, and intrusion detection systems actually function correctly.
+
+### Scheduling an Assessment
+
+1. Navigate to the **Security Testing** workspace.
+2. Click **+ New Campaign**.
+3. Select an attack library (e.g., `OWASP Top 10 Web Exploits`).
+4. Set the engagement cadence to **Weekly**.
+5. Once the simulation finishes, assign the successfully breached pathways as high-priority tickets to your engineering team.
+
+---
+
+*Console > My Company*
+
+## My Company
+
+The **My Company** page defines the global context for the AI engine. Here, you establish your organizational footprint, including your specific industry, cloud providers, and operational zones.
+
+Accurately maintaining this profile prevents the AI engine from generating false positives. If your profile incorrectly states you use `Azure` instead of `AWS`, the system may suppress critical AWS specific vulnerability alerts.
+
+**Note:** Whenever a new core technology is culturally adopted, your IT administrators must accurately update this profile so the AI engine can dynamically adjust its 24/7 monitoring capabilities.
+
+---
+
+*Console > Control Panel*
+
+## Control Panel
+
+The **Control Panel** is the central configuration and operations hub for the platform. Improper configuration here represents a severe insider threat vector. Administrator access to this panel must be tightly controlled using Role-Based Access Control (RBAC).
+
+The Control Panel houses the following critical integration cards:
+
+### AI & Platform Foundations
+Configure the underlying AI models (e.g. `GPT-4` or `Claude 3.5 Sonnet`), routing protocols, and API cost management features.
+
+### Threat Intelligence Feeds
+Manage inbound threat signal streams. Toggling premium feeds (such as `FS-ISAC` for finance) ensures the platform digests intelligence tailored to your sector.
+
+### User Management & RBAC
+Invite team members and assign strict platform roles (`CISO`, `SOC_ANALYST`, `AUDITOR`). Ensure engineers have permissions to execute scripts, while executives receive read-only reporting access.
+
+### Integrations & API Keys
+Securely connect external platforms like `Jira`, `CrowdStrike`, or `AWS`. Providing valid API keys ensures the AI retains continuous telemetry flow from your network.
+
+### Data Workflows
+Manage automated data ingestion connectors and synchronization schedules. Maintaining healthy cron-schedules ensures the platform pipeline is never blind to active attacks.
+
+### Notifications & Alerts
+Set up global SLA rules, **Slack** webhooks, email summaries, and **PagerDuty** escalations to ensure critical alerts reach the correct on-call engineer instantly.
+
+### General Security
+Configure platform-wide Single Sign-On (SSO), enforce Multi-Factor Authentication (MFA), and define session timeouts to defend against account takeover vectors.
+
+### Subscription & Service Tier
+Manage your active financial subscription plan, upgrade your tier, and review billing statements to ensure continuity of the security service.
+
+### Playbooks (SOAR)
+Configure automated response actions (SOAR). By automatically neutralizing low-level threats (like isolating a laptop exhibiting malware signatures via ED integrations), you drastically alleviate operational burden.
+
+### Audit Trail
+Review comprehensive, immutable system logs containing every administrative action and compliance event. This provides cryptographic accountability, which is mandatory for passing regulatory audits.
+
+---
+
+*Console > User Guide*
+
+## User Guide
+
+The *User Guide* (this document) provides the authoritative reference manual for navigating the vCISO platform. By explicitly outlining the purpose and risks associated with every page, it ensures your team extracts the maximum defensive value from the software.
+
+[Previous: Control Panel](#) | [Next: Dashboard Overview](#)

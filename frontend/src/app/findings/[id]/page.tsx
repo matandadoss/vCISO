@@ -66,7 +66,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
   useEffect(() => {
     async function fetchFinding() {
       try {
-        const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/findings/${unwrappedParams.id}?org_id=default`);
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/findings/${unwrappedParams.id}?org_id=default`);
         if (!res.ok) throw new Error("Failed to fetch finding details");
         const data = await res.json();
         setFinding(data);
@@ -90,7 +90,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
       if (action === "accept-risk") body = { justification: "Mitigating controls in place via WAF.", expiration_date: "2024-12-31" };
       if (action === "ticket") body = { integration: "jira", priority: "High" };
 
-      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/findings/${finding.id}/${action}?org_id=default`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/findings/${finding.id}/${action}?org_id=default`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

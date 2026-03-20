@@ -30,7 +30,7 @@ export default function ThreatIntelMeridianPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/meridian/threats`);
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/meridian/threats`);
         if (res.ok) {
            const json = await res.json();
            setThreats(json.threats || []);

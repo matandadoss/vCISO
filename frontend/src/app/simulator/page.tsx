@@ -18,7 +18,7 @@ export default function SimulatorPage() {
 
   useEffect(() => {
     // Fetch tier
-    fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/organizations/test-org`)
+    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/organizations/test-org`)
       .then(res => res.json())
       .then(data => {
         if (data.subscription_tier) setTier(data.subscription_tier);
@@ -76,7 +76,7 @@ export default function SimulatorPage() {
     setResult(null);
 
     try {
-      const res = await fetchWithAuth(`${"https://vciso-backend-7gkk7pkdya-uc.a.run.app"}/api/v1/simulator/simulate`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/simulator/simulate`, {
          method: "POST",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify({ query: simulationQuery })

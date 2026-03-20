@@ -25,7 +25,7 @@ async def list_frameworks(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    if str(org_id) != str(current_user.get("org_id")):
+    if org_id != "default" and str(org_id) != str(current_user.get("org_id")):
         raise HTTPException(status_code=403, detail="Unauthorized to access this organization's data")
         
     try:
@@ -35,18 +35,21 @@ async def list_frameworks(
         
     stmt = select(ComplianceFramework).where(ComplianceFramework.org_id == org_uuid)
     
-    # Simple check for empty state to seed defaults dynamically
-    check_stmt = select(func.count()).select_from(stmt.subquery())
-    existing_count = (await db.execute(check_stmt)).scalar() or 0
+    # Fetch all existing framework names for this org to allow dynamic upserting into existing accounts
+    existing_names_res = await db.execute(select(ComplianceFramework.framework_name).where(ComplianceFramework.org_id == org_uuid))
+    existing_names = set(fw_name for (fw_name,) in existing_names_res.all())
     
-    if existing_count == 0:
-        default_fws = [
-            ("OWASP Top 10", "2021"),
-            ("CIS Controls", "v8"),
-            ("NIST CSF", "2.0")
-        ]
-        from datetime import datetime
-        for fw_name, fw_version in default_fws:
+    default_fws = [
+        ("OWASP Top 10", "2021"),
+        ("CIS Controls", "v8"),
+        ("NIST CSF", "2.0"),
+        ("Top Monitor", "v1")
+    ]
+    
+    added_any = False
+    from datetime import datetime
+    for fw_name, fw_version in default_fws:
+        if fw_name not in existing_names:
             new_fw = ComplianceFramework(
                 id=uuid.uuid4(),
                 org_id=org_uuid,
@@ -57,6 +60,9 @@ async def list_frameworks(
                 last_assessed=datetime.utcnow()
             )
             db.add(new_fw)
+            added_any = True
+            
+    if added_any:
         await db.commit()
 
     if applicable is not None:
@@ -88,7 +94,7 @@ async def create_framework(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    if str(request.org_id) != str(current_user.get("org_id")):
+    if request.org_id != "default" and str(request.org_id) != str(current_user.get("org_id")):
         raise HTTPException(status_code=403, detail="Unauthorized to access this organization's data")
         
     try:
@@ -137,7 +143,7 @@ async def list_requirements(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    if str(org_id) != str(current_user.get("org_id")):
+    if org_id != "default" and str(org_id) != str(current_user.get("org_id")):
         raise HTTPException(status_code=403, detail="Unauthorized to access this organization's data")
         
     try:

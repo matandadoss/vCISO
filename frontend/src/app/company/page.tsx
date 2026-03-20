@@ -1,6 +1,7 @@
 "use client";
 
-import { Building, Layers, ShieldCheck, Plus, CheckCircle2, Database } from "lucide-react";
+import { fetchWithAuth } from "@/lib/api";
+import { Building, Layers, ShieldCheck, Plus, CheckCircle2, Database, Users, FileCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
@@ -9,15 +10,21 @@ const TECH_SUGGESTIONS = ["Node.js", "Python", "React", "PostgreSQL", "MongoDB",
 const TOOL_SUGGESTIONS = ["SentinelOne", "Datadog", "CrowdStrike Falcon", "Palo Alto Prisma Cloud", "Splunk Enterprise", "Tenable Nessus", "Wiz", "Snyk", "Checkmarx", "TruffleHog", "Rapid7", "Qualys", "Veracode", "SonarQube", "Aqua Security", "Lacework"];
 
 export default function CompanyPage() {
-  const [activeTab, setActiveTab] = useState<"stack" | "tools" | "app">("stack");
+  const [activeTab, setActiveTab] = useState<"stack" | "tools" | "app" | "threat-actors" | "frameworks">("stack");
   
   const [activeInput, setActiveInput] = useState<"infra" | "tech" | "tools" | null>(null);
   const [inputText, setInputText] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   
+  // Local Storage State
   const [providers, setProviders] = useState<string[]>([]);
   const [techStack, setTechStack] = useState<string[]>([]);
   const [securityTools, setSecurityTools] = useState<any[]>([]);
+
+  // API State
+  const [threatActors, setThreatActors] = useState<any[]>([]);
+  const [frameworks, setFrameworks] = useState<any[]>([]);
+  const [loadingApi, setLoadingApi] = useState(true);
 
   useEffect(() => {
     try {
@@ -33,6 +40,28 @@ export default function CompanyPage() {
          { name: "Tenable Nessus", status: "Disconnected", type: "Vuln Scanner", connected: false }
       ]);
     } catch(e) {}
+
+    // Fetch API Data to trigger backend injection of defaults
+    const fetchApiData = async () => {
+      try {
+        const [actorsRes, fwRes] = await Promise.all([
+          fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/actors?org_id=default`),
+          fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/compliance/frameworks?org_id=default`)
+        ]);
+        
+        const actorsData = await actorsRes.json();
+        const fwData = await fwRes.json();
+        
+        setThreatActors(actorsData.items || []);
+        setFrameworks(fwData.items || []);
+      } catch (err) {
+        console.error("Failed to fetch API data", err);
+      } finally {
+        setLoadingApi(false);
+      }
+    };
+    
+    fetchApiData();
   }, []);
 
   const hasMounted = providers.length > 0 || techStack.length > 0;
@@ -75,6 +104,7 @@ export default function CompanyPage() {
      if (type === "tools") return TOOL_SUGGESTIONS.filter(s => s.toLowerCase().includes(query) && !securityTools.find(t => t.name === s));
      return [];
   };
+
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
       <div className="max-w-5xl mx-auto space-y-8">
@@ -97,24 +127,36 @@ export default function CompanyPage() {
             Continuous Correlation Engine Active. Scanning configurations against incoming threat feeds...
         </div>
 
-        <div className="flex bg-muted p-1 rounded-lg w-max mb-6">
+        <div className="flex flex-wrap bg-muted p-1 rounded-lg w-fit mb-6 gap-1">
            <button 
-             className={cn("text-sm font-medium px-6 py-2 rounded-md flex items-center gap-2 transition-all", activeTab === "stack" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+             className={cn("text-sm font-medium px-4 py-2 rounded-md flex items-center gap-2 transition-all", activeTab === "stack" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
              onClick={() => setActiveTab("stack")}
            >
-              <Layers className="w-4 h-4" /> Stack
+              <Layers className="w-4 h-4" /> Cloud Infra
            </button>
            <button 
-             className={cn("text-sm font-medium px-6 py-2 rounded-md flex items-center gap-2 transition-all", activeTab === "tools" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+             className={cn("text-sm font-medium px-4 py-2 rounded-md flex items-center gap-2 transition-all", activeTab === "app" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+             onClick={() => setActiveTab("app")}
+           >
+              <Database className="w-4 h-4" /> App Stack
+           </button>
+           <button 
+             className={cn("text-sm font-medium px-4 py-2 rounded-md flex items-center gap-2 transition-all", activeTab === "tools" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
              onClick={() => setActiveTab("tools")}
            >
               <ShieldCheck className="w-4 h-4" /> Security Tools
            </button>
            <button 
-             className={cn("text-sm font-medium px-6 py-2 rounded-md flex items-center gap-2 transition-all", activeTab === "app" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
-             onClick={() => setActiveTab("app")}
+             className={cn("text-sm font-medium px-4 py-2 rounded-md flex items-center gap-2 transition-all", activeTab === "threat-actors" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+             onClick={() => setActiveTab("threat-actors")}
            >
-              <Database className="w-4 h-4" /> App Stack
+              <Users className="w-4 h-4" /> Threat Actors
+           </button>
+           <button 
+             className={cn("text-sm font-medium px-4 py-2 rounded-md flex items-center gap-2 transition-all", activeTab === "frameworks" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+             onClick={() => setActiveTab("frameworks")}
+           >
+              <FileCheck className="w-4 h-4" /> Frameworks
            </button>
         </div>
 
@@ -292,6 +334,75 @@ export default function CompanyPage() {
                </div>
            </div>
         )}
+
+        {activeTab === "threat-actors" && (
+           <div className="grid gap-6 animate-in fade-in duration-300">
+               <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 sm:gap-0 mb-6">
+                     <div>
+                         <h2 className="text-xl font-bold text-foreground">Monitored Threat Actors</h2>
+                         <p className="text-sm text-muted-foreground mt-1">Advanced Persistent Threats (APTs) monitored dynamically based on your industry and stack.</p>
+                     </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                     {loadingApi ? (
+                        <div className="py-8 text-center text-muted-foreground animate-pulse">Loading tracked actors...</div>
+                     ) : threatActors.length > 0 ? (
+                       threatActors.map((actor: any) => (
+                          <div key={actor.id} className="border border-border/50 bg-muted/10 p-4 rounded-lg flex flex-col justify-between group hover:border-primary/50 transition-colors">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-bold text-foreground">{actor.name}</span>
+                                <span className="bg-red-500/10 text-red-500 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                                  {actor.sophistication?.replace("_", " ")}
+                                </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{actor.description}</p>
+                          </div>
+                       ))
+                     ) : (
+                       <div className="py-8 text-center text-muted-foreground border border-dashed rounded-lg bg-muted/20">No active threat actors mapped.</div>
+                     )}
+                  </div>
+               </div>
+           </div>
+        )}
+
+        {activeTab === "frameworks" && (
+           <div className="grid gap-6 animate-in fade-in duration-300">
+               <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 sm:gap-0 mb-6">
+                     <div>
+                         <h2 className="text-xl font-bold text-foreground">Global Compliance Frameworks</h2>
+                         <p className="text-sm text-muted-foreground mt-1">Security frameworks actively mapped and enforced across your telemetry.</p>
+                     </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     {loadingApi ? (
+                        <div className="py-8 text-center text-muted-foreground animate-pulse col-span-full">Loading injected frameworks...</div>
+                     ) : frameworks.length > 0 ? (
+                       frameworks.map((fw: any) => (
+                          <div key={fw.id} className="border border-border/50 bg-muted/10 p-4 rounded-lg flex items-center gap-3 group hover:border-primary/50 transition-colors">
+                              <div className="p-2 bg-primary/10 rounded-md">
+                                <FileCheck className="w-5 h-5 text-primary" />
+                              </div>
+                              <div>
+                                <span className="font-bold text-foreground flex items-center gap-2">
+                                  {fw.framework_name} 
+                                  {fw.version && <span className="text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{fw.version}</span>}
+                                </span>
+                              </div>
+                          </div>
+                       ))
+                     ) : (
+                       <div className="py-8 text-center text-muted-foreground border border-dashed rounded-lg bg-muted/20 col-span-full">No active frameworks.</div>
+                     )}
+                  </div>
+               </div>
+           </div>
+        )}
+
       </div>
     </div>
   );
