@@ -1,37 +1,36 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 import datetime
+import uuid
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.session import get_db
+from app.models.domain import Organization
+from app.db.seeds import seed_defaults_for_org
 
 router = APIRouter(prefix="/onboarding", tags=["onboarding"])
-
-# In-memory mock state for the current session demonstration
-MOCK_ONBOARDING_STATE = {
-    "is_onboarded": True,
-    "completed_at": None,
-    "organization": None,
-    "integrations": [],
-    "frameworks": []
-}
 
 class OnboardingCompleteRequest(BaseModel):
     organization: dict
     integrations: list[str]
     frameworks: list[str]
 
-@router.get("/status")
-async def get_onboarding_status():
-    return MOCK_ONBOARDING_STATE
-
 @router.post("/complete")
-async def complete_onboarding(request: OnboardingCompleteRequest):
-    # Mock simulating the saving of onboarding preferences
-    import asyncio
-    await asyncio.sleep(1.0)
+async def complete_onboarding(request: OnboardingCompleteRequest, db: AsyncSession = Depends(get_db)):
+    org_name = request.organization.get("companyName", "New Company")
+    org_id = uuid.uuid4()
     
-    MOCK_ONBOARDING_STATE["is_onboarded"] = True
-    MOCK_ONBOARDING_STATE["completed_at"] = datetime.datetime.utcnow().isoformat()
-    MOCK_ONBOARDING_STATE["organization"] = request.organization
-    MOCK_ONBOARDING_STATE["integrations"] = request.integrations
-    MOCK_ONBOARDING_STATE["frameworks"] = request.frameworks
+    new_org = Organization(
+        id=org_id,
+        name=org_name,
+        industry="Unknown",
+        size="Unknown",
+        subscription_tier="professional"
+    )
+    db.add(new_org)
     
-    return {"status": "success", "state": MOCK_ONBOARDING_STATE}
+    # Seed the defaults automatically for the new account
+    await seed_defaults_for_org(db, org_id)
+    await db.commit()
+    
+    return {"status": "success", "org_id": str(org_id)}

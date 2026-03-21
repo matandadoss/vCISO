@@ -32,8 +32,30 @@ export default function SetupPage() {
     try {
       if (!user) return;
       
-      // In a real application, we would POS to the backend `/api/v1/organizations` here
-      console.log("Saving Org Profile:", data);
+      console.log("Saving Org Profile to Backend:", data);
+      
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/onboarding/complete`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            organization: data,
+            integrations: data.securityTools,
+            frameworks: []
+          })
+        });
+        
+        if (!res.ok) {
+           console.warn("Failed to save org to backend. Continuing with local mock.");
+        } else {
+           const json = await res.json();
+           console.log("Organization created:", json.org_id);
+        }
+      } catch (e) {
+        console.warn("API unreachable. Continuing with local mock.", e);
+      }
       
       // Flag completion in local storage
       localStorage.setItem(`vCISO_Setup_${user.uid}`, "true");
