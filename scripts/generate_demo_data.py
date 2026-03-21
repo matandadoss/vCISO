@@ -10,9 +10,10 @@ from sqlalchemy.orm import sessionmaker
 from app.models.domain import (
     Organization, Asset, AssetType, Environment,
     Vulnerability, FindingStatus, Severity,
-    Finding, FindingType, WorkflowName, ThreatActor, ThreatSophistication
+    Finding, FindingType, WorkflowName, ThreatActor, ThreatSophistication, ComplianceFramework
 )
 from app.services.graph_service import GraphService
+from app.db.seeds import seed_defaults_for_org
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/vciso")
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
@@ -23,8 +24,12 @@ engine = create_async_engine(DATABASE_URL, echo=False)
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 async def generate_demo_data():
-    print("Connecting to DB and Neo4j...")
-    graph_service = GraphService(uri=NEO4J_URI, user=NEO4J_USERNAME, password=NEO4J_PASSWORD)
+    print("Connecting to DB and bypassing Neo4j...")
+    class MockGraphService:
+        async def sync_entity(self, *args, **kwargs): pass
+        async def add_relationship(self, *args, **kwargs): pass
+        async def close(self): pass
+    graph_service = MockGraphService()
     
     async with AsyncSessionLocal() as session:
         # 1. Create Org
@@ -55,16 +60,22 @@ async def generate_demo_data():
         await session.commit()
         print(f"Created {len(assets)} Assets")
 
-        # 3. Create Threat Actor
-        ta = ThreatActor(
-            id=uuid.uuid4(),
-            org_id=org_id,
-            name="FIN7",
-            sophistication=ThreatSophistication.advanced,
-            active=True
+        # 3. Create Threat Actors and Frameworks defaults
+        await seed_defaults_for_org(session, org_id)
+        
+        # Flush to ensure we can query them immediately
+        await session.flush()
+        
+        from sqlalchemy.future import select
+        threat_actors_result = await session.execute(
+            select(ThreatActor).where(ThreatActor.org_id == org_id)
         )
-        session.add(ta)
-        await graph_service.sync_entity("ThreatActor", {"id": str(ta.id), "name": ta.name})
+        actors = threat_actors_result.scalars().all()
+        for act in actors:
+            await graph_service.sync_entity("ThreatActor", {"id": str(act.id), "name": act.name})
+        
+        # Pick one for findings
+        ta = actors[0] if actors else None
         await session.commit()
         
         # 4. Create Vulnerabilities & Findings
