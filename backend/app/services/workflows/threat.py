@@ -7,16 +7,16 @@ class ThreatWorkflow(BaseWorkflow):
     workflow_name = WorkflowName.threat
 
     async def ingest(self, org_id: str) -> List[Any]:
-        # ThreatIntelPlatformConnector, RecordedFutureConnector, ChronicleConnector, VirusTotalConnector
+        # Connectors: ThreatIntelPlatformConnector, GCPChronicleConnector, RecordedFutureConnector
         return [
             {
-                "id": f"threat-{uuid.uuid4()}",
+                "id": f"chronicle-threat-{uuid.uuid4()}",
                 "indicator_type": "ip",
                 "value": "198.51.100.42",
-                "threat_actor": "FIN7",
+                "threat_actor": "UNKNOWN_APT",
                 "matched_asset": "prod-gateway-01",
                 "severity": "CRITICAL",
-                "description": "Observed communication with known FIN7 C2 infrastructure directly from production gateway"
+                "description": "Chronicle SIEM: Observed communication with known malicious C2 infrastructure from production gateway."
             }
         ]
 

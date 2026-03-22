@@ -6,7 +6,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from secure import Secure
 from app.core.auth import get_current_user
-from app.api.v1 import ai_settings, chat, findings, dashboard, ws, threat_intel, compliance, correlation_graph, playbooks, onboarding, integrations, simulator, organizations, vendors, pentest, workflows, bugs
+from app.api.v1 import ai_settings, chat, findings, dashboard, ws, threat_intel, compliance, correlation_graph, playbooks, onboarding, integrations, simulator, organizations, vendors, pentest, workflows, bugs, users, risk_register
 from app.db.session import get_db
 
 # Initialize Rate Limiter
@@ -67,6 +67,8 @@ app.include_router(organizations.router, prefix="/api/v1", dependencies=[Depends
 app.include_router(vendors.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
 app.include_router(pentest.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
 app.include_router(workflows.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(users.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(risk_register.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
 app.include_router(bugs.router, prefix="/api/v1") # Open/loose auth for bug report catching
 
 @app.get("/")

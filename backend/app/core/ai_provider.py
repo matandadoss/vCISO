@@ -27,6 +27,7 @@ class AIRequest:
     max_tokens: int = 4096
     temperature: float = 0.1
     metadata: dict = None
+    file_parts: Optional[list] = None
 
 @dataclass
 class AIResponse:
@@ -47,7 +48,7 @@ class AIProviderClient:
     PRICING = {
         AIProvider.VERTEX_AI: {
             "gemini-2.5-pro-preview": {"input": 1.25, "output": 10.00},
-            "gemini-2.0-flash": {"input": 0.075, "output": 0.30},
+            "gemini-1.5-flash-002": {"input": 0.075, "output": 0.30},
             "gemini-1.5-pro": {"input": 1.25, "output": 10.00},
         },
         AIProvider.ANTHROPIC_DIRECT: {
@@ -81,13 +82,16 @@ class AIProviderClient:
         if self.active_provider == AIProvider.VERTEX_AI:
             try:
                 import vertexai
-                vertexai.init(
-                    project=self.config.VERTEX_PROJECT_ID,
-                    location=self.config.VERTEX_LOCATION
-                )
+                if self.config.VERTEX_PROJECT_ID and self.config.VERTEX_LOCATION:
+                    vertexai.init(
+                        project=self.config.VERTEX_PROJECT_ID,
+                        location=self.config.VERTEX_LOCATION
+                    )
+                else:
+                    vertexai.init()
                 self._vertex_client = True # Just a flag to show it's configured
-            except ImportError:
-                pass
+            except ImportError as e:
+                print(f"Failed to import vertexai: {e}")
         elif self.active_provider == AIProvider.ANTHROPIC_DIRECT:
             try:
                 from anthropic import AsyncAnthropic
@@ -101,7 +105,7 @@ class AIProviderClient:
     def resolve_model(self, tier: ModelTier) -> tuple[AIProvider, str]:
         tier_map = {
             AIProvider.VERTEX_AI: {
-                ModelTier.FAST_CHEAP: "gemini-2.0-flash",
+                ModelTier.FAST_CHEAP: "gemini-1.5-flash-002",
                 ModelTier.BALANCED: "gemini-1.5-pro",
                 ModelTier.DEEP: "gemini-2.5-pro-preview",
             },
@@ -170,7 +174,7 @@ class AIProviderClient:
 
     async def _complete_vertex(self, request: AIRequest, model: str):
         if not self._vertex_client:
-            return "Vertex AI not configured. Please set VERTEX_PROJECT_ID and VERTEX_LOCATION.", 0, 0
+            return "Vertex AI not configured. Please ensure the cloud environment provides default credentials or set VERTEX_PROJECT_ID and VERTEX_LOCATION.", 0, 0
         from vertexai.generative_models import GenerativeModel, GenerationConfig
         try:
             gen_model = GenerativeModel(model)
@@ -184,10 +188,17 @@ class AIProviderClient:
             if request.structured_output_schema:
                 full_prompt += f"\n\nReturn the output exactly matching this JSON schema:\n{json.dumps(request.structured_output_schema)}"
             
+            contents = []
+            if getattr(request, 'file_parts', None) and request.file_parts:
+                from vertexai.generative_models import Part
+                for fp in request.file_parts:
+                    contents.append(Part.from_data(data=fp["data"], mime_type=fp["mime_type"]))
+            contents.append(full_prompt)
+            
             # Using synchronous call in a thread pool since vertexai client might not be fully async
             loop = asyncio.get_running_loop()
             res = await loop.run_in_executor(None, lambda: gen_model.generate_content(
-                full_prompt,
+                contents,
                 generation_config=config,
             ))
             

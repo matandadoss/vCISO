@@ -86,7 +86,11 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
     setActionLoading(action);
     try {
       let body: any = {};
-      if (action === "assign") body = { owner_id: "user-123", notes: "Please investigate this priority item." };
+      if (action === "assign") {
+          const email = window.prompt("Enter Assignee Email Address:");
+          if (!email) { setActionLoading(null); return; }
+          body = { owner_id: email, notes: "Please investigate this priority item." };
+      }
       if (action === "accept-risk") body = { justification: "Mitigating controls in place via WAF.", expiration_date: "2024-12-31" };
       if (action === "ticket") body = { integration: "jira", priority: "High" };
 
@@ -189,6 +193,11 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
             <p className="text-sm text-muted-foreground flex items-center gap-2">
               Detected {formatDate(finding.detected_at)} via <span className="capitalize text-foreground font-medium">{finding.workflow} Workflow</span>
             </p>
+            {(finding as any).assigned_to && (
+               <p className="text-sm font-medium text-emerald-600 dark:text-emerald-500 flex items-center gap-1.5 mt-1 border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 rounded w-fit">
+                 <User className="h-3.5 w-3.5" /> Assigned to: {(finding as any).assigned_to}
+               </p>
+            )}
           </div>
           
           <div className="flex flex-wrap gap-2 w-full xl:w-auto mt-2 xl:mt-0">
@@ -258,7 +267,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
                 <CheckCircle2 className="h-4 w-4 text-primary" /> Remediation Plan
               </h3>
               
-              {finding.remediation.automated_available && (
+              {finding.remediation?.automated_available && (
                 <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-md flex items-start gap-3">
                   <ShieldAlert className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
                   <div>
@@ -271,18 +280,33 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
                 </div>
               )}
 
-              <div className="space-y-3 pt-2">
-                <h4 className="text-sm font-medium text-foreground">Manual Steps:</h4>
-                <div className="space-y-2">
-                  {finding.remediation.manual_steps.map((step, idx) => (
-                    <div key={idx} className="flex gap-3 text-sm p-3 rounded bg-accent/30 border border-transparent hover:border-border transition-colors">
-                      <span className="text-muted-foreground min-w-[1.5rem] font-mono">{idx + 1}.</span>
-                      <span className="text-muted-foreground">{step.replace(/^\d+\.\s*/, '')}</span>
-                    </div>
-                  ))}
+              {finding.remediation?.manual_steps && finding.remediation.manual_steps.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <h4 className="text-sm font-medium text-foreground">Manual Steps:</h4>
+                  <div className="space-y-2">
+                    {finding.remediation.manual_steps.map((step, idx) => (
+                      <div key={idx} className="flex gap-3 text-sm p-3 rounded bg-accent/30 border border-transparent hover:border-border transition-colors">
+                        <span className="text-muted-foreground min-w-[1.5rem] font-mono">{idx + 1}.</span>
+                        <span className="text-muted-foreground">{step.replace(/^\d+\.\s*/, '')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* AI Generated Raw Reports (Used for AI Threat Models) */}
+            {(finding as any).raw_data?.full_report && (
+              <div className="bg-card border border-border rounded-lg p-6 space-y-4">
+                <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                  <Cpu className="h-4 w-4 text-emerald-500" /> Full Threat Model Report
+                </h3>
+                <div className="bg-[#0a0f18] text-gray-300 p-5 rounded-md border border-border overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap font-mono relative">
+                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500/20 via-primary/20 to-transparent"></div>
+                   {(finding as any).raw_data?.full_report}
                 </div>
               </div>
-            </div>
+            )}
 
           </div>
 

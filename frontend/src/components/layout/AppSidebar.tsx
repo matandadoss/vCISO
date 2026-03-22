@@ -24,7 +24,8 @@ import {
   ChevronLeft,
   ChevronRight,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Archive
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -45,6 +46,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Risk",
     items: [
+      { href: "/risk-register", label: "Risk Register", icon: Archive, roles: ["CISO", "AUDITOR", "BOARD_MEMBER"] },
       { href: "/findings", label: "Findings", icon: ShieldAlert, roles: ["CISO", "SOC_ANALYST", "AUDITOR"] },
       { href: "/compliance", label: "Compliance", icon: Activity, roles: ["CISO", "AUDITOR", "BOARD_MEMBER"] },
       { href: "/vendor-risk", label: "Vendor Risk", icon: Building2, roles: ["CISO", "AUDITOR"] },

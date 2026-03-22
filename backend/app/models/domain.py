@@ -110,7 +110,7 @@ class OrgAIBudget(BaseModel):
     daily_limit_usd: Mapped[float] = mapped_column(Float, default=10.00)
     monthly_limit_usd: Mapped[float] = mapped_column(Float, default=200.00)
     auto_downgrade_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
-    active_provider: Mapped[str] = mapped_column(String(50), default="anthropic_direct")
+    active_provider: Mapped[str] = mapped_column(String(50), default="vertex_ai")
     alert_webhook_url: Mapped[str] = mapped_column(String(2048), nullable=True)
 
 class User(BaseModel):
@@ -392,4 +392,21 @@ class InternalBugLog(BaseModel):
 
     __table_args__ = (
         Index("ix_internal_bug_logs_status", "status", "timestamp"),
+    )
+
+class RiskRegister(BaseModel):
+    __tablename__ = "risk_register"
+    org_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("organizations.id"))
+    finding_id: Mapped[str] = mapped_column(String(255), nullable=True) # Optional link back to the source vulnerability
+    title: Mapped[str] = mapped_column(String(512))
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    risk_level: Mapped[Severity] = mapped_column(SQLEnum(Severity)) # Leveraging existing low/med/high
+    risk_categories: Mapped[dict] = mapped_column(JSON) # e.g. ["Operational", "Security", "Reputational"]
+    owner: Mapped[str] = mapped_column(String(255), nullable=True)
+    action_plan: Mapped[str] = mapped_column(Text, nullable=True)
+    attachment_url: Mapped[str] = mapped_column(String(2048), nullable=True)
+    date_entered: Mapped[datetime] = mapped_column(server_default=func.now())
+    
+    __table_args__ = (
+        Index("ix_risk_register_composite", "org_id", "risk_level", "date_entered"),
     )

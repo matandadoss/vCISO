@@ -1,7 +1,7 @@
 "use client";
 
 import { fetchWithAuth } from "@/lib/api";
-import { Building, Layers, ShieldCheck, Plus, CheckCircle2, Database, Users, FileCheck, Trash2, Edit2, Save, X } from "lucide-react";
+import { Building, Layers, ShieldCheck, Plus, CheckCircle2, Database, Users, FileCheck, Trash2, Edit2, Save, Upload, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +29,8 @@ export default function CompanyPage() {
   // Edit State
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editVersion, setEditVersion] = useState("");
+  
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     try {
@@ -162,6 +164,71 @@ export default function CompanyPage() {
     setEditVersion(currentVersion || "");
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      setUploading(true);
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/v1/organizations/upload-architecture`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        
+        let shouldAlert = false;
+        if (data.infra && data.infra.length > 0) {
+           const newProviders = [...providers];
+           data.infra.forEach((i: string) => {
+               if(!newProviders.find(p => p.name === i)) newProviders.push({ name: i, version: "" });
+           });
+           setProviders(newProviders);
+           shouldAlert = true;
+        }
+        
+        if (data.tech && data.tech.length > 0) {
+           const newTech = [...techStack];
+           data.tech.forEach((t: string) => {
+               if(!newTech.find(p => p.name === t)) newTech.push({ name: t, version: "" });
+           });
+           setTechStack(newTech);
+           shouldAlert = true;
+        }
+        
+        if (data.tools && data.tools.length > 0) {
+           const newTools = [...securityTools];
+           data.tools.forEach((t: any) => {
+               if(!newTools.find(x => x.name === t.name)) {
+                   newTools.push({ name: t.name, status: "Discovered by AI", type: t.type || "Tool", connected: false, version: "" });
+               }
+           });
+           setSecurityTools(newTools);
+           shouldAlert = true;
+        }
+        
+        if (shouldAlert) {
+            alert("Architecture successfully parsed and merged!");
+        } else {
+            alert("Upload successful, but AI couldn't detect any explicit infrastructure items.");
+        }
+      } else {
+        const err = await res.json();
+        alert(err.detail || "Failed to scan and upload architecture");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to upload architecture diagram");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
   const saveEdit = async (type: string, idOrName: string) => {
     if (type === "infra") {
       setProviders(providers.map(p => p.name === idOrName ? { ...p, version: editVersion } : p));
@@ -196,12 +263,32 @@ export default function CompanyPage() {
     <div className="flex-1 overflow-y-auto bg-background p-8">
       <div className="max-w-5xl mx-auto space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-            <Building className="w-8 h-8 text-primary" />
-            My Company
-          </h1>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+              <Building className="w-8 h-8 text-primary" />
+              My Company
+            </h1>
+            <div>
+              <label 
+                className={cn(
+                  "px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium rounded-md shadow-sm transition-colors flex items-center gap-2 cursor-pointer",
+                  uploading ? "opacity-50 cursor-not-allowed" : ""
+                )}
+              >
+                <Upload className="h-4 w-4" />
+                {uploading ? "Scanning & Analyzing..." : "Upload Architecture / SBOM"}
+                <input 
+                  type="file" 
+                  accept=".pdf,image/png,image/jpeg,image/webp" 
+                  className="hidden" 
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                />
+              </label>
+            </div>
+          </div>
           <p className="text-muted-foreground mt-2">
-            Define your organizational infrastructure and active security stack. This contextual data natively feeds the Cyber Threat Analyzer and Red Team engines.
+            Define your organizational infrastructure and active security stack. Upload a diagram or SBOM for automatic AI population.
           </p>
         </div>
 

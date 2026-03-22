@@ -31,3 +31,6 @@ pytest-asyncio==0.23.6
 slowapi==0.1.9
 secure==0.3.0
 firebase-admin==6.4.0
+
+# Email dependencies
+sendgrid>=6.11.0

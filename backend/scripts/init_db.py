@@ -43,7 +43,7 @@ async def init_db():
             org_id=test_org_id,
             daily_limit_usd=50.0,
             monthly_limit_usd=1000.0,
-            active_provider="anthropic_direct"
+            active_provider="vertex_ai"
         )
         session.add(budget)
         

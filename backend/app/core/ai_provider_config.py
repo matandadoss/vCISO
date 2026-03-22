@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
 class AIProviderConfig(BaseSettings):
-    AI_PROVIDER: str = "anthropic_direct"
+    AI_PROVIDER: str = "vertex_ai"
     VERTEX_PROJECT_ID: Optional[str] = None
     VERTEX_LOCATION: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None

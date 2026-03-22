@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.domain import Severity, FindingStatus, FindingType, WorkflowName, Finding
+from app.models.domain import Severity, FindingStatus, FindingType, WorkflowName, Finding, RiskRegister
 from sqlalchemy import select, func
 from app.db.session import get_db
 from app.schemas.finding import FindingResponse, FindingUpdate
@@ -213,13 +213,82 @@ async def accept_risk(finding_id: str, request: AcceptRiskRequest, org_id: str, 
         
     db_finding.status = FindingStatus.accepted
     db_finding.remediation_notes = f"Risk Accepted. Justification: {request.justification}. Expires: {request.expiration_date}"
+    
+    # AI/Contextual Risk Categorization
+    categories = []
+    if db_finding.finding_type == FindingType.compliance_gap:
+        categories.append("Compliance Risk")
+    if db_finding.severity in [Severity.critical, Severity.high]:
+        categories.append("Operational Risk")
+    if db_finding.finding_type in [FindingType.data_leak, FindingType.access_sale, FindingType.credential_exposure]:
+        categories.append("Reputational Risk")
+        categories.append("Legal Risk")
+    if not categories:
+        categories.append("Security Risk")
+        
+    risk_entry = RiskRegister(
+        org_id=db_finding.org_id,
+        finding_id=str(db_finding.id),
+        title=f"Accepted Risk: {db_finding.title}",
+        description=db_finding.description,
+        risk_level=db_finding.severity,
+        risk_categories=categories,
+        owner=db_finding.assigned_to,
+        action_plan=f"Risk formally accepted. Justification: {request.justification}. Expires: {request.expiration_date}"
+    )
+    db.add(risk_entry)
+    
     await db.commit()
-    return {"status": "success", "action": "risk_accepted", "finding_id": finding_id, "new_status": "accepted"}
+    return {"status": "success", "action": "risk_accepted", "finding_id": finding_id, "new_status": "accepted", "risk_register_id": str(risk_entry.id)}
 
 @router.post("/{finding_id}/ticket")
 async def create_ticket(finding_id: str, request: CreateTicketRequest, org_id: str, db: AsyncSession = Depends(get_db)):
-    """Creates an external ticket (Jira/ServiceNow) for the finding."""
-    # Mocking external integration
+    """Creates an external ticket (Jira/ServiceNow) for the finding and records it as a Cyber Risk."""
+    try:
+        finding_uuid = uuid.UUID(finding_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid finding ID format")
+        
+    result = await db.execute(select(Finding).where(Finding.id == finding_uuid))
+    db_finding = result.scalar_one_or_none()
+    if not db_finding:
+        raise HTTPException(status_code=404, detail="Finding not found")
+
     mock_ticket_id = f"{request.integration.upper()}-{str(uuid.uuid4())[:6]}"
-    return {"status": "success", "action": "ticket_created", "finding_id": finding_id, "ticket_id": mock_ticket_id}
+    
+    # Send Risk to RiskRegister as a formally tracked 'Cyber Risk'
+    risk_entry = RiskRegister(
+        org_id=db_finding.org_id,
+        finding_id=str(db_finding.id),
+        title=f"Cyber Risk Tracking: {db_finding.title}",
+        description=db_finding.description,
+        risk_level=db_finding.severity,
+        risk_categories=["Cyber Risk", "Ticketing"],
+        owner=db_finding.assigned_to,
+        action_plan=f"Tracking ticket created via {request.integration.upper()}: {mock_ticket_id}. Awaiting resolution."
+    )
+    db.add(risk_entry)
+    db_finding.status = FindingStatus.in_progress
+    db_finding.remediation_notes = f"Ticket generated: {mock_ticket_id}"
+    await db.commit()
+
+    # Dispatch email if assignee exists
+    if db_finding.assigned_to and "@" in db_finding.assigned_to:
+        from app.services.email import send_assignment_notification_email
+        import asyncio
+        finding_url = f"https://vciso.local/findings/{finding_id}"
+        asyncio.create_task(send_assignment_notification_email(
+            to_email=db_finding.assigned_to,
+            finding_title=db_finding.title,
+            finding_url=finding_url
+        ))
+
+    return {
+        "status": "success", 
+        "action": "ticket_created", 
+        "finding_id": finding_id, 
+        "ticket_id": mock_ticket_id, 
+        "risk_register_id": str(risk_entry.id), 
+        "new_status": "in_progress"
+    }
 

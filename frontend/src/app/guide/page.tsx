@@ -242,6 +242,41 @@ export default function UserGuidePage() {
 
         <hr className="border-border/50" />
 
+        {/* Section: vCISO AI Strategy */}
+        <div className="space-y-6">
+          <div className="flex items-center text-sm font-medium text-muted-foreground gap-1.5 mb-2">
+            Architecture <ChevronRight className="w-4 h-4" /> vCISO AI Strategy
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">vCISO AI Strategy</h2>
+          <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
+            <p className="text-base leading-relaxed">
+              The vCISO platform strategically leverages <strong>Google Gemini via Google Cloud Vertex AI</strong> as its foundational intelligence engine. This architectural decision was made explicitly to prioritize enterprise-grade security, extreme data privacy, and massive contextual awareness over consumer-grade APIs.
+            </p>
+            
+            <h3 className="text-xl font-bold mt-6 mb-2">1. Enterprise Security, Privacy & Compliance</h3>
+            <p className="text-base leading-relaxed mb-4">
+              Unlike direct, consumer-facing LLM APIs, our integration with Vertex AI ensures your highly sensitive data (vulnerability scans, network architecture, and threat actor profiles) is strictly protected. <strong>Google explicitly guarantees that customer data is never used to train their foundational models.</strong> Furthermore, this architecture natively inherits Google Cloud's massive compliance portfolio, including SOC 2, ISO 27001, HIPAA, and FedRAMP readiness.
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-2">2. Identity-Based Authentication (No Static Keys)</h3>
+            <p className="text-base leading-relaxed mb-4">
+              Direct API integrations often rely on long-lived, static API keys—a notorious security risk if leaked. The vCISO platform completely eliminates this risk by authenticating to the AI services autonomously using short-lived, deeply scoped <strong>Google Cloud IAM Service Accounts</strong>.
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-2">3. Massive Context Windows (Gemini 1.5 Pro)</h3>
+            <p className="text-base leading-relaxed mb-4">
+              Gemini 1.5 Pro features a groundbreaking context window of up to <strong>2 million tokens</strong>. In a cybersecurity context, this means your vCISO Control Tower can instantly ingest and analyze an entire 500-page PDF compliance framework, thousands of lines of raw firewall logs, and your entire repository's threat modeling documentation all in a single, cohesive analysis prompt.
+            </p>
+
+            <h3 className="text-xl font-bold mt-6 mb-2">4. Native SecOps Integration & Data Residency</h3>
+            <p className="text-base leading-relaxed mb-4">
+              By utilizing the Google AI ecosystem, the platform aligns perfectly with native enterprise tools like Google SecOps (Chronicle) and Mandiant Threat Intelligence. Additionally, Vertex AI allows us to enforce strict <strong>Data Residency</strong> policies—ensuring European customers' AI prompts never leave regional data centers to remain strictly GDPR compliant.
+            </p>
+          </div>
+        </div>
+
+        <hr className="border-border/50" />
+
         {/* Section: Control Panel */}
         <div className="space-y-6">
           <div className="flex items-center text-sm font-medium text-muted-foreground gap-1.5 mb-2">

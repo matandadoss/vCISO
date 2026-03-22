@@ -70,6 +70,17 @@ The **Threat Intel** dashboard acts as your proactive early-warning radar. It co
 
 By alerting you the second a zero-day vulnerability is announced that impacts a software version you actively use, this module significantly decreases your "Time to Patch".
 
+### Intelligent Threat Tracking
+
+The platform uses a multi-layered correlation engine to automatically determine exactly which Threat Actors to monitor for your organization:
+
+1. **Tech Stack Correlation:** The engine cross-references the technologies defined in your "My Company" profile (e.g., Snowflake, Azure) against incoming threat feeds. If a Threat Actor begins exploiting your active technologies, they are automatically pinned to your monitoring board.
+2. **Industry & Sector Targeting:** The platform connects to sector-specific ISAC feeds. It continuously monitors and elevates the priority score of actors known to actively target your specific vertical (e.g., Healthcare, Financial Services).
+3. **Active Intelligence Feeds:** The system ingests structured indicators of compromise (IoCs) from configured subscriptions (e.g., CISA KEV, CrowdStrike). If an actor's signals appear frequently or target your domain directly, that actor is instantly promoted.
+4. **Opt-In Manual Tracking:** Administrators can also browse the global database and manually choose to "Track" specific advanced persistent threats (APTs) or ransomware gangs at any time.
+
+*Because of this correlation design, the more accurate your **My Company** (Cloud Infra, App Stack) profile is, the more precise and automated your Threat Actor monitoring becomes.*
+
 ### Responding to Campaigns
 
 1. Monitor this page for critical **"Your business is affected"** banners.

@@ -185,36 +185,117 @@ class SimulationEngine:
         """
         Mock LLM interaction: Generates the markdown narrative based on the pathfinding results.
         """
-        if "mgm" in query.lower():
-            return f"""### Agentic Risk Assessment: Identity-Driven Ransomware
-**Analysis Complete.** Simulated Scattered Spider TTPs against your architecture.
-**Blast Radius:** The actor reached {len(compromised_nodes)} internal nodes.
-**Critical Findings:**
-1. **Helpdesk Verification:** Your IT Helpdesk can be bypassed via social engineering.
-2. **MFA Exposure:** Okta is vulnerable to token theft and SMS reset.
-**Recommendation:** Implement Phishing-Resistant MFA immediately."""
-        
-        elif "dmz" in query.lower():
-            return f"""### Agentic Risk Assessment: DMZ Database Move
-**Analysis Complete.** Simulated moving the Customer Database to the DMZ.
-**Blast Radius:** The exposure reached {len(compromised_nodes)} internal nodes.
-**Critical Findings:**
-1. **SOC 2 Violation:** Moving PII to a DMZ drops compliance by {88 - comp}%.
-2. **Direct Internet Exposure:** The database is directly routable from the internet.
-**Recommendation:** DO NOT PROCEED. Keep the database in a private subnet and proxy via the internal API."""
-            
-        elif "port 22" in query.lower():
-             return f"""### Agentic Risk Assessment: Open SSH
-**Analysis Complete.** Simulated opening Port 22 globally.
-**Critical Findings:** 
-1. **Brute Force Risk:** Exposure of core servers directly to automated botnets.
-**Recommendation:** Restrict Port 22 to internal VPN or Bastion Host IPs only."""
+        query_lower = query.lower()
+        if "mgm" in query_lower or "ransomware" in query_lower or "scattered spider" in query_lower or "attack" in query_lower:
+            return f"""### Simulation Results: Identity Theft & Ransomware
+**Attack Summary:** An attacker successfully tricked the IT Helpdesk and reset employee passwords, gaining full access to {len(compromised_nodes)} internal systems.
 
-        return f"""### Agentic Risk Assessment
-**Analysis Complete.** Evaluated scenario: "{query}"
-**Blast Radius:** {len(compromised_nodes)} nodes compromised.
-Risk increased to {risk}/100 and Compliance dropped to {comp}/100.
-**Recommendation:** Review the highlighted attack paths in the topology graph to identify missing compensating controls."""
+**Critical Vulnerabilities:**
+1. **Helpdesk Verification:** The support desk does not securely verify who is calling them.
+2. **Password Security:** The login system allows weak password resets via text messages.
+
+**Security Plan (Mitigations):**
+1. **Priority 1:** Require hardware security keys (e.g. YubiKey) instead of text messages for login.
+2. **Priority 2:** Train IT Helpdesk staff to require visual identity proof before resetting passwords.
+3. **Priority 3:** Segment the network so a hacked employee account cannot immediately access core servers."""
+        
+        elif "dmz" in query_lower or "database" in query_lower or "public" in query_lower:
+            return f"""### Simulation Results: Moving the Database to Public Access
+**Attack Summary:** Safely reviewed the plan to move the Customer Database to a public-facing network. This change would expose {len(compromised_nodes)} internal systems to the internet.
+
+**Critical Vulnerabilities:**
+1. **Compliance Failure:** Moving personal data to a public network directly violates security laws (SOC 2), dropping your score by {88 - comp}%.
+2. **Direct Internet Exposure:** Hackers on the public internet can directly scan and attempt to break into the database.
+
+**Security Plan (Mitigations):**
+1. **Priority 1:** DO NOT PROCEED with this architecture change.
+2. **Priority 2:** Keep the database hidden in a private network, and require all access to go through a secure, monitored API gateway.
+3. **Priority 3:** Add an internal firewall (WAF) to inspect data requests before they reach the database."""
+            
+        elif "port 22" in query_lower or "ssh" in query_lower or "open port" in query_lower:
+             return f"""### Simulation Results: Opening Server Remote Access
+**Attack Summary:** Reviewed the risk of opening remote management ports globally to the internet.
+
+**Critical Vulnerabilities:** 
+1. **Automated Hacking:** Automated internet bots will immediately try thousands of passwords to break into your servers.
+
+**Security Plan (Mitigations):**
+1. **Priority 1:** Close the port immediately on the public internet.
+2. **Priority 2:** Require administrators to connect to a secure VPN before they can reach the server management ports.
+3. **Priority 3:** Implement an alert when someone repeatedly fails to login to a server."""
+
+        return f"""### Simulation Results Summary
+**Attack Summary:** Evaluated the scenario: "{query}"
+
+**Affected Systems:** {len(compromised_nodes)} internal systems could be compromised.
+**Security Impact:** Your overall security score worsened to {risk}/100 and compliance dropped to {comp}/100.
+
+**Security Plan (Mitigations):**
+1. **Priority 1:** Review the highlighted red paths in the Threat Graph below to see exactly how the attacker got in.
+2. **Priority 2:** Add security checks, like firewalls or multi-factor authentication, along those specific paths.
+3. **Priority 3:** Re-run this simulation to verify the fix works."""
+
+    @staticmethod
+    def generate_findings(query: str, compromised_nodes: List[str]) -> List[Dict[str, Any]]:
+        """
+        Maps the simulated attack paths into structured UI findings identical to pentest cards.
+        """
+        findings = []
+        query_lower = query.lower()
+        
+        target = "Multiple Assets"
+        if compromised_nodes:
+            target = ", ".join(compromised_nodes[:2]) + ("..." if len(compromised_nodes) > 2 else "")
+
+        if "mgm" in query_lower or "ransomware" in query_lower or "scattered spider" in query_lower:
+            findings.append({
+                "title": "Helpdesk Social Engineering Bypass",
+                "severity": "Critical",
+                "description": "IT Support desk workflows can be bypassed via Vishing to reset employee credentials.",
+                "affected_asset": "IT Helpdesk",
+                "remediation": "Mandate visual identity verification for all credential resets.",
+                "mitre_tactic": "Initial Access"
+            })
+            findings.append({
+                "title": "Weak MFA Implementation",
+                "severity": "High",
+                "description": "SMS-based MFA allows attackers to reset authentication tokens post-AD compromise.",
+                "affected_asset": target,
+                "remediation": "Migrate to Phishing-Resistant MFA (FIDO2/WebAuthn).",
+                "mitre_tactic": "Credential Access"
+            })
+
+        elif "dmz" in query_lower or "database" in query_lower or "public" in query_lower:
+            findings.append({
+                "title": "Direct Database Web Exposure",
+                "severity": "Critical",
+                "description": "The customer database is directly Internet-routable, violating SOC 2 architecture standards.",
+                "affected_asset": "Customer DB",
+                "remediation": "Isolate database in private subnet and expose only via internal API gateway.",
+                "mitre_tactic": "Initial Access"
+            })
+
+        elif "port 22" in query_lower or "ssh" in query_lower:
+             findings.append({
+                "title": "Open SSH Port Detection",
+                "severity": "High",
+                "description": "Port 22 is exposed to 0.0.0.0/0, allowing automated botnet brute-forcing.",
+                "affected_asset": target,
+                "remediation": "Restrict Port 22 strictly to internal Bastion host or VPN subnet IPs.",
+                "mitre_tactic": "Initial Access"
+            })
+            
+        else:
+             findings.append({
+                "title": f"Simulated Exploitation: {query[:30]}...",
+                "severity": "Medium",
+                "description": "The simulation correlation engine discovered a high-probability attack path resulting in network compromise.",
+                "affected_asset": target,
+                "remediation": "Review the Threat Graph below and implement compensating controls along the highlighted path.",
+                "mitre_tactic": "Lateral Movement"
+            })
+
+        return findings
 
     @classmethod
     async def run_simulation(cls, query: str) -> Dict[str, Any]:
@@ -237,6 +318,9 @@ Risk increased to {risk}/100 and Compliance dropped to {comp}/100.
         # 5. Generate Narrative
         narrative = await cls.generate_narrative(query, sim_risk, sim_comp, compromised)
         
+        # 6. Generate Findings List
+        findings = cls.generate_findings(query, compromised)
+        
         return {
             "simulation_id": str(uuid.uuid4()),
             "original_query": query,
@@ -252,5 +336,6 @@ Risk increased to {risk}/100 and Compliance dropped to {comp}/100.
                 "nodes": eval_nodes,
                 "edges": eval_edges
             },
-            "assessment_narrative": narrative
+            "assessment_narrative": narrative,
+            "findings": findings
         }

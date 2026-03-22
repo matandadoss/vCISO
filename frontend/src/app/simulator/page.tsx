@@ -2,19 +2,23 @@
 import { fetchWithAuth } from "@/lib/api";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { FlaskConical, Send, Bot, AlertTriangle, ShieldCheck, Zap, ArrowRight, Activity, TrendingDown, TrendingUp, Network, BookOpen, Layers, Database, Terminal } from "lucide-react";
+import { FlaskConical, Send, Bot, AlertTriangle, ShieldCheck, ShieldAlert, Zap, ArrowRight, Activity, TrendingDown, TrendingUp, Network, BookOpen, Layers, Database, Terminal, Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
+import { toast } from "sonner";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
 export default function SimulatorPage() {
   const [query, setQuery] = useState("");
   const [simulating, setSimulating] = useState(false);
+  const [committing, setCommitting] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [simType, setSimType] = useState<"architecture" | "breach" | "pentest">("architecture");
   const [tier, setTier] = useState<string>("professional");
   const initRef = useRef(false);
+  const router = useRouter();
 
   useEffect(() => {
     // Fetch tier
@@ -67,6 +71,29 @@ export default function SimulatorPage() {
   const handleSimulate = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     runSimulation(query);
+  };
+
+  const handleCommitFindings = async () => {
+    if (!result || !result.findings) return;
+    setCommitting(true);
+    try {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/simulator/findings/commit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(result.findings)
+      });
+      if (!res.ok) throw new Error("Failed to commit findings");
+      
+      toast.success("Discoveries Moved to Findings", {
+        description: "Official mitigation tickets have been created."
+      });
+      router.push("/findings");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to move discoveries");
+    } finally {
+      setCommitting(false);
+    }
   };
 
   const runSimulation = async (simulationQuery: string) => {
@@ -346,7 +373,7 @@ export default function SimulatorPage() {
                {/* Graph Viewer */}
                <div className="bg-[#0B1120] border border-border rounded-xl shadow-inner h-[400px] flex flex-col overflow-hidden relative" ref={containerRef}>
                  <div className="absolute top-4 left-4 z-10 bg-background/80 backdrop-blur px-3 py-1.5 rounded-md border border-border text-sm font-medium flex items-center gap-2">
-                    <Network className="w-4 h-4 text-primary" /> Simulated Topology Canvas
+                    <Activity className="w-4 h-4 text-rose-500" /> Threat Graph (IOC & Progression)
                  </div>
                  <ForceGraph2D
                     ref={graphRef}
@@ -364,11 +391,11 @@ export default function SimulatorPage() {
                  />
                  {/* Legend */}
                  <div className="absolute bottom-4 right-4 bg-background/80 backdrop-blur p-3 rounded-md border border-border text-xs space-y-2 pointer-events-none">
-                     <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#ef4444]"></span> Critical/Attacker</div>
-                     <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#f97316]"></span> Vulnerable</div>
-                     <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#eab308]"></span> Warning</div>
-                     <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#22c55e]"></span> Secure</div>
-                     <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border"><span className="w-4 border-t-2 border-dashed border-[#ef4444]"></span> Simulated Attack Path</div>
+                     <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#ef4444]"></span> Critical Threat / Attacker</div>
+                     <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#f97316]"></span> Active IOC / Vulnerable</div>
+                     <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#eab308]"></span> Suspicious</div>
+                     <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#22c55e]"></span> Secure Asset</div>
+                     <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border"><span className="w-4 border-t-2 border-dashed border-[#ef4444]"></span> Attacker Progression</div>
                  </div>
                </div>
 
@@ -405,6 +432,48 @@ export default function SimulatorPage() {
                    })}
                  </div>
                </div>
+
+               {/* Discovered Findings Cards Loop */}
+               {result.findings && result.findings.length > 0 && (
+                 <div className="bg-card border border-border rounded-xl p-8 shadow-sm mt-6">
+                   <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-rose-400">
+                     <ShieldAlert className="w-5 h-5" /> Detailed Discoveries
+                   </h3>
+                   <div className="space-y-4 mb-8">
+                     {result.findings.map((f: any, i: number) => (
+                       <div key={i} className="p-4 bg-red-950/20 border border-red-900/50 rounded-lg">
+                         <div className="flex justify-between items-start mb-2">
+                           <h4 className="font-semibold text-rose-300 text-base">{f.title}</h4>
+                           <span className="text-xs font-mono bg-red-900/50 px-2 py-0.5 rounded text-red-200 uppercase tracking-widest">
+                             {f.severity}
+                           </span>
+                         </div>
+                         <p className="text-sm text-muted-foreground mb-4">{f.description}</p>
+                         <div className="text-xs font-mono text-gray-400 flex flex-col gap-1.5 bg-background/50 p-3 rounded border border-border/50">
+                           <span><strong className="text-gray-300">Target Asset:</strong> {f.affected_asset}</span>
+                           <span className="text-blue-300"><strong className="text-blue-200">Mitre Tactic:</strong> {f.mitre_tactic}</span>
+                           <span className="text-emerald-400 mt-1"><strong className="text-emerald-300">Remediation:</strong> {f.remediation}</span>
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                   
+                   <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                     <div>
+                       <h4 className="font-bold text-primary mb-1">Would you like me to move these discoveries to the Findings list for mitigation?</h4>
+                       <p className="text-sm text-muted-foreground">This will create official tracking tickets in your risk dashboard for your engineering team to mitigate.</p>
+                     </div>
+                     <button
+                       onClick={handleCommitFindings}
+                       disabled={committing}
+                       className="shrink-0 bg-primary text-primary-foreground font-semibold px-6 py-3 rounded-md hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
+                     >
+                       {committing ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
+                       Move to Findings
+                     </button>
+                   </div>
+                 </div>
+               )}
 
             </div>
          )}
