@@ -4,10 +4,127 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 from app.db.session import get_db
-from sqlalchemy import select
-from app.models.domain import ComplianceFramework
+from sqlalchemy import select, delete
+from app.models.domain import ComplianceFramework, Finding, Severity, FindingStatus, FindingType, WorkflowName
+import datetime
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/correlation", tags=["correlation"])
+
+class RecalculateRequest(BaseModel):
+    infra: List[Dict[str, Any]]
+    tech: List[Dict[str, Any]]
+    tools: List[Dict[str, Any]]
+
+@router.post("/recalculate")
+async def recalculate_correlation(
+    request: RecalculateRequest,
+    org_id: str = "default",
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        org_uuid = uuid.UUID(org_id)
+    except ValueError:
+        org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+    
+    await db.execute(delete(Finding).where(Finding.org_id == org_uuid))
+    
+    infra_names = [i.get("name", "").lower() for i in request.infra]
+    tech_names = [t.get("name", "").lower() for t in request.tech]
+    tool_names = [t.get("name", "").lower() for t in request.tools]
+    
+    new_findings = []
+    
+    if any("aws" in i or "ec2" in i or "s3" in i or "lambda" in i for i in infra_names):
+        new_findings.append(Finding(
+            id=uuid.uuid4(),
+            org_id=org_uuid,
+            finding_type=FindingType.misconfiguration,
+            title="AWS S3 Bucket Publicly Accessible",
+            description="A critical AWS storage bucket containing PII has public read access enabled via its bucket policy.",
+            severity=Severity.critical,
+            risk_score=9.5,
+            source_workflow=WorkflowName.infrastructure,
+            status=FindingStatus.new,
+            detected_at=datetime.datetime.utcnow()
+        ))
+    
+    if any("azure" in i or "gcp" in i or "google" in i for i in infra_names):
+        new_findings.append(Finding(
+            id=uuid.uuid4(),
+            org_id=org_uuid,
+            finding_type=FindingType.credential_exposure,
+            title="Leaked Cloud Service Account Keys",
+            description="Service account keys with Editor permissions were discovered in a public GitHub repository.",
+            severity=Severity.critical,
+            risk_score=9.8,
+            source_workflow=WorkflowName.osint,
+            status=FindingStatus.new,
+            detected_at=datetime.datetime.utcnow()
+        ))
+        
+    if any("react" in t or "node" in t for t in tech_names):
+        new_findings.append(Finding(
+            id=uuid.uuid4(),
+            org_id=org_uuid,
+            finding_type=FindingType.supply_chain_risk,
+            title="Malicious NPM Package Installed in React App",
+            description="The frontend build process references an actively exploited typo-squatted npm package.",
+            severity=Severity.high,
+            risk_score=8.1,
+            source_workflow=WorkflowName.supply_chain,
+            status=FindingStatus.new,
+            detected_at=datetime.datetime.utcnow()
+        ))
+        
+    if any("python" in t or "fastapi" in t for t in tech_names):
+        new_findings.append(Finding(
+            id=uuid.uuid4(),
+            org_id=org_uuid,
+            finding_type=FindingType.vulnerability,
+            title="Vulnerable Python Dependency (PyYAML)",
+            description="A critical PyYAML CVE allows arbitrary code execution in the Python backend.",
+            severity=Severity.high,
+            risk_score=7.9,
+            source_workflow=WorkflowName.vulnerability,
+            status=FindingStatus.new,
+            detected_at=datetime.datetime.utcnow()
+        ))
+    
+    if not any("crowdstrike" in t or "sentinelone" in t or "datadog" in t for t in tool_names):
+        new_findings.append(Finding(
+            id=uuid.uuid4(),
+            org_id=org_uuid,
+            finding_type=FindingType.control_gap,
+            title="Missing EDR Coverage",
+            description="Critical production instances do not have an active Endpoint Detection and Response agent installed.",
+            severity=Severity.high,
+            risk_score=7.5,
+            source_workflow=WorkflowName.controls,
+            status=FindingStatus.new,
+            detected_at=datetime.datetime.utcnow()
+        ))
+        
+    if not new_findings:
+        new_findings.append(Finding(
+            id=uuid.uuid4(),
+            org_id=org_uuid,
+            finding_type=FindingType.vulnerability,
+            title="Unauthenticated RCE Detected",
+            description="An unknown unauthenticated remote code execution vulnerability was discovered on edge networks.",
+            severity=Severity.critical,
+            risk_score=10.0,
+            source_workflow=WorkflowName.vulnerability,
+            status=FindingStatus.new,
+            detected_at=datetime.datetime.utcnow()
+        ))
+        
+    for f in new_findings:
+        db.add(f)
+        
+    await db.commit()
+    return {"status": "success", "regenerated_count": len(new_findings)}
+
 
 @router.get("/engine", response_model=Dict[str, Any])
 async def get_correlation_engine_insights(

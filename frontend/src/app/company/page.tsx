@@ -72,6 +72,30 @@ export default function CompanyPage() {
     fetchApiData();
   }, []);
 
+  // Trigger recalculation when leaving the page so alerts and findings are generated for the new stack
+  useEffect(() => {
+    return () => {
+       try {
+           const infraStr = localStorage.getItem("vciso_company_infra") || "[]";
+           const techStr = localStorage.getItem("vciso_company_tech") || "[]";
+           const toolsStr = localStorage.getItem("vciso_company_tools") || "[]";
+           
+           if (infraStr !== "[]" || techStr !== "[]" || toolsStr !== "[]") {
+             fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/correlation/recalculate?org_id=default`, {
+                 method: "POST",
+                 keepalive: true,
+                 headers: { "Content-Type": "application/json" },
+                 body: JSON.stringify({ 
+                     infra: JSON.parse(infraStr), 
+                     tech: JSON.parse(techStr), 
+                     tools: JSON.parse(toolsStr) 
+                 })
+             }).catch(e => console.error("Recalculation failed", e));
+           }
+       } catch(e) {}
+    };
+  }, []);
+
   const hasMounted = providers.length > 0 || techStack.length > 0 || securityTools.length > 0;
 
   useEffect(() => {
