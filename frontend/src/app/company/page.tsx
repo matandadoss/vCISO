@@ -255,7 +255,7 @@ export default function CompanyPage() {
                                      <button onClick={() => setEditingId(null)} className="text-muted-foreground hover:text-foreground text-xs font-medium px-2 py-1">Cancel</button>
                                    </div>
                                ) : (
-                                   <span className="text-xs text-muted-foreground mt-1">{provider.version ? `v${provider.version}` : ""}</span>
+                                   <span className="text-xs text-muted-foreground mt-1">{provider.version ? `v${provider.version.replace(/^v/i, '')}` : ""}</span>
                                )}
                             </div>
                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -300,7 +300,7 @@ export default function CompanyPage() {
                                      <button onClick={() => setEditingId(null)} className="text-muted-foreground hover:text-foreground text-xs font-medium px-2 py-1">Cancel</button>
                                    </div>
                                ) : (
-                                   <span className="text-xs text-muted-foreground mt-1">{tech.version ? `v${tech.version}` : ""}</span>
+                                   <span className="text-xs text-muted-foreground mt-1">{tech.version ? `v${tech.version.replace(/^v/i, '')}` : ""}</span>
                                )}
                             </div>
                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -341,7 +341,7 @@ export default function CompanyPage() {
                               <div className="flex flex-wrap items-center gap-2">
                                   <span className="font-bold text-foreground">{tool.name}</span>
                                   <span className="bg-muted text-muted-foreground px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">{tool.type}</span>
-                                  {tool.version && <span className="text-xs text-muted-foreground border border-border px-1.5 py-0.5 rounded bg-muted">v{tool.version}</span>}
+                                  {tool.version && <span className="text-xs text-muted-foreground border border-border px-1.5 py-0.5 rounded bg-muted">v{tool.version.replace(/^v/i, '')}</span>}
                               </div>
                               <div className="flex items-center gap-2 mt-2">
                                   <div className={cn("w-2 h-2 rounded-full", tool.connected ? "bg-green-500" : "bg-amber-500")}></div>
@@ -391,7 +391,7 @@ export default function CompanyPage() {
                               <div className="flex items-start sm:items-center justify-between mb-2">
                                 <div className="flex flex-wrap items-center gap-2">
                                   <span className="font-bold text-foreground">{actor.name}</span>
-                                  {actor.version && <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border">v{actor.version}</span>}
+                                  {actor.version && <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border">v{actor.version.replace(/^v/i, '')}</span>}
                                 </div>
                                 <div className="flex items-center gap-2 ml-2">
                                   <span className="bg-red-500/10 text-red-500 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider hidden sm:block whitespace-nowrap">
@@ -445,7 +445,7 @@ export default function CompanyPage() {
                                 <div className="flex flex-col">
                                   <span className="font-bold text-foreground flex flex-wrap items-center gap-2">
                                     {fw.framework_name} 
-                                    {fw.version && <span className="text-xs font-normal text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded">v{fw.version}</span>}
+                                    {fw.version && <span className="text-xs font-normal text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded">v{fw.version.replace(/^v/i, '')}</span>}
                                   </span>
                                   {editingId === fw.id && (
                                      <div className="flex items-center gap-2 mt-3 p-1">
