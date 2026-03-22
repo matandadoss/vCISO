@@ -4,7 +4,7 @@ import { fetchWithAuth } from "@/lib/api";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { FlaskConical, Send, Bot, AlertTriangle, ShieldCheck, ShieldAlert, Zap, ArrowRight, Activity, TrendingDown, TrendingUp, Network, BookOpen, Layers, Database, Terminal, Loader2 } from "lucide-react";
+import { FlaskConical, Send, Bot, AlertTriangle, ShieldCheck, ShieldAlert, Zap, ArrowRight, Activity, TrendingDown, TrendingUp, Network, BookOpen, Layers, Database, Terminal, Loader2, Upload, Cpu } from "lucide-react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 
@@ -17,6 +17,7 @@ export default function SimulatorPage() {
   const [result, setResult] = useState<any>(null);
   const [simType, setSimType] = useState<"architecture" | "breach" | "pentest">("architecture");
   const [tier, setTier] = useState<string>("professional");
+  const [uploading, setUploading] = useState(false);
   const initRef = useRef(false);
   const router = useRouter();
 
@@ -114,6 +115,40 @@ export default function SimulatorPage() {
       console.error("Simulation failed", err);
     } finally {
       setSimulating(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      setUploading(true);
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/v1/pentest/threat-model`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        toast.success("Threat Model Generated", {
+          description: "Analysis complete. Redirecting to findings...",
+        });
+        setTimeout(() => {
+            router.push('/findings');
+        }, 1500);
+      } else {
+        const err = await res.json();
+        toast.error("Generation Failed", { description: err.detail || "Could not parse diagram." });
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Generation Failed", { description: "Failed to upload architecture diagram" });
+    } finally {
+      setUploading(false);
+      e.target.value = "";
     }
   };
 
@@ -297,6 +332,40 @@ export default function SimulatorPage() {
              </button>
            </form>
            )}
+
+           <div className="mt-6 border-t border-border pt-6">
+              <div className="mb-4">
+                <h3 className="text-sm font-bold flex items-center gap-2 text-foreground">
+                  <Cpu className="h-4 w-4 text-emerald-400" />
+                  AI Threat Modeler (MITRE)
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Upload an architecture diagram or SBOM to natively generate an automated Threat Model utilizing MITRE ATT&CK.
+                </p>
+              </div>
+              <label 
+                className={cn(
+                  "w-full flex flex-col items-center justify-center gap-3 px-4 py-6 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-slate-900/50 transition-colors bg-accent/20",
+                  uploading ? "opacity-50 cursor-not-allowed" : ""
+                )}
+              >
+                {uploading ? (
+                  <><Loader2 className="h-5 w-5 animate-spin text-emerald-400" /> <span className="text-xs font-medium text-muted-foreground">Analyzing Diagram...</span></>
+                ) : (
+                  <>
+                     <Upload className="h-5 w-5 text-emerald-400" /> 
+                     <span className="font-medium text-xs">Select Diagram (.png, .pdf)</span>
+                  </>
+                )}
+                <input 
+                  type="file" 
+                  accept=".pdf,image/png,image/jpeg,image/webp" 
+                  className="hidden" 
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                />
+              </label>
+           </div>
         </div>
       </div>
 

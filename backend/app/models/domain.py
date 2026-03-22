@@ -226,6 +226,8 @@ class Vendor(BaseModel):
     contract_expiry: Mapped[datetime] = mapped_column(nullable=True)
     primary_contact: Mapped[str] = mapped_column(String(255), nullable=True)
     metadata_data: Mapped[dict] = mapped_column(JSON, nullable=True)
+    tech_stack: Mapped[dict] = mapped_column(JSON, nullable=True)
+    status: Mapped[str] = mapped_column(String(50), default="Warning")
 
 class SecurityControl(BaseModel):
     __tablename__ = "security_controls"
@@ -406,6 +408,8 @@ class RiskRegister(BaseModel):
     action_plan: Mapped[str] = mapped_column(Text, nullable=True)
     attachment_url: Mapped[str] = mapped_column(String(2048), nullable=True)
     date_entered: Mapped[datetime] = mapped_column(server_default=func.now())
+    expiration_date: Mapped[datetime] = mapped_column(nullable=True)
+    source: Mapped[str] = mapped_column(String(255), nullable=True)
     
     __table_args__ = (
         Index("ix_risk_register_composite", "org_id", "risk_level", "date_entered"),

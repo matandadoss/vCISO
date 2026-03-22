@@ -88,13 +88,14 @@ export default function RiskRegisterPage() {
                 <th className="px-6 py-4 font-medium uppercase tracking-wider">Categories</th>
                 <th className="px-6 py-4 font-medium uppercase tracking-wider">Owner</th>
                 <th className="px-6 py-4 font-medium uppercase tracking-wider">Date Entered</th>
+                <th className="px-6 py-4 font-medium uppercase tracking-wider">Expires</th>
                 <th className="px-6 py-4 font-medium uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {risks.length === 0 ? (
                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
                        No risks currently recorded in the registry.
                     </td>
                  </tr>
@@ -129,6 +130,15 @@ export default function RiskRegisterPage() {
                   </td>
                   <td className="px-6 py-4 text-muted-foreground">
                     {r.date_entered ? formatDate(r.date_entered) : "-"}
+                  </td>
+                  <td className="px-6 py-4">
+                    {r.expiration_date ? (
+                        <span className={cn("font-medium", new Date(r.expiration_date) < new Date() ? "text-destructive font-bold animate-pulse" : "text-emerald-500")}>
+                           {formatDate(r.expiration_date)}
+                        </span>
+                    ) : (
+                        <span className="text-muted-foreground">-</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <Link href={`/risk-register/${r.id}`} className="text-primary hover:text-blue-400 font-medium text-sm flex items-center justify-end w-full">

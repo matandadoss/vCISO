@@ -45,7 +45,7 @@ interface FindingDetail {
   status: string;
   description: string;
   detected_at: string;
-  workflow: string;
+  source_workflow: string;
   root_cause_analysis: string;
   affected_assets: Asset[];
   mitre_attack: MitreTactic[];
@@ -191,7 +191,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
             </div>
             <h1 className="text-2xl font-bold text-foreground">{finding.title}</h1>
             <p className="text-sm text-muted-foreground flex items-center gap-2">
-              Detected {formatDate(finding.detected_at)} via <span className="capitalize text-foreground font-medium">{finding.workflow} Workflow</span>
+              Detected {formatDate(finding.detected_at)} via <span className="capitalize text-foreground font-medium">{finding.source_workflow ? finding.source_workflow.replace(/_/g, ' ') : 'Manual'} Workflow</span>
             </p>
             {(finding as any).assigned_to && (
                <p className="text-sm font-medium text-emerald-600 dark:text-emerald-500 flex items-center gap-1.5 mt-1 border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 rounded w-fit">

@@ -101,6 +101,7 @@ export default function FindingsPage() {
               <tr>
                 <th className="px-6 py-4 font-medium uppercase tracking-wider">Finding</th>
                 <th className="px-6 py-4 font-medium uppercase tracking-wider">Severity</th>
+                <th className="px-6 py-4 font-medium uppercase tracking-wider">Source</th>
                 <th className="px-6 py-4 font-medium uppercase tracking-wider">Risk Score</th>
                 <th className="px-6 py-4 font-medium uppercase tracking-wider">Status</th>
                 <th className="px-6 py-4 font-medium uppercase tracking-wider">Detected</th>
@@ -113,7 +114,6 @@ export default function FindingsPage() {
                 <tr key={f.id} className="hover:bg-muted/50 transition-colors">
                   <td className="px-6 py-4">
                     <p className="font-semibold text-foreground">{f.title}</p>
-                    <p className="text-xs text-muted-foreground mt-1 capitalize">{f.workflow} Workflow</p>
                   </td>
                   <td className="px-6 py-4">
                     <span className={cn(
@@ -124,6 +124,9 @@ export default function FindingsPage() {
                     )}>
                       {f.severity}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                     <span className="text-sm font-medium capitalize text-muted-foreground">{f.source_workflow ? f.source_workflow.replace(/_/g, ' ') : 'Manual'}</span>
                   </td>
                   <td className="px-6 py-4">
                     <span className="font-mono text-foreground font-medium">{f.risk_score}</span>

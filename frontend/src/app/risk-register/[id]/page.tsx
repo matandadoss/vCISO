@@ -1,9 +1,10 @@
 "use client";
 import { fetchWithAuth } from "@/lib/api";
 import { useEffect, useState, use } from "react";
-import { ArrowLeft, AlertCircle, Save, UploadCloud, FileText, User as UserIcon, Tag } from "lucide-react";
+import { ArrowLeft, AlertCircle, Save, UploadCloud, FileText, User as UserIcon, Tag, CalendarClock } from "lucide-react";
 import Link from "next/link";
 import { formatDate, cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface RiskDetail {
   id: string;
@@ -16,6 +17,8 @@ interface RiskDetail {
   action_plan?: string;
   attachment_url?: string;
   date_entered: string;
+  expiration_date?: string;
+  source?: string;
 }
 
 export default function RiskDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -30,6 +33,13 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
   const [editActionPlan, setEditActionPlan] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  
+  const [editSource, setEditSource] = useState("");
+  const [extendDate, setExtendDate] = useState("");
+  const [extending, setExtending] = useState(false);
+  const [showExtendDialog, setShowExtendDialog] = useState(false);
+  
+  const isExpired = risk?.expiration_date ? new Date(risk.expiration_date) < new Date() : false;
 
   useEffect(() => {
     async function fetchRisk() {
@@ -44,6 +54,7 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
         setEditCategories(data.risk_categories.join(", "));
         setEditOwner(data.owner || "");
         setEditActionPlan(data.action_plan || "");
+        setEditSource(data.source || "");
       } catch (error) {
         console.error(error);
       } finally {
@@ -65,7 +76,8 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
           risk_level: editLevel,
           risk_categories: catsArray,
           owner: editOwner,
-          action_plan: editActionPlan
+          action_plan: editActionPlan,
+          source: editSource
         }),
       });
       if (res.ok) {
@@ -76,6 +88,32 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
       console.error("Failed to save", err);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleExtend = async () => {
+    if (!extendDate || !risk) return;
+    setExtending(true);
+    try {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/risk-register/${risk.id}/extend`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ new_expiration: extendDate }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setRisk(updated);
+        setShowExtendDialog(false);
+        setExtendDate("");
+        toast.success("Risk Acceptance Extended", { description: "The expiration boundary has been updated successfully." });
+      } else {
+        const err = await res.json();
+        toast.error("Extension Failed", { description: err.detail });
+      }
+    } catch (e) {
+      toast.error("Extension Failed");
+    } finally {
+      setExtending(false);
     }
   };
 
@@ -140,6 +178,52 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
           Back to Register
         </Link>
 
+        {isExpired && (
+           <div className="bg-destructive/10 border border-destructive/20 text-destructive p-4 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                 <AlertCircle className="w-8 h-8 opacity-80" />
+                 <div>
+                    <h3 className="font-bold text-sm">ACTION REQUIRED: Risk Acceptance Expired</h3>
+                    <p className="text-xs opacity-90">This risk has passed its previously approved lifespan. You must either mitigate the underlying finding immediately or formally extend the acceptance period (Max 1 Year limit).</p>
+                 </div>
+              </div>
+              <button 
+                 onClick={() => setShowExtendDialog(!showExtendDialog)}
+                 className="px-4 py-2 bg-destructive text-destructive-foreground text-xs font-bold rounded hover:bg-destructive/90 transition-colors shadow-lg shrink-0"
+              >
+                 Extend Acceptance
+              </button>
+           </div>
+        )}
+
+        {showExtendDialog && (
+           <div className="bg-card border border-primary/30 p-5 rounded-lg space-y-3 shadow-lg ring-1 ring-primary/20">
+              <h4 className="text-sm font-bold flex items-center gap-2"><CalendarClock className="w-5 h-5 text-primary" /> Request Formal Extension</h4>
+              <p className="text-xs text-muted-foreground w-3/4">Select a new expiration date for this risk. Per corporate governance, risk extensions cannot exceed exactly 365 days from today's date.</p>
+              <div className="flex items-center gap-3 mt-2">
+                 <input 
+                    type="date" 
+                    value={extendDate}
+                    onChange={(e) => setExtendDate(e.target.value)}
+                    className="px-3 py-2 bg-background border border-border rounded text-sm focus:outline-none focus:ring-1 ring-primary text-foreground"
+                 />
+                 <button 
+                    onClick={handleExtend}
+                    disabled={extending || !extendDate}
+                    className="px-5 py-2 bg-primary text-primary-foreground text-xs font-bold rounded shadow hover:bg-primary/90 transition-colors disabled:opacity-50"
+                 >
+                    {extending ? "Confirming..." : "Confirm Extension Boundary"}
+                 </button>
+                 <button 
+                    onClick={() => setShowExtendDialog(false)}
+                    className="px-4 py-2 text-muted-foreground text-xs font-bold hover:text-foreground transition-colors"
+                 >
+                    Cancel
+                 </button>
+              </div>
+           </div>
+        )}
+
         {/* Header Section */}
         <div className="bg-card border border-border rounded-lg p-6 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
           <div className="space-y-2 flex-1">
@@ -153,9 +237,17 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
                 )}>
                   {risk.risk_level}
                 </span>
-                <span className="text-muted-foreground text-sm font-medium">
+                <span className="text-muted-foreground text-sm font-medium border-l border-border pl-3">
                    Entered: {formatDate(risk.date_entered)}
                 </span>
+                {risk.expiration_date && (
+                   <span className={cn(
+                       "text-sm font-medium border-l border-border pl-3 flex items-center gap-1.5", 
+                       isExpired ? "text-destructive font-bold animate-pulse" : "text-emerald-500"
+                   )}>
+                      <CalendarClock className="w-4 h-4" /> Expires: {formatDate(risk.expiration_date)}
+                   </span>
+                )}
              </div>
              <h1 className="text-2xl font-bold text-foreground">{risk.title}</h1>
              {risk.finding_id && (
@@ -244,6 +336,25 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
                        className="w-full px-3 py-2 bg-background border border-border rounded text-sm focus:outline-none focus:ring-1 ring-primary"
                        placeholder="Assign an owner..."
                     />
+                 </div>
+
+                 <div className="space-y-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                      <FileText className="w-3.5 h-3.5" /> Source / Origin
+                    </label>
+                    <select 
+                       value={editSource}
+                       onChange={(e) => setEditSource(e.target.value)}
+                       className="w-full px-3 py-2 bg-background border border-border rounded text-sm focus:outline-none focus:ring-1 ring-primary"
+                    >
+                       <option value="">Select an Origin Source...</option>
+                       <option value="Security Audit">Security Audit</option>
+                       <option value="Penetration Test">Penetration Test</option>
+                       <option value="Threat Modeler">Threat Modeler</option>
+                       <option value="Automated Scanner">Automated Scanner</option>
+                       <option value="Bug Bounty">Bug Bounty</option>
+                       <option value="Manual Entry">Manual Entry</option>
+                    </select>
                  </div>
 
               </div>
