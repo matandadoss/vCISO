@@ -5,6 +5,7 @@ import {
   User, 
   onAuthStateChanged,
   GoogleAuthProvider,
+  OAuthProvider,
   signInWithPopup,
   signOut as firebaseSignOut,
   createUserWithEmailAndPassword,
@@ -17,6 +18,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithMicrosoft: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -29,6 +31,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   signInWithGoogle: async () => {},
+  signInWithMicrosoft: async () => {},
   signInWithEmail: async () => {},
   signUpWithEmail: async () => {},
   resetPassword: async () => {},
@@ -107,6 +110,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithMicrosoft = async () => {
+    try {
+      if (!configured) {
+        if (process.env.NODE_ENV !== "production") {
+          setUser({ uid: "mock-ms-123", email: "demo@vciso.local", displayName: "Demo User", getIdToken: async () => "mock-token" } as any);
+        } else {
+           throw new Error("Firebase Authentication is strictly required in production domains.");
+        }
+        return;
+      }
+      const { auth } = await import("@/lib/firebase");
+      const provider = new OAuthProvider('microsoft.com');
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Error signing in with Microsoft", error);
+      throw error;
+    }
+  };
+
   const signUpWithEmail = async (email: string, pass: string) => {
     try {
       if (!configured) {
@@ -180,7 +202,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword, signOut, getToken, isMock: !configured }}>
+    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithMicrosoft, signInWithEmail, signUpWithEmail, resetPassword, signOut, getToken, isMock: !configured }}>
       {children}
     </AuthContext.Provider>
   );
