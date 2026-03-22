@@ -3,67 +3,14 @@ import { fetchWithAuth } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import { formatDate, cn } from "@/lib/utils";
-import { Search, FileCheck, CheckCircle2, AlertCircle, Clock, Plus, X, Edit2, Trash2 } from "lucide-react";
-
-const FRAMEWORK_SUGGESTIONS = [
-  "SOC 2 Type II", "SOC 1 Type II", "ISO 27001", "ISO 27701",
-  "GDPR", "HIPAA", "PCI DSS v4.0", "NIST CSF 2.0", "NIST SP 800-53",
-  "NIST SP 800-171", "CIS Controls v8", "FedRAMP", "CMMC 2.0", "CCPA"
-];
+import { Search, FileCheck, CheckCircle2, AlertCircle, Clock, Plus, X, Info } from "lucide-react";
+import Link from "next/link";
 
 export default function CompliancePage() {
   const [frameworks, setFrameworks] = useState<any[]>([]);
   const [requirements, setRequirements] = useState<any[]>([]);
   const [selectedFramework, setSelectedFramework] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  // Add Framework Modal State
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newFrameworkName, setNewFrameworkName] = useState("");
-  const [newFrameworkVersion, setNewFrameworkVersion] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-
-  // Edit State
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editVersion, setEditVersion] = useState("");
-
-  const handleDeleteFramework = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    try {
-      await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/compliance/frameworks/${id}?org_id=default`, { method: "DELETE" });
-      setFrameworks(frameworks.filter(f => f.id !== id));
-      if (selectedFramework?.id === id) setSelectedFramework(null);
-    } catch (err) {
-      console.error("Failed to delete", err);
-    }
-  };
-
-  const startEdit = (e: React.MouseEvent, id: string, name: string, version: string) => {
-    e.stopPropagation();
-    setEditingId(id);
-    setEditName(name || "");
-    setEditVersion(version || "");
-  };
-
-  const saveEdit = async (e: React.MouseEvent | React.KeyboardEvent, id: string) => {
-    e.stopPropagation();
-    try {
-      await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/compliance/frameworks/${id}?org_id=default`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ framework_name: editName, version: editVersion })
-      });
-      setFrameworks(frameworks.map(f => f.id === id ? { ...f, framework_name: editName, version: editVersion } : f));
-      if (selectedFramework?.id === id) {
-         setSelectedFramework({ ...selectedFramework, framework_name: editName, version: editVersion });
-      }
-      setEditingId(null);
-    } catch (err) {
-      console.error("Failed to save edit", err);
-    }
-  };
 
   useEffect(() => {
     // Fetch Frameworks
@@ -72,9 +19,9 @@ export default function CompliancePage() {
       .then((data) => {
         setFrameworks(data.items || []);
         if (data.items && data.items.length > 0) {
-           setSelectedFramework(data.items[0]);
+          setSelectedFramework(data.items[0]);
         } else {
-           setLoading(false);
+          setLoading(false);
         }
       })
       .catch((err) => {
@@ -84,10 +31,10 @@ export default function CompliancePage() {
   }, []);
 
   useEffect(() => {
-     if (!selectedFramework) return;
-     
-     setLoading(true);
-     fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/compliance/frameworks/${selectedFramework.id}/requirements?org_id=default`)
+    if (!selectedFramework) return;
+
+    setLoading(true);
+    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/compliance/frameworks/${selectedFramework.id}/requirements?org_id=default`)
       .then((res) => res.json())
       .then((data) => {
         setRequirements(data.items || []);
@@ -99,34 +46,6 @@ export default function CompliancePage() {
       });
   }, [selectedFramework]);
 
-  const handleAddFramework = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newFrameworkName) return;
-    
-    setIsSubmitting(true);
-    try {
-      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/compliance/frameworks`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          org_id: "default",
-          framework_name: newFrameworkName,
-          version: newFrameworkVersion
-        })
-      });
-      
-      const newFw = await res.json();
-      setFrameworks([...frameworks, newFw]);
-      setSelectedFramework(newFw);
-      setIsAddModalOpen(false);
-      setNewFrameworkName("");
-      setNewFrameworkVersion("");
-    } catch (err) {
-      console.error("Failed to add framework:", err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
@@ -142,21 +61,21 @@ export default function CompliancePage() {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto mt-4 md:mt-0">
-             <div className="relative w-full sm:w-auto">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input 
-                  type="text" 
-                  placeholder="Search requirements..." 
-                  className="pl-9 pr-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-2 ring-primary w-full"
-                />
-             </div>
-             <button
-               onClick={() => setIsAddModalOpen(true)}
-               className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition w-full sm:w-auto"
-             >
-               <Plus className="w-4 h-4" />
-               Add Framework
-             </button>
+            <div className="relative w-full sm:w-auto">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search requirements..."
+                className="pl-9 pr-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-2 ring-primary w-full"
+              />
+            </div>
+            <Link 
+              href="/company"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-accent/50 text-foreground border border-border rounded-md text-sm font-medium hover:bg-muted transition w-full sm:w-auto"
+            >
+              <Info className="w-4 h-4 text-primary" />
+              Manage Frameworks in My Company
+            </Link>
           </div>
         </div>
 
@@ -165,8 +84,8 @@ export default function CompliancePage() {
           <h2 className="text-xl font-semibold text-foreground mb-4">Active Frameworks</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {frameworks.map((fw: any) => (
-              <div 
-                key={fw.id} 
+              <div
+                key={fw.id}
                 onClick={() => setSelectedFramework(fw)}
                 className={cn(
                   "bg-card border rounded-lg p-6 cursor-pointer transition-all hover:shadow-md",
@@ -174,47 +93,26 @@ export default function CompliancePage() {
                 )}
               >
                 <div className="flex justify-between items-start mb-4">
-                  <div className="w-full">
-                    {editingId === fw.id ? (
-                        <div className="flex flex-col gap-2" onClick={e => e.stopPropagation()}>
-                           <input autoFocus type="text" className="bg-background border border-border rounded-sm px-2 py-1 text-sm focus:outline-none focus:border-primary w-full" placeholder="Name..." value={editName} onChange={e => setEditName(e.target.value)} onKeyDown={e => e.key === "Enter" && saveEdit(e, fw.id)} />
-                           <input type="text" className="bg-background border border-border rounded-sm px-2 py-1 text-xs focus:outline-none focus:border-primary w-full" placeholder="Version..." value={editVersion} onChange={e => setEditVersion(e.target.value)} onKeyDown={e => e.key === "Enter" && saveEdit(e, fw.id)} />
-                           <div className="flex items-center gap-2 mt-1">
-                              <button onClick={(e) => saveEdit(e, fw.id)} className="bg-primary text-primary-foreground px-3 py-1 text-xs rounded-md">Save</button>
-                              <button onClick={(e) => { e.stopPropagation(); setEditingId(null); }} className="text-muted-foreground hover:text-foreground text-xs font-medium px-2 py-1">Cancel</button>
-                           </div>
-                        </div>
-                    ) : (
-                        <div className="flex justify-between items-start w-full group/fw">
-                            <div className="flex flex-col">
-                               <h3 className="text-lg font-bold text-foreground">{fw.framework_name}</h3>
-                               {fw.version && <p className="text-xs text-muted-foreground">{fw.version}</p>}
-                            </div>
-                            <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover/fw:opacity-100 transition-opacity">
-                               <button onClick={(e) => startEdit(e, fw.id, fw.framework_name, fw.version)} className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md"><Edit2 className="w-4 h-4"/></button>
-                               <button onClick={(e) => handleDeleteFramework(e, fw.id)} className="p-1.5 text-red-500/70 hover:text-red-500 hover:bg-red-500/10 rounded-md"><Trash2 className="w-4 h-4"/></button>
-                            </div>
-                        </div>
-                    )}
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">{fw.framework_name}</h3>
+                    {fw.version && <p className="text-xs text-muted-foreground">{fw.version}</p>}
                   </div>
-                  {editingId !== fw.id && (
-                     <div className="flex items-center justify-center w-12 h-12 rounded-full border-4 border-muted shrink-0 ml-4" style={{ borderColor: `var(--chart-${fw.overall_compliance_pct >= 90 ? '2' : fw.overall_compliance_pct >= 70 ? '4' : '1'})`}}>
-                        <span className="text-xs font-bold text-foreground">{Math.round(fw.overall_compliance_pct)}%</span>
-                     </div>
-                  )}
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full border-4 border-muted" style={{ borderColor: `var(--chart-${fw.overall_compliance_pct >= 90 ? '2' : fw.overall_compliance_pct >= 70 ? '4' : '1'})` }}>
+                    <span className="text-xs font-bold text-foreground">{Math.round(fw.overall_compliance_pct)}%</span>
+                  </div>
                 </div>
-                
+
                 <div className="space-y-2 mt-4">
-                   <div className="w-full bg-muted rounded-full h-2 text-xs">
-                     <div 
-                       className={cn("h-2 rounded-full", fw.overall_compliance_pct >= 90 ? "bg-green-500" : fw.overall_compliance_pct >= 70 ? "bg-orange-500" : "bg-red-500")} 
-                       style={{ width: `${fw.overall_compliance_pct}%` }}
-                     ></div>
-                   </div>
+                  <div className="w-full bg-muted rounded-full h-2 text-xs">
+                    <div
+                      className={cn("h-2 rounded-full", fw.overall_compliance_pct >= 90 ? "bg-green-500" : fw.overall_compliance_pct >= 70 ? "bg-orange-500" : "bg-red-500")}
+                      style={{ width: `${fw.overall_compliance_pct}%` }}
+                    ></div>
+                  </div>
                 </div>
 
                 <div className="flex justify-between items-center text-xs text-muted-foreground mt-6 pt-4 border-t border-border/50">
-                  <span className="flex items-center gap-1"><Clock className="w-3 h-3"/> Next Due: {formatDate(fw.next_assessment_due).split(',')[0]}</span>
+                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Next Due: {formatDate(fw.next_assessment_due).split(',')[0]}</span>
                 </div>
               </div>
             ))}
@@ -241,11 +139,11 @@ export default function CompliancePage() {
                 </thead>
                 <tbody className="divide-y divide-border/50">
                   {loading ? (
-                     <tr>
-                        <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
-                          Loading requirements...
-                        </td>
-                     </tr>
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+                        Loading requirements...
+                      </td>
+                    </tr>
                   ) : requirements.map((req: any) => (
                     <tr key={req.id} className="hover:bg-muted/30 transition-colors group">
                       <td className="px-6 py-4">
@@ -258,8 +156,8 @@ export default function CompliancePage() {
                         <span className={cn(
                           "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider",
                           req.status === "compliant" ? "bg-green-500/10 text-green-500" :
-                          req.status === "partial" ? "bg-yellow-500/10 text-yellow-500" :
-                          "bg-red-500/10 text-red-500"
+                            req.status === "partial" ? "bg-yellow-500/10 text-yellow-500" :
+                              "bg-red-500/10 text-red-500"
                         )}>
                           {req.status === "compliant" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
                           {req.status.replace("_", " ")}
@@ -267,12 +165,12 @@ export default function CompliancePage() {
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className={cn(
-                           "text-xs font-medium capitalize",
-                           req.evidence_status === "collected" ? "text-green-500" :
-                           req.evidence_status === "incomplete" ? "text-yellow-500" :
-                           "text-red-500"
+                          "text-xs font-medium capitalize",
+                          req.evidence_status === "collected" ? "text-green-500" :
+                            req.evidence_status === "incomplete" ? "text-yellow-500" :
+                              "text-red-500"
                         )}>
-                           {req.evidence_status}
+                          {req.evidence_status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right text-muted-foreground whitespace-nowrap">
@@ -294,76 +192,7 @@ export default function CompliancePage() {
         )}
       </div>
 
-      {/* Add Framework Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-card border border-border rounded-lg shadow-xl p-6">
-             <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-foreground">Add Custom Framework</h3>
-                <button onClick={() => setIsAddModalOpen(false)} className="text-muted-foreground hover:text-foreground">
-                  <X className="w-5 h-5" />
-                </button>
-             </div>
-             <form onSubmit={handleAddFramework}>
-               <div className="space-y-4">
-                 <div className="relative">
-                   <label className="block text-sm font-medium text-foreground mb-1">Framework Name *</label>
-                   <input 
-                     type="text" 
-                     value={newFrameworkName}
-                     onChange={(e) => { setNewFrameworkName(e.target.value); setShowSuggestions(true); }}
-                     onFocus={() => setShowSuggestions(true)}
-                     onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                     required
-                     autoComplete="off"
-                     className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 ring-primary"
-                     placeholder="e.g. PCI DSS, HIPAA"
-                   />
-                   {showSuggestions && newFrameworkName && FRAMEWORK_SUGGESTIONS.filter(s => s.toLowerCase().includes(newFrameworkName.toLowerCase())).length > 0 && (
-                       <ul className="absolute top-full left-0 z-10 w-full bg-background border border-border mt-1 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                           {FRAMEWORK_SUGGESTIONS.filter(s => s.toLowerCase().includes(newFrameworkName.toLowerCase())).map(s => (
-                               <li 
-                                   key={s} 
-                                   onMouseDown={(e) => { e.preventDefault(); setNewFrameworkName(s); setShowSuggestions(false); }} 
-                                   className="px-3 py-2 hover:bg-muted text-sm cursor-pointer"
-                               >
-                                   {s}
-                               </li>
-                           ))}
-                       </ul>
-                   )}
-                 </div>
-                 <div>
-                   <label className="block text-sm font-medium text-foreground mb-1">Version (Optional)</label>
-                   <input 
-                     type="text" 
-                     value={newFrameworkVersion}
-                     onChange={(e) => setNewFrameworkVersion(e.target.value)}
-                     className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 ring-primary"
-                     placeholder="e.g. v4.0"
-                   />
-                 </div>
-               </div>
-               <div className="mt-8 flex justify-end gap-3">
-                 <button 
-                   type="button" 
-                   onClick={() => setIsAddModalOpen(false)}
-                   className="px-4 py-2 bg-transparent text-foreground hover:bg-muted font-medium rounded-md transition"
-                 >
-                   Cancel
-                 </button>
-                 <button 
-                   type="submit" 
-                   disabled={isSubmitting || !newFrameworkName}
-                   className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded-md hover:bg-primary/90 transition disabled:opacity-50"
-                 >
-                   {isSubmitting ? "Adding..." : "Add Framework"}
-                 </button>
-               </div>
-             </form>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
