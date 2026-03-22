@@ -7,7 +7,7 @@ import {
   Smartphone, Cloud, Key, FileCode2, Edit2, Trash2, Upload, Plus
 } from "lucide-react";
 import { cn, formatDate } from "@/lib/utils";
-import { useOrganization } from "@/context/OrganizationContext";
+
 
 type Vendor = {
   id: string;
@@ -27,8 +27,7 @@ type InspectionReport = {
 };
 
 export default function VendorRiskPage() {
-  const { currentOrganization } = useOrganization();
-  const orgId = currentOrganization?.id;
+  const orgId = "default";
 
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);

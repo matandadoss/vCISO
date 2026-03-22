@@ -14,7 +14,9 @@ def _send_email_smtp(to_email: str, subject: str, text_content: str = "", html_c
     smtp_pass = os.getenv("SMTP_PASSWORD")
     sender_email = os.getenv("SMTP_FROM_EMAIL", "noreply@vciso.local")
 
-    if not smtp_server or not smtp_user or smtp_pass == "your_app_password":
+    # If using App Passwords, user/pass are needed. If using SMTP Relay, they might be empty.
+    # We just ensure we have an SMTP server configured.
+    if not smtp_server or (smtp_server == "smtp.gmail.com" and smtp_pass == "your_app_password"):
         logger.warning(f"[MOCK EMAIL - SMTP NOT CONFIGURED] To: {to_email} | Subject: {subject}")
         # Fallback/Development Console Logger
         print("\n" + "="*50)
@@ -41,7 +43,9 @@ def _send_email_smtp(to_email: str, subject: str, text_content: str = "", html_c
         with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.ehlo()
             server.starttls() # Secure the connection
-            server.login(smtp_user, smtp_pass)
+            # Only login if credentials were provided (SMTP Relay uses IP whitelisting instead)
+            if smtp_user and smtp_pass and smtp_pass != "your_app_password":
+                server.login(smtp_user, smtp_pass)
             server.send_message(msg)
         logger.info(f"Successfully sent email to {to_email}")
         return True
