@@ -111,7 +111,11 @@ export default function FindingsPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {findings.map((f: any) => (
-                <tr key={f.id} className="hover:bg-muted/50 transition-colors">
+                <tr 
+                  key={f.id} 
+                  onClick={() => router.push(`/findings/${f.id}`)}
+                  className="hover:bg-muted/50 transition-colors cursor-pointer"
+                >
                   <td className="px-6 py-4">
                     <p className="font-semibold text-foreground">{f.title}</p>
                   </td>

@@ -2,6 +2,7 @@
 import { fetchWithAuth } from "@/lib/api";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AlertTriangle, ShieldAlert, FileWarning, Clock, Info } from "lucide-react";
 
 interface AttentionItem {
@@ -16,6 +17,7 @@ interface AttentionItem {
 export function WhatNeedsAttention() {
   const [items, setItems] = useState<AttentionItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchAttentionItems() {
@@ -85,7 +87,8 @@ export function WhatNeedsAttention() {
           return (
             <div 
               key={item.id} 
-              className={`p-4 rounded-md border text-sm transition-all hover:bg-accent/50 relative overflow-hidden ${
+              onClick={() => router.push(`/findings/${item.id}`)}
+              className={`p-4 rounded-md border text-sm transition-all hover:bg-accent/50 relative overflow-hidden cursor-pointer ${
                 isOverdue ? 'border-destructive bg-destructive/10 ring-1 ring-destructive' :
                 item.isUrgent ? 'border-destructive/40 bg-destructive/5' : 
                 isExpiring ? 'border-orange-500/40 bg-orange-500/5' :
