@@ -67,8 +67,12 @@ export default function OSINTCorrelationPage() {
        const savedInfra = JSON.parse(localStorage.getItem("vciso_company_infra") || '["Google Cloud Platform", "AWS", "Microsoft Azure"]');
        const savedTech = JSON.parse(localStorage.getItem("vciso_company_tech") || '["Node.js", "Python", "React", "PostgreSQL", "MongoDB", "Redis", "Docker", "Kubernetes"]');
        const savedTools = JSON.parse(localStorage.getItem("vciso_company_tools") || '[{"name": "CrowdStrike Falcon"}, {"name": "Palo Alto Prisma Cloud"}]');
+       
+       const infraNames = savedInfra.map((i: any) => i.name || i);
+       const techNames = savedTech.map((t: any) => t.name || t);
        const toolNames = savedTools.map((t: any) => t.name || t);
-       setUserStack([...savedInfra, ...savedTech, ...toolNames]);
+       
+       setUserStack([...infraNames, ...techNames, ...toolNames]);
      } catch (e) {
        console.error("Failed to parse local stack", e);
      }
@@ -87,7 +91,11 @@ export default function OSINTCorrelationPage() {
              const savedInfra = JSON.parse(localStorage.getItem("vciso_company_infra") || '["Google Cloud Platform", "AWS"]');
              const savedTech = JSON.parse(localStorage.getItem("vciso_company_tech") || '["Node.js", "React", "Docker"]');
              const savedTools = JSON.parse(localStorage.getItem("vciso_company_tools") || '[{"name": "CrowdStrike Falcon"}]');
-             const allTargets = [...savedInfra, ...savedTech, ...savedTools.map((t: any) => t.name || t)];
+             const allTargets = [
+                 ...savedInfra.map((i: any) => i.name || i), 
+                 ...savedTech.map((t: any) => t.name || t), 
+                 ...savedTools.map((t: any) => t.name || t)
+             ];
              
              if (allTargets.length > 0) {
                 baseCorrelations = baseCorrelations.map((corr: any, idx: number) => {
