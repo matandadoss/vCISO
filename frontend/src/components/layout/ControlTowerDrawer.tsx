@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { Send, Bot, User, Loader2, Mic, Plus, FileText, ExternalLink, X } from "lucide-react";
@@ -44,10 +44,11 @@ export function ControlTowerDrawer() {
   // When context changes and drawer is open, we can optionally notify the user, 
   // but let's keep it simple for now and let the LLM use it silently.
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  const handleSend = async (overrideMsg?: string) => {
+    const textToSend = overrideMsg || input;
+    if (!textToSend.trim()) return;
 
-    const userMsg: Message = { id: Date.now().toString(), role: "user", content: input };
+    const userMsg: Message = { id: Date.now().toString(), role: "user", content: textToSend };
     setMessages(prev => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
@@ -62,7 +63,7 @@ export function ControlTowerDrawer() {
         },
         body: JSON.stringify({
            session_id: "default-session",
-           content: input,
+           content: textToSend,
            org_id: "default",
            page_context: pageContext ? JSON.stringify(pageContext) : null
         })
@@ -209,6 +210,24 @@ export function ControlTowerDrawer() {
                </div>
             </div>
           )}
+          
+          {/* Question Bubbles / Suggestions */}
+          {!isTyping && pageContext?.suggestions && pageContext.suggestions.length > 0 && (
+             <div className="flex flex-col gap-2 mt-4 ml-9">
+                <div className="text-xs text-muted-foreground font-medium mb-1">Suggested Questions:</div>
+                <div className="flex flex-col gap-2 items-start">
+                   {pageContext.suggestions.map((sug, i) => (
+                      <button 
+                        key={i}
+                        onClick={() => handleSend(sug)}
+                        className="text-left text-xs bg-accent/30 hover:bg-accent border border-primary/20 hover:border-primary/50 text-foreground px-3 py-2 rounded-lg transition-colors w-fit max-w-[95%]"
+                      >
+                        {sug}
+                      </button>
+                   ))}
+                </div>
+             </div>
+          )}
         </div>
 
         {/* Input Area */}
@@ -236,7 +255,7 @@ export function ControlTowerDrawer() {
                  <Mic className={cn("w-4 h-4", isListening && "animate-pulse")} />
                </button>
                <button 
-                 onClick={handleSend}
+                 onClick={() => handleSend()}
                  disabled={!input.trim() && !isListening}
                  className="p-1.5 bg-primary text-primary-foreground rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
                >

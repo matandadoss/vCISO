@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 type PageContextData = {
   title: string;
   data: any;
+  suggestions?: string[];
 };
 
 type ControlTowerContextType = {

@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { Search, ShieldAlert, Activity, Users, BookOpen, FlaskConical } from "lucide-react";
 import Link from "next/link";
+import { useControlTower } from "@/contexts/ControlTowerContext";
 
 export default function ThreatIntelPage() {
   const [actors, setActors] = useState([]);
@@ -19,9 +20,23 @@ export default function ThreatIntelPage() {
   const [loading, setLoading] = useState(true);
   const [expandedIoc, setExpandedIoc] = useState<string | null>(null);
   
-  // Playbook execution state
   const [executingIoc, setExecutingIoc] = useState<string | null>(null);
   const [executionSuccess, setExecutionSuccess] = useState<Record<string, boolean>>({});
+
+  const { setIsOpen, setPageContext } = useControlTower();
+
+  const handleActorClick = (actor: any) => {
+    setPageContext({
+      title: `Threat Actor: ${actor.name}`,
+      data: actor,
+      suggestions: [
+        `What is the current risk rating for ${actor.name} against our architecture?`,
+        `How can we defend against ${actor.name}'s known attack methods?`,
+        `Are there any active indicators suggesting ${actor.name} is targeting us?`
+      ]
+    });
+    setIsOpen(true);
+  };
 
   const toggleIoc = (id: string) => {
     setExpandedIoc(expandedIoc === id ? null : id);
@@ -138,10 +153,14 @@ export default function ThreatIntelPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {actors.map((actor: any) => (
-              <div key={actor.id} className={cn(
-                "bg-card border rounded-lg p-6 flex flex-col hover:border-primary/50 transition-colors relative",
-                actor.relevance_score === "High" ? "border-red-500/30" : "border-border"
-              )}>
+              <div 
+                 key={actor.id} 
+                 onClick={() => handleActorClick(actor)}
+                 className={cn(
+                   "bg-card border rounded-lg p-6 flex flex-col hover:border-primary/50 hover:shadow-md transition-all relative cursor-pointer group",
+                   actor.relevance_score === "High" ? "border-red-500/30" : "border-border"
+                 )}
+              >
                 {/* Relevance Badge */}
                 {actor.relevance_score && (
                   <div className={cn(
