@@ -197,13 +197,45 @@ export default function UserGuidePage() {
           <h2 className="text-3xl font-bold tracking-tight text-foreground">My Company</h2>
           <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
             <p className="text-base leading-relaxed">
-              The <strong>My Company</strong> page defines the global context for the AI engine. Here, you establish your organizational footprint, including your specific industry, cloud providers, and operational zones.
+              The <strong>My Company</strong> page defines the global context for the AI engine. Here, you establish your organizational footprint, establishing the exact attack surface the vCISO monitors. Accurately maintaining this profile prevents the AI from generating false positives.
+            </p>
+            
+            <h3 className="text-xl font-bold mt-6 mb-2">Centralized Asset & Threat Management</h3>
+            <p className="text-base leading-relaxed mb-4">
+              All core tracking capabilities are centralized on this page. You can actively Add, Edit (version tracking), and Delete objects across the following domains to keep your environment up-to-date:
+            </p>
+            
+            <ul className="list-disc list-outside ml-5 space-y-2 text-base leading-relaxed marker:text-muted-foreground font-medium text-foreground/90">
+              <li><strong>Cloud Infrastructure:</strong> Track your operating environments (e.g., AWS, GCP, Azure) and their versions. The AI correlates this against active zero-days targeting cloud control planes.</li>
+              <li><strong>App Stack:</strong> Catalog software frameworks, databases, and dependencies (e.g., React, PostgreSQL). Ensure versions are tracked accurately to enable the AI to detect deeply embedded supply chain vulnerabilities.</li>
+              <li><strong>Security Tools:</strong> Inventory deployed defenses (e.g., CrowdStrike, Palo Alto WAF). The correlation engine accounts for these tools when determining if an active threat path is reliably mitigated or not.</li>
+              <li><strong>Compliance Frameworks:</strong> Select which regulatory frameworks (e.g., SOC 2, HIPAA) your organization must adhere to. This automatically activates the requirements mapping in the Compliance module.</li>
+              <li><strong>Tracked Threat Actors:</strong> Monitor specific cybercriminal groups (e.g., LAPSUS$, Scattered Spider) relevant to your sector. The AI continuously correlates their evolving Tactics, Techniques, and Procedures (TTPs) against your exact architecture.</li>
+            </ul>
+
+            <p className="text-base leading-relaxed mt-4">
+              <strong>Note:</strong> Any time you update these components, the <strong>Correlation Engine</strong> automatically recalculates your organization's security posture and updates your Findings, active Alerts, and Executive Dashboard scoring in real-time.
+            </p>
+          </div>
+        </div>
+
+        <hr className="border-border/50" />
+
+        {/* Section: Control Tower AI */}
+        <div className="space-y-6">
+          <div className="flex items-center text-sm font-medium text-muted-foreground gap-1.5 mb-2">
+            Intelligence <ChevronRight className="w-4 h-4" /> Control Tower AI
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Control Tower AI</h2>
+          <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
+            <p className="text-base leading-relaxed">
+              The <strong>Control Tower</strong> is a context-aware, generative AI assistant deeply integrated into the vCISO platform. It is designed to act as a Tier-3 Security Analyst and Strategic Advisor.
             </p>
             <p className="text-base leading-relaxed">
-              Accurately maintaining this profile prevents the AI engine from generating false positives. If your profile incorrectly states you use <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">Azure</code> instead of <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border">AWS</code>, the system may suppress critical AWS specific vulnerability alerts.
+              When navigating complex modules—such as Threat Intelligence or Cyber Threat Analyzer—you can launch the Control Tower by interacting with objects (e.g., clicking on a specific Threat Actor card). The Assistant automatically ingests the context of the explicit object you are viewing, allowing you to ask hyper-specific questions like <em>"What is our current risk rating against this actor?"</em> without having to manually describe your environment.
             </p>
             <p className="text-base leading-relaxed">
-              <strong>Note:</strong> Whenever a new core technology is culturally adopted, your IT administrators must accurately update this profile so the AI engine can dynamically adjust its 24/7 monitoring capabilities.
+              The Control Tower offers one-click generated query suggestions, real-time risk calculations, and can dynamically cross-reference your tracked <strong>App Stack</strong> against emerging global attacker TTPs to formulate natural-language defense recommendations.
             </p>
           </div>
         </div>
