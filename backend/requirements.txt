@@ -33,4 +33,4 @@ secure==0.3.0
 firebase-admin==6.4.0
 
 # Email dependencies
-sendgrid>=6.11.0
+# (Replaced SendGrid with built-in smtplib for Google Workspace)
