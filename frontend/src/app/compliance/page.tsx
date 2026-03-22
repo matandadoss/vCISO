@@ -3,7 +3,7 @@ import { fetchWithAuth } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import { formatDate, cn } from "@/lib/utils";
-import { Search, FileCheck, CheckCircle2, AlertCircle, Clock, Plus, X } from "lucide-react";
+import { Search, FileCheck, CheckCircle2, AlertCircle, Clock, Plus, X, Edit2, Trash2 } from "lucide-react";
 
 const FRAMEWORK_SUGGESTIONS = [
   "SOC 2 Type II", "SOC 1 Type II", "ISO 27001", "ISO 27701",
@@ -23,6 +23,47 @@ export default function CompliancePage() {
   const [newFrameworkVersion, setNewFrameworkVersion] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Edit State
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editVersion, setEditVersion] = useState("");
+
+  const handleDeleteFramework = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    try {
+      await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/compliance/frameworks/${id}?org_id=default`, { method: "DELETE" });
+      setFrameworks(frameworks.filter(f => f.id !== id));
+      if (selectedFramework?.id === id) setSelectedFramework(null);
+    } catch (err) {
+      console.error("Failed to delete", err);
+    }
+  };
+
+  const startEdit = (e: React.MouseEvent, id: string, name: string, version: string) => {
+    e.stopPropagation();
+    setEditingId(id);
+    setEditName(name || "");
+    setEditVersion(version || "");
+  };
+
+  const saveEdit = async (e: React.MouseEvent | React.KeyboardEvent, id: string) => {
+    e.stopPropagation();
+    try {
+      await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/compliance/frameworks/${id}?org_id=default`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ framework_name: editName, version: editVersion })
+      });
+      setFrameworks(frameworks.map(f => f.id === id ? { ...f, framework_name: editName, version: editVersion } : f));
+      if (selectedFramework?.id === id) {
+         setSelectedFramework({ ...selectedFramework, framework_name: editName, version: editVersion });
+      }
+      setEditingId(null);
+    } catch (err) {
+      console.error("Failed to save edit", err);
+    }
+  };
 
   useEffect(() => {
     // Fetch Frameworks
@@ -133,13 +174,34 @@ export default function CompliancePage() {
                 )}
               >
                 <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-lg font-bold text-foreground">{fw.framework_name}</h3>
-                    {fw.version && <p className="text-xs text-muted-foreground">{fw.version}</p>}
+                  <div className="w-full">
+                    {editingId === fw.id ? (
+                        <div className="flex flex-col gap-2" onClick={e => e.stopPropagation()}>
+                           <input autoFocus type="text" className="bg-background border border-border rounded-sm px-2 py-1 text-sm focus:outline-none focus:border-primary w-full" placeholder="Name..." value={editName} onChange={e => setEditName(e.target.value)} onKeyDown={e => e.key === "Enter" && saveEdit(e, fw.id)} />
+                           <input type="text" className="bg-background border border-border rounded-sm px-2 py-1 text-xs focus:outline-none focus:border-primary w-full" placeholder="Version..." value={editVersion} onChange={e => setEditVersion(e.target.value)} onKeyDown={e => e.key === "Enter" && saveEdit(e, fw.id)} />
+                           <div className="flex items-center gap-2 mt-1">
+                              <button onClick={(e) => saveEdit(e, fw.id)} className="bg-primary text-primary-foreground px-3 py-1 text-xs rounded-md">Save</button>
+                              <button onClick={(e) => { e.stopPropagation(); setEditingId(null); }} className="text-muted-foreground hover:text-foreground text-xs font-medium px-2 py-1">Cancel</button>
+                           </div>
+                        </div>
+                    ) : (
+                        <div className="flex justify-between items-start w-full group/fw">
+                            <div className="flex flex-col">
+                               <h3 className="text-lg font-bold text-foreground">{fw.framework_name}</h3>
+                               {fw.version && <p className="text-xs text-muted-foreground">{fw.version}</p>}
+                            </div>
+                            <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover/fw:opacity-100 transition-opacity">
+                               <button onClick={(e) => startEdit(e, fw.id, fw.framework_name, fw.version)} className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md"><Edit2 className="w-4 h-4"/></button>
+                               <button onClick={(e) => handleDeleteFramework(e, fw.id)} className="p-1.5 text-red-500/70 hover:text-red-500 hover:bg-red-500/10 rounded-md"><Trash2 className="w-4 h-4"/></button>
+                            </div>
+                        </div>
+                    )}
                   </div>
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full border-4 border-muted" style={{ borderColor: `var(--chart-${fw.overall_compliance_pct >= 90 ? '2' : fw.overall_compliance_pct >= 70 ? '4' : '1'})`}}>
-                     <span className="text-xs font-bold text-foreground">{Math.round(fw.overall_compliance_pct)}%</span>
-                  </div>
+                  {editingId !== fw.id && (
+                     <div className="flex items-center justify-center w-12 h-12 rounded-full border-4 border-muted shrink-0 ml-4" style={{ borderColor: `var(--chart-${fw.overall_compliance_pct >= 90 ? '2' : fw.overall_compliance_pct >= 70 ? '4' : '1'})`}}>
+                        <span className="text-xs font-bold text-foreground">{Math.round(fw.overall_compliance_pct)}%</span>
+                     </div>
+                  )}
                 </div>
                 
                 <div className="space-y-2 mt-4">
