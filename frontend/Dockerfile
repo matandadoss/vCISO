@@ -16,8 +16,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Set environment variables for build time (if necessary for build static generation)
-# ENV NEXT_PUBLIC_FIREBASE_API_KEY=dummy
+# Set environment variables for build time
+ENV NODE_ENV=production
 RUN apk add --no-cache ca-certificates
 RUN npm run build
 

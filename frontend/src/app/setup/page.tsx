@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import SetupWizard, { SetupData } from "@/components/setup/SetupWizard";
+import { fetchWithAuth } from "@/lib/api";
 
 export default function SetupPage() {
   const { user, loading } = useAuth();
@@ -35,7 +36,7 @@ export default function SetupPage() {
       console.log("Saving Org Profile to Backend:", data);
       
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/onboarding/complete`, {
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/onboarding/complete`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"

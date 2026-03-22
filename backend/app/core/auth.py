@@ -16,8 +16,14 @@ logger = logging.getLogger(__name__)
 if not firebase_admin._apps:
     try:
         # If running in GCP, it can use default credentials
-        # For local dev, you'd set GOOGLE_APPLICATION_CREDENTIALS
-        firebase_admin.initialize_app()
+        # Cloud Run does not automatically inject GOOGLE_CLOUD_PROJECT, so we explicitly define it.
+        # Alternatively, we could fetch from gcp metadata server or env vars.
+        options = {}
+        if not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
+            # When using application default credentials, Firebase Admin SDK needs the project ID explicitly
+            options = {'projectId': 'gen-lang-client-0873796692'}
+            
+        firebase_admin.initialize_app(options=options)
     except ValueError as e:
         logger.warning(f"Failed to initialize Firebase app: {e}")
 
@@ -44,7 +50,7 @@ async def verify_firebase_token(credentials: HTTPAuthorizationCredentials = Secu
         return decoded_token
     except Exception as e:
         logger.error(f"Error verifying Firebase token: {e}")
-        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        raise HTTPException(status_code=401, detail=f"Invalid authentication credentials: {str(e)}")
 
 async def get_current_user(
     decoded_token: dict = Depends(verify_firebase_token),

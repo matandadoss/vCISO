@@ -7,6 +7,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from secure import Secure
 from app.core.auth import get_current_user
 from app.api.v1 import ai_settings, chat, findings, dashboard, ws, threat_intel, compliance, correlation_graph, playbooks, onboarding, integrations, simulator, organizations, vendors, pentest, workflows, bugs
+from app.db.session import get_db
 
 # Initialize Rate Limiter
 from app.core.rate_limit import limiter
@@ -35,10 +36,15 @@ async def set_secure_headers(request: Request, call_next):
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
-# CORS config - locked down to specific frontend origins for security
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", "https://vciso.web.app", "https://vciso.firebaseapp.com"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://vciso.web.app",
+        "https://vciso.firebaseapp.com",
+        "https://vciso-frontend-457240052356.us-central1.run.app"
+    ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -66,7 +72,6 @@ app.include_router(bugs.router, prefix="/api/v1") # Open/loose auth for bug repo
 @app.get("/")
 async def root():
     return {"message": "vCISO API Operational"}
-
 @app.get("/api/v1/health")
 async def health_check():
     return {"status": "healthy"}

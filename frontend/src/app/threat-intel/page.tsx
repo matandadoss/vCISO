@@ -30,7 +30,7 @@ export default function ThreatIntelPage() {
   const executePlaybook = async (ind: any) => {
     setExecutingIoc(ind.id);
     try {
-      const res = await fetchWithAuth(`/api/v1/playbooks/execute`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/playbooks/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -51,7 +51,7 @@ export default function ThreatIntelPage() {
 
   const fetchBreaches = async (offset: number) => {
     try {
-      const res = await fetchWithAuth(`/api/v1/threat-intel/breach-reports?org_id=default&limit=${BREACH_LIMIT}&offset=${offset}`);
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/breach-reports?org_id=default&limit=${BREACH_LIMIT}&offset=${offset}`);
       if (res.ok) {
         const data = await res.json();
         if (offset === 0) {
@@ -76,7 +76,7 @@ export default function ThreatIntelPage() {
 
   useEffect(() => {
     // Fetch Threat Actors
-    fetchWithAuth(`/api/v1/threat-intel/actors?org_id=default`)
+    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/actors?org_id=default`)
       .then((res) => res.json())
       .then((data) => {
         setActors(data.items || []);
@@ -84,7 +84,7 @@ export default function ThreatIntelPage() {
       .catch((err) => console.error("Error fetching actors:", err));
 
     // Fetch Threat Indicators
-    fetchWithAuth(`/api/v1/threat-intel/indicators?org_id=default`)
+    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/indicators?org_id=default`)
       .then((res) => res.json())
       .then((data) => {
         setIndicators(data.items || []);
@@ -95,7 +95,7 @@ export default function ThreatIntelPage() {
     fetchBreaches(0);
 
     // Fetch Dark Web Alerts
-    fetchWithAuth(`/api/v1/threat-intel/dark-web?org_id=default`)
+    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/dark-web?org_id=default`)
       .then((res) => res.json())
       .then((data) => {
         setDarkWebAlerts(data.items || []);

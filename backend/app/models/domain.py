@@ -182,6 +182,7 @@ class ThreatActor(BaseModel):
     name: Mapped[str] = mapped_column(String(255))
     aliases: Mapped[dict] = mapped_column(JSON, nullable=True)
     description: Mapped[str] = mapped_column(Text, nullable=True)
+    version: Mapped[str] = mapped_column(String(50), nullable=True)
     motivation: Mapped[str] = mapped_column(String(100), nullable=True)
     sophistication: Mapped[ThreatSophistication] = mapped_column(SQLEnum(ThreatSophistication))
     target_industries: Mapped[dict] = mapped_column(JSON, nullable=True)
