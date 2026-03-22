@@ -11,6 +11,7 @@ export default function CompliancePage() {
   const [requirements, setRequirements] = useState<any[]>([]);
   const [selectedFramework, setSelectedFramework] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     // Fetch Frameworks
@@ -46,6 +47,12 @@ export default function CompliancePage() {
       });
   }, [selectedFramework]);
 
+  const filteredRequirements = requirements.filter(req => 
+    !searchQuery || 
+    (req.requirement_id_code?.toLowerCase() || "").includes(searchQuery.toLowerCase()) || 
+    (req.title?.toLowerCase() || "").includes(searchQuery.toLowerCase())
+  );
+
 
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
@@ -65,6 +72,8 @@ export default function CompliancePage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search requirements..."
                 className="pl-9 pr-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-2 ring-primary w-full"
               />
@@ -144,7 +153,7 @@ export default function CompliancePage() {
                         Loading requirements...
                       </td>
                     </tr>
-                  ) : requirements.map((req: any) => (
+                  ) : filteredRequirements.map((req: any) => (
                     <tr key={req.id} className="hover:bg-muted/30 transition-colors group">
                       <td className="px-6 py-4">
                         <span className="font-mono font-medium text-foreground">{req.requirement_id_code}</span>
@@ -182,6 +191,13 @@ export default function CompliancePage() {
                     <tr>
                       <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
                         No requirements found for this framework.
+                      </td>
+                    </tr>
+                  )}
+                  {!loading && requirements.length > 0 && filteredRequirements.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+                        No requirements matching "{searchQuery}".
                       </td>
                     </tr>
                   )}
