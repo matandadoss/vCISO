@@ -4,6 +4,7 @@ from typing import Optional, Any
 from sqlalchemy import Float, Integer, String, Boolean, ForeignKey, Text, Enum as SQLEnum, Index, func, JSON
 from sqlalchemy.types import Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import event, text
 from app.models.base import BaseModel
 import enum
 
@@ -426,3 +427,44 @@ class RiskRegister(BaseModel):
     __table_args__ = (
         Index("ix_risk_register_composite", "org_id", "risk_level", "date_entered"),
     )
+
+def apply_rls_ddl(target, connection, **kw):
+    """
+    SQLAlchemy metadata hook that executes immediately after database schema creation.
+    It loops through tables containing an 'org_id' column and enforces physical PostgreSQL
+    Row-Level Security rules blocking any queries lacking proper ContextVars constraints.
+    """
+    if connection.dialect.name != "postgresql":
+        return
+        
+    tables_to_protect = [
+        "users", "assets", "vulnerabilities", "threat_actors",
+        "threat_intel_indicators", "vendors", "security_controls",
+        "compliance_frameworks", "findings", "correlation_rules",
+        "chat_sessions", "audit_logs", "threat_feed_subscriptions",
+        "ai_query_logs", "internal_bug_logs", "risk_register", "org_ai_budgets"
+    ]
+    
+    for table in tables_to_protect:
+        try:
+            connection.execute(text(f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;"))
+            connection.execute(text(f"ALTER TABLE {table} FORCE ROW LEVEL SECURITY;"))
+            
+            # Idempotency safety buffer
+            connection.execute(text(f"DROP POLICY IF EXISTS tenant_isolation_{table} ON {table};"))
+            
+            # Restrictive policy: blocks access unless rls.org_id exists AND physically matches
+            connection.execute(text(f"""
+                CREATE POLICY tenant_isolation_{table} ON {table}
+                AS RESTRICTIVE FOR ALL TO PUBLIC
+                USING (
+                    current_setting('rls.org_id', true) IS NOT NULL 
+                    AND current_setting('rls.org_id', true) != ''
+                    AND org_id = current_setting('rls.org_id', true)::uuid
+                );
+            """))
+        except Exception as e:
+            print(f"Failed configuring Tenant Isolation Row-Level Security on {table}: {e}")
+
+event.listen(BaseModel.metadata, "after_create", apply_rls_ddl)
+

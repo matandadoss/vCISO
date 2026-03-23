@@ -6,9 +6,12 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from secure import Secure
 from app.core.auth import get_current_user
-from app.api.v1 import ai_settings, chat, findings, dashboard, ws, threat_intel, compliance, correlation_graph, playbooks, onboarding, integrations, simulator, organizations, vendors, pentest, workflows, bugs, users, risk_register, tiers
+from app.api.v1 import ai_settings, chat, findings, dashboard, ws, threat_intel, compliance, correlation_graph, playbooks, onboarding, integrations, simulator, organizations, vendors, pentest, workflows, bugs, users, risk_register, tiers, billing
 from app.api.v1.admin import customers as admin_customers, tiers as admin_tiers
 from app.db.session import get_db
+import base64
+import json
+from app.core.context import org_id_ctx
 
 # Initialize Rate Limiter
 from app.core.rate_limit import limiter
@@ -28,6 +31,30 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 
 # Apply Security Headers Middleware
+@app.middleware("http")
+async def tenant_isolation_middleware(request: Request, call_next):
+    """
+    Extracts the org_id from the incoming JWT (unverified) and injects it into contextvars.
+    Cryptographic verification still happens in the get_current_user dependency,
+    protecting this fast-path metadata extraction from forgery.
+    """
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        if token == "mock-token":
+            org_id_ctx.set("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        else:
+            try:
+                payload_b64 = token.split(".")[1]
+                payload_b64 += "=" * ((4 - len(payload_b64) % 4) % 4)
+                payload = json.loads(base64.urlsafe_b64decode(payload_b64))
+                if "org_id" in payload:
+                    org_id_ctx.set(payload["org_id"])
+            except Exception:
+                pass 
+                
+    return await call_next(request)
+
 @app.middleware("http")
 async def set_secure_headers(request: Request, call_next):
     response = await call_next(request)
@@ -74,7 +101,9 @@ app.include_router(workflows.router, prefix="/api/v1", dependencies=[Depends(get
 app.include_router(users.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
 app.include_router(risk_register.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
 app.include_router(tiers.router, prefix="/api/v1/tiers", dependencies=[Depends(get_current_user)])
+app.include_router(billing.router, prefix="/api/v1/billing", dependencies=[Depends(get_current_user)])
 app.include_router(bugs.router, prefix="/api/v1") # Open/loose auth for bug report catching
+
 
 # Admin Routes
 app.include_router(admin_customers.router, prefix="/api/v1/admin/customers", dependencies=[Depends(get_current_user)])

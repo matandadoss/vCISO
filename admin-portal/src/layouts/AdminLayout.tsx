@@ -29,7 +29,7 @@ const AdminLayout = () => {
           
           <NavLink to="/customers" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
             <Users size={20} />
-            <span>Customers</span>
+            <span>Organizations</span>
           </NavLink>
           
           <NavLink to="/tiers" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>

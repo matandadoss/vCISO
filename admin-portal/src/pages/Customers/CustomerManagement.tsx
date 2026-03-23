@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, ShieldX, ShieldCheck, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Search, ShieldX, ShieldCheck, CheckCircle, XCircle, Loader2, Plus, Trash2 } from 'lucide-react';
 import { ApiService, Customer } from '../../services/api';
 import './CustomerManagement.css';
 
@@ -10,6 +10,12 @@ const CustomerManagement = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
+  
+  // Organization Creation Modal State
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newOrgName, setNewOrgName] = useState('');
+  const [newOrgTier, setNewOrgTier] = useState('Professional');
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     loadCustomers();
@@ -53,6 +59,33 @@ const CustomerManagement = () => {
     setActingId(null);
   };
 
+  const handleCreateOrg = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newOrgName.trim()) return;
+    
+    setIsCreating(true);
+    const newCustomer = await ApiService.createCustomer(newOrgName, newOrgTier);
+    if (newCustomer) {
+      setCustomers(prev => [...prev, newCustomer]);
+      setIsCreateModalOpen(false);
+      setNewOrgName('');
+      setNewOrgTier('Professional');
+    }
+    setIsCreating(false);
+  };
+
+  const handleDeleteOrg = async (customerId: string) => {
+    if (actingId) return;
+    if (!window.confirm("Are you SURE you want to permanently delete this organization? All users will be wiped!")) return;
+    
+    setActingId(customerId);
+    const success = await ApiService.deleteCustomer(customerId);
+    if (success) {
+      setCustomers(prev => prev.filter(c => c.id !== customerId));
+    }
+    setActingId(null);
+  };
+
   const filtered = customers.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -61,10 +94,17 @@ const CustomerManagement = () => {
     <div className="customers-container">
       <div className="page-header">
         <div>
-          <h1>Customer Accounts</h1>
-          <p className="text-muted">Manage tenant accounts, subscriptions, and platform access</p>
+          <h1>Organizations</h1>
+          <p className="text-muted">Manage tenant platforms, subscriptions, and platform access</p>
         </div>
-        <button className="btn btn-primary" onClick={loadCustomers}>Refresh Data</button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button className="btn btn-secondary" onClick={loadCustomers} style={{backgroundColor: 'var(--bg-glass)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)'}}>
+            Refresh Data
+          </button>
+          <button className="btn btn-primary" onClick={() => setIsCreateModalOpen(true)} style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+            <Plus size={18} /> Add Organization
+          </button>
+        </div>
       </div>
 
       <div className="table-controls">
@@ -72,7 +112,7 @@ const CustomerManagement = () => {
           <Search size={18} className="text-muted" />
           <input 
             type="text" 
-            placeholder="Search customers..." 
+            placeholder="Search organizations..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -89,7 +129,7 @@ const CustomerManagement = () => {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Company Name</th>
+                <th>Organization Name</th>
                 <th>Tier</th>
                 <th>Active Users</th>
                 <th>Status</th>
@@ -121,10 +161,10 @@ const CustomerManagement = () => {
                     </span>
                   </td>
                   <td>
-                    <div className="action-menu" style={{ justifyContent: 'flex-start' }}>
+                    <div className="action-menu" style={{ justifyContent: 'flex-start', gap: '0.5rem' }}>
                       <button 
                         className={`icon-btn ${customer.status === 'active' ? 'text-accent-danger' : 'text-accent-success'}`}
-                        title={customer.status === 'active' ? "Suspend Customer" : "Activate Customer"}
+                        title={customer.status === 'active' ? "Suspend Tenant" : "Activate Tenant"}
                         onClick={() => handleToggleStatus(customer)}
                         disabled={actingId === customer.id}
                         style={{ border: '1px solid var(--border-subtle)', padding: '0.4rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600, gap: '0.5rem' }}
@@ -135,6 +175,15 @@ const CustomerManagement = () => {
                           <><ShieldCheck size={16}/> Activate</>
                         )}
                       </button>
+                      <button 
+                        className="icon-btn text-accent-danger"
+                        title="Delete Tenant"
+                        onClick={() => handleDeleteOrg(customer.id)}
+                        disabled={actingId === customer.id}
+                        style={{ border: '1px solid var(--border-subtle)', padding: '0.4rem', borderRadius: '6px' }}
+                      >
+                        <Trash2 size={16}/>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -142,7 +191,7 @@ const CustomerManagement = () => {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={5} className="text-center py-4 text-muted">
-                    No customers found matching "{searchTerm}"
+                    No organizations found matching "{searchTerm}"
                   </td>
                 </tr>
               )}
@@ -150,6 +199,47 @@ const CustomerManagement = () => {
           </table>
         )}
       </div>
+      
+      {/* Create Organization Modal */}
+      {isCreateModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '400px', padding: '2rem', border: '1px solid var(--border-subtle)' }}>
+             <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>New Organization</h2>
+             <form onSubmit={handleCreateOrg} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Organization Name</label>
+                  <input 
+                    type="text" 
+                    className="modern-input" 
+                    value={newOrgName} 
+                    onChange={e => setNewOrgName(e.target.value)} 
+                    placeholder="e.g. Acme Corp"
+                    required
+                    style={{ width: '100%', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Initial Subscription Tier</label>
+                  <select 
+                    className="modern-input" 
+                    value={newOrgTier} 
+                    onChange={e => setNewOrgTier(e.target.value)}
+                    style={{ width: '100%', boxSizing: 'border-box' }}
+                  >
+                    {AVAILABLE_TIERS.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                  <button type="button" onClick={() => setIsCreateModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" disabled={isCreating} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    {isCreating ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />} 
+                    Deploy Platform
+                  </button>
+                </div>
+             </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

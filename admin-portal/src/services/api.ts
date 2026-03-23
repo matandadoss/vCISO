@@ -116,5 +116,28 @@ export const ApiService = {
       console.error("Failed to update customer tier.", e);
       return false;
     }
+  },
+
+  async createCustomer(name: string, tier: string): Promise<Customer | null> {
+    try {
+      const resp = await fetchWithAuth(`/admin/customers/`, {
+        method: 'POST',
+        body: JSON.stringify({ name, tier })
+      });
+      return resp as Customer;
+    } catch (e) {
+      console.error("Failed to create customer.", e);
+      return null;
+    }
+  },
+
+  async deleteCustomer(customerId: string): Promise<boolean> {
+    try {
+      await fetchWithAuth(`/admin/customers/${customerId}`, { method: 'DELETE' });
+      return true;
+    } catch (e) {
+      console.error("Failed to delete customer.", e);
+      return false;
+    }
   }
 };

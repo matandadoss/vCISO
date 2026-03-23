@@ -9,6 +9,9 @@ export default function SubscriptionPage() {
   const [tier, setTier] = useState<string>("professional");
   const [pricingTiers, setPricingTiers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [targetTier, setTargetTier] = useState<string | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
     fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/organizations/test-org`)
@@ -30,20 +33,42 @@ export default function SubscriptionPage() {
       });
   }, []);
 
-  const handleSave = async (newTier: string) => {
-    setTier(newTier);
+  const initiateCheckout = (newTier: string) => {
+    if (newTier === tier) return; // Already on this tier
+    setTargetTier(newTier);
+    setIsCheckoutModalOpen(true);
+  };
+
+  const processFluidpayCheckout = async () => {
+    if (!targetTier) return;
+    setIsProcessingPayment(true);
+    
+    // In production, Fluidpay.js would generate this secure PCI-compliant token
+    const secureMockToken = "tok_fluidpay_vault_auth_xyz123";
+    
     try {
-      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/organizations/test-org`, {
-         method: "PUT",
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/billing/checkout`, {
+         method: "POST",
          headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ subscription_tier: newTier })
+         body: JSON.stringify({ 
+           tier_id: targetTier,
+           payment_token: secureMockToken 
+         })
       });
-      if (res.ok) {
-        toast.success(`Subscription updated to ${newTier.toUpperCase()}`);
+      
+      const data = await res.json();
+      if (res.ok && data.status === "success") {
+        setTier(targetTier);
+        toast.success(data.detail || `Successfully upgraded to ${targetTier.toUpperCase()}`);
+        setIsCheckoutModalOpen(false);
+      } else {
+        toast.error(data.detail || "Payment declined by the gateway.");
       }
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update subscription");
+      toast.error("Failed to process transaction securely.");
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -75,7 +100,7 @@ export default function SubscriptionPage() {
               return (
               <div 
                 key={t.id}
-                onClick={() => handleSave(t.id)}
+                onClick={() => initiateCheckout(t.id)}
                 className={`relative flex flex-col p-6 rounded-xl border-2 transition-all cursor-pointer ${
                   tier === t.id 
                   ? 'border-primary bg-primary/5 shadow-md' 
@@ -128,6 +153,63 @@ export default function SubscriptionPage() {
            )})}
         </div>
       </div>
+
+      {isCheckoutModalOpen && targetTier && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-card w-full max-w-md p-6 rounded-xl border border-border shadow-lg m-4">
+             <h2 className="text-xl font-bold mb-2">Secure Checkout</h2>
+             <p className="text-sm text-muted-foreground mb-6">
+               You are upgrading your organization to the <strong>{targetTier.toUpperCase()}</strong> tier capability.
+             </p>
+             
+             {/* FluidPay PCI Simulator UI */}
+             <div className="space-y-4 mb-8 p-4 bg-muted/30 rounded-lg border border-border/50">
+                <div className="flex justify-between items-center mb-2">
+                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">FluidPay Secure Vaulting</span>
+                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground ml-1">Card Number</label>
+                  <div className="w-full h-10 bg-background border border-border rounded flex items-center px-3 opacity-60">
+                     <span className="text-sm text-foreground tracking-widest">•••• •••• •••• 4242</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-muted-foreground ml-1">Expiry</label>
+                    <div className="w-full h-10 bg-background border border-border rounded flex items-center px-3 opacity-60">
+                       <span className="text-sm text-foreground tracking-widest">12 / 28</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-muted-foreground ml-1">CVC</label>
+                    <div className="w-full h-10 bg-background border border-border rounded flex items-center px-3 opacity-60">
+                       <span className="text-sm text-foreground tracking-widest">•••</span>
+                    </div>
+                  </div>
+                </div>
+             </div>
+
+             <div className="flex justify-end gap-3">
+                <button 
+                  onClick={() => setIsCheckoutModalOpen(false)}
+                  disabled={isProcessingPayment}
+                  className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-lg transition-colors text-muted-foreground"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={processFluidpayCheckout}
+                  disabled={isProcessingPayment}
+                  className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                >
+                  {isProcessingPayment && <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />}
+                  {isProcessingPayment ? "Vaulting & Processing..." : "Authorize Secure Payment"}
+                </button>
+             </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

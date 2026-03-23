@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Dict, Any
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func, update
 import uuid
 from app.db.session import get_db
-from app.models.domain import Organization, User, ServiceTier
+from app.models.domain import Organization, User, ServiceTier, ServiceTierConfig
 from app.core.auth import require_role
 
 router = APIRouter(tags=["Admin Customers"])
@@ -65,6 +66,78 @@ async def get_all_customers(
         })
         
     return customers
+
+class CreateCustomerRequest(BaseModel):
+    name: str
+    tier: str
+
+@router.post("/", response_model=Dict[str, Any])
+async def create_customer(
+    payload: CreateCustomerRequest,
+    db: AsyncSession = Depends(get_db),
+    admin_user: dict = Depends(require_role("admin"))
+):
+    try:
+        tier_enum = ServiceTier(payload.tier.lower())
+        
+        # Verify tier exists in configs
+        tier_result = await db.execute(select(ServiceTierConfig).where(ServiceTierConfig.tier == tier_enum))
+        if not tier_result.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Invalid target subscription tier limits.")
+            
+        new_org = Organization(
+            name=payload.name,
+            subscription_tier=tier_enum
+        )
+        db.add(new_org)
+        await db.commit()
+        await db.refresh(new_org)
+        
+        return {
+            "id": str(new_org.id),
+            "name": new_org.name,
+            "tier": new_org.subscription_tier.value.title(),
+            "users": 0,
+            "status": "active",
+            "mrr": TIER_PRICING.get(new_org.subscription_tier, 0),
+            "joinedAt": "2024-03-23" 
+        }
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid tier: {payload.tier}")
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/{org_id}")
+async def delete_customer(
+    org_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin_user: dict = Depends(require_role("admin"))
+):
+    try:
+        org_uuid = uuid.UUID(org_id)
+        
+        # Security framework deletes must cascade or be handled manually
+        # For this MVP, we will physically delete the users then the org
+        await db.execute(
+            User.__table__.delete().where(User.org_id == org_uuid)
+        )
+        
+        result = await db.execute(
+            Organization.__table__.delete().where(Organization.id == org_uuid)
+        )
+        
+        if result.rowcount == 0:
+             raise HTTPException(status_code=404, detail="Organization not found")
+             
+        await db.commit()
+    except HTTPException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+        
+    return {"message": "Organization permanently deleted", "org_id": org_id}
 
 @router.put("/{org_id}/suspend")
 async def suspend_customer(
