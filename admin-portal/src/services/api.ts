@@ -72,6 +72,18 @@ export const ApiService = {
     }
   },
 
+  async updateTier(tierId: string, data: Partial<Tier>): Promise<{ status: string }> {
+    try {
+      return await fetchWithAuth(`/admin/tiers/${tierId}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    } catch (e) {
+      console.error("Failed to update tier.", e);
+      throw e; // Re-throw to allow caller to handle
+    }
+  },
+
   async suspendCustomer(customerId: string): Promise<boolean> {
     try {
       await fetchWithAuth(`/admin/customers/${customerId}/suspend`, { method: 'PUT' });

@@ -104,6 +104,17 @@ class Organization(BaseModel):
     gcp_project_id: Mapped[str] = mapped_column(String(255), nullable=True)
     subscription_tier: Mapped[ServiceTier] = mapped_column(SQLEnum(ServiceTier), default=ServiceTier.professional)
 
+class ServiceTierConfig(BaseModel):
+    __tablename__ = "service_tier_configs"
+    tier: Mapped[ServiceTier] = mapped_column(SQLEnum(ServiceTier), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(50))
+    description: Mapped[str] = mapped_column(Text)
+    monthly_price: Mapped[int] = mapped_column(Integer)
+    max_users: Mapped[str] = mapped_column(String(50))
+    features: Mapped[dict] = mapped_column(JSON)
+    is_popular: Mapped[bool] = mapped_column(Boolean, default=False)
+    color_hex: Mapped[str] = mapped_column(String(20))
+
 class OrgAIBudget(BaseModel):
     __tablename__ = "org_ai_budgets"
     org_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("organizations.id"))

@@ -45,7 +45,9 @@ app.add_middleware(
         "http://localhost:5173",
         "https://vciso.web.app",
         "https://vciso.firebaseapp.com",
-        "https://vciso-frontend-457240052356.us-central1.run.app"
+        "https://vciso-frontend-457240052356.us-central1.run.app",
+        "https://gen-lang-client-0873796692.web.app",
+        "https://gen-lang-client-0873796692.firebaseapp.com"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
