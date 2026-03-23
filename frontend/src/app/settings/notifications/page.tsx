@@ -1,8 +1,28 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Bell, Mail, MessageSquare, AlertTriangle, Smartphone } from "lucide-react";
+import api from "@/lib/api";
 
 export default function NotificationsSettingsPage() {
+  const [receiveWeeklyDigest, setReceiveWeeklyDigest] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Initialize preference fetch (dummy fetch for now, assumed enabled unless overridden)
+  
+  const toggleWeeklyDigest = async (enabled: boolean) => {
+    try {
+      setIsLoading(true);
+      setReceiveWeeklyDigest(enabled);
+      await api.put("/users/me/preferences", { receives_weekly_digest: enabled });
+    } catch (e) {
+      console.error("Failed to update preferences", e);
+      setReceiveWeeklyDigest(!enabled); // revert on failure
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -27,10 +47,24 @@ export default function NotificationsSettingsPage() {
               <h2 className="text-lg font-semibold text-foreground">Email Notifications</h2>
             </div>
             <div className="space-y-4">
+              <label className={`flex items-center justify-between cursor-pointer ${isLoading ? 'opacity-50' : ''}`}>
+                <div>
+                  <p className="font-medium text-foreground">Weekly Security Brief (AI Digest)</p>
+                  <p className="text-sm text-muted-foreground">Receive a personalized, role-based AI digest highlighting 7-day posture drift and infrastructure updates.</p>
+                </div>
+                <input 
+                  type="checkbox" 
+                  className="h-4 w-4 text-primary rounded border-input" 
+                  checked={receiveWeeklyDigest}
+                  onChange={(e) => toggleWeeklyDigest(e.target.checked)}
+                  disabled={isLoading}
+                />
+              </label>
+              <div className="h-px bg-border my-4" />
               <label className="flex items-center justify-between cursor-pointer">
                 <div>
-                  <p className="font-medium text-foreground">Daily Digest</p>
-                  <p className="text-sm text-muted-foreground">Receive a summary of new findings and compliance drifts every morning.</p>
+                  <p className="font-medium text-foreground">Daily Digest (Legacy)</p>
+                  <p className="text-sm text-muted-foreground">Receive a standard tabular summary of new findings and compliance drifts every morning.</p>
                 </div>
                 <input type="checkbox" className="h-4 w-4 text-primary rounded border-input" defaultChecked />
               </label>

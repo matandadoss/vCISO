@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function FindingsPage() {
-  const [findings, setFindings] = useState([]);
+  const [findings, setFindings] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -142,15 +142,25 @@ export default function FindingsPage() {
                     {formatDate(f.detected_at)}
                   </td>
                   <td className="px-6 py-4">
-                    {f.sla_status && (
-                      <span className={cn(
-                        "inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium whitespace-nowrap",
-                        f.sla_breached ? "bg-destructive/10 text-destructive border border-destructive/20" : "bg-muted text-muted-foreground border border-border"
-                      )}>
-                        {f.sla_breached ? <AlertCircle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-                        {f.sla_status}
-                      </span>
-                    )}
+                    <input 
+                      type="date"
+                      className="px-2 py-1.5 bg-card border border-border hover:border-primary focus:ring-2 focus:ring-primary/50 text-foreground text-xs font-medium rounded-md shadow-sm transition-all cursor-pointer"
+                      onClick={(e) => e.stopPropagation()}
+                      value={f.sla_deadline ? new Date(f.sla_deadline).toISOString().split('T')[0] : ''}
+                      onChange={async (e) => {
+                        e.stopPropagation();
+                        try {
+                          const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/findings/${f.id}/deadline?org_id=default`, {
+                            method: "PATCH",
+                            headers: {"Content-Type": "application/json"},
+                            body: JSON.stringify({sla_deadline: e.target.value ? new Date(e.target.value).toISOString() : null})
+                          });
+                          if (res.ok) {
+                            setFindings(prev => prev.map((finding: any) => finding.id === f.id ? {...finding, sla_deadline: e.target.value ? new Date(e.target.value).toISOString() : null} : finding));
+                          }
+                        } catch (err) {}
+                      }}
+                    />
                   </td>
                   <td className="px-6 py-4 text-right">
                     <Link href={`/findings/${f.id}`} className="text-primary hover:text-blue-400 font-medium text-sm flex items-center justify-end w-full">

@@ -134,7 +134,10 @@ export function WhatNeedsAttention() {
         )})}
       </div>
       
-      <button className="mt-4 w-full text-sm font-medium text-primary hover:text-primary/80 transition-colors py-2 border border-transparent hover:border-border rounded-md">
+      <button 
+        onClick={() => router.push('/findings')}
+        className="mt-4 w-full text-sm font-medium text-primary hover:text-primary/80 transition-colors py-2 border border-transparent hover:border-border rounded-md"
+      >
         View All Alerts
       </button>
     </div>

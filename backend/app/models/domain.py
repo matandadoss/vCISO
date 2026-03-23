@@ -134,6 +134,7 @@ class User(BaseModel):
     full_name: Mapped[str] = mapped_column(String(255), nullable=True)
     role: Mapped[str] = mapped_column(String(50), default="viewer") # admin, editor, viewer
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    receives_weekly_digest: Mapped[bool] = mapped_column(Boolean, default=True)
     last_login: Mapped[datetime] = mapped_column(nullable=True)
 
 
@@ -428,6 +429,18 @@ class RiskRegister(BaseModel):
         Index("ix_risk_register_composite", "org_id", "risk_level", "date_entered"),
     )
 
+class WeeklySecurityBrief(BaseModel):
+    __tablename__ = "weekly_security_briefs"
+    org_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("organizations.id"))
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id"))
+    role_targeted: Mapped[str] = mapped_column(String(50))
+    markdown_content: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+    __table_args__ = (
+        Index("ix_security_briefs_composite", "org_id", "user_id", "created_at"),
+    )
+
 def apply_rls_ddl(target, connection, **kw):
     """
     SQLAlchemy metadata hook that executes immediately after database schema creation.
@@ -442,7 +455,8 @@ def apply_rls_ddl(target, connection, **kw):
         "threat_intel_indicators", "vendors", "security_controls",
         "compliance_frameworks", "findings", "correlation_rules",
         "chat_sessions", "audit_logs", "threat_feed_subscriptions",
-        "ai_query_logs", "internal_bug_logs", "risk_register", "org_ai_budgets"
+        "ai_query_logs", "internal_bug_logs", "risk_register", "org_ai_budgets",
+        "weekly_security_briefs"
     ]
     
     for table in tables_to_protect:

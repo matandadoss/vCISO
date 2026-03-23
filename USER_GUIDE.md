@@ -148,7 +148,7 @@ Configure the underlying AI models (e.g. `GPT-4` or `Claude 3.5 Sonnet`), routin
 Manage inbound threat signal streams. Toggling premium feeds (such as `FS-ISAC` for finance) ensures the platform digests intelligence tailored to your sector.
 
 ### User Management & RBAC
-Invite team members and assign strict platform roles (`CISO`, `SOC_ANALYST`, `AUDITOR`). Ensure engineers have permissions to execute scripts, while executives receive read-only reporting access.
+Invite team members and assign strict platform roles (`CISO`, `SOC_ANALYST`, `AUDITOR`). Ensure engineers have permissions to execute scripts, while executives receive read-only reporting access. *(Note: The maximum number of active users you can invite is algorithmically constrained by your active Subscription Tier).*
 
 ### Integrations & API Keys
 Securely connect external platforms like `Jira`, `CrowdStrike`, or `AWS`. Providing valid API keys ensures the AI retains continuous telemetry flow from your network.

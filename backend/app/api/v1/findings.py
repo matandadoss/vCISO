@@ -258,6 +258,26 @@ async def accept_risk(finding_id: str, request: AcceptRiskRequest, org_id: str, 
     await db.commit()
     return {"status": "success", "action": "risk_accepted", "finding_id": finding_id, "new_status": "accepted", "risk_register_id": str(risk_entry.id)}
 
+class UpdateDeadlineRequest(BaseModel):
+    sla_deadline: Optional[datetime] = None
+
+@router.patch("/{finding_id}/deadline")
+async def update_deadline(finding_id: str, request: UpdateDeadlineRequest, org_id: str, db: AsyncSession = Depends(get_db)):
+    """Updates the SLA formulation deadline for a specific finding."""
+    try:
+        finding_uuid = uuid.UUID(finding_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid finding ID format")
+        
+    result = await db.execute(select(Finding).where(Finding.id == finding_uuid))
+    db_finding = result.scalar_one_or_none()
+    if not db_finding:
+        raise HTTPException(status_code=404, detail="Finding not found")
+        
+    db_finding.sla_deadline = request.sla_deadline
+    await db.commit()
+    return {"status": "success", "action": "deadline_updated", "finding_id": finding_id, "sla_deadline": request.sla_deadline}
+
 @router.post("/{finding_id}/ticket")
 async def create_ticket(finding_id: str, request: CreateTicketRequest, org_id: str, db: AsyncSession = Depends(get_db)):
     """Creates an external ticket (Jira/ServiceNow) for the finding and records it as a Cyber Risk."""

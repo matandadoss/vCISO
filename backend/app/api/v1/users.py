@@ -10,8 +10,34 @@ from app.core.auth import get_current_user
 from app.models.domain import User, Organization, ServiceTierConfig
 from app.schemas.user import UserResponse, UserUpdate, UserInvite
 from app.services.email import send_invite_email
+from pydantic import BaseModel
+
+class UserPreferenceUpdate(BaseModel):
+    receives_weekly_digest: bool
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+@router.put("/me/preferences", response_model=UserResponse)
+async def update_my_preferences(
+    prefs: UserPreferenceUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """ Allows users to opt-in or out of backend LLM summary processing streams. """
+    firebase_uid = current_user.get("firebase_uid")
+    if not firebase_uid:
+        raise HTTPException(status_code=401, detail="Unauthorized Firebase construct.")
+        
+    result = await db.execute(select(User).where(User.firebase_uid == firebase_uid))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User Identity not mapped.")
+        
+    user.receives_weekly_digest = prefs.receives_weekly_digest
+    await db.commit()
+    await db.refresh(user)
+    return user
 
 @router.get("", response_model=List[UserResponse])
 async def get_users(db: AsyncSession = Depends(get_db), current_user: dict = Depends(get_current_user)):

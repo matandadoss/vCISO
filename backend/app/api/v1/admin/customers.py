@@ -3,7 +3,7 @@ from typing import List, Dict, Any
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func, update
+from sqlalchemy import func, update, cast, Integer
 import uuid
 from app.db.session import get_db
 from app.models.domain import Organization, User, ServiceTier, ServiceTierConfig
@@ -35,7 +35,7 @@ async def get_all_customers(
         select(
             User.org_id, 
             func.count(User.id).label('total_users'),
-            func.sum(func.cast(User.is_active, func.integer())).label('active_users')
+            func.sum(cast(User.is_active, Integer)).label('active_users')
         ).group_by(User.org_id)
     )
     
