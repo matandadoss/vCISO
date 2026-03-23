@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, LogOut, ShieldAlert } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, LogOut, ShieldAlert, BarChart3 } from 'lucide-react';
 import './AdminLayout.css';
 
 const AdminLayout = () => {
@@ -35,6 +35,11 @@ const AdminLayout = () => {
           <NavLink to="/tiers" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
             <CreditCard size={20} />
             <span>Tiers & Pricing</span>
+          </NavLink>
+
+          <NavLink to="/reports" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+            <BarChart3 size={20} />
+            <span>Revenue Report</span>
           </NavLink>
         </nav>
 

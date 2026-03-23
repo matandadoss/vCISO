@@ -7,6 +7,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from secure import Secure
 from app.core.auth import get_current_user
 from app.api.v1 import ai_settings, chat, findings, dashboard, ws, threat_intel, compliance, correlation_graph, playbooks, onboarding, integrations, simulator, organizations, vendors, pentest, workflows, bugs, users, risk_register
+from app.api.v1.admin import customers as admin_customers, tiers as admin_tiers
 from app.db.session import get_db
 
 # Initialize Rate Limiter
@@ -41,6 +42,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:3001",
+        "http://localhost:5173",
         "https://vciso.web.app",
         "https://vciso.firebaseapp.com",
         "https://vciso-frontend-457240052356.us-central1.run.app"
@@ -70,6 +72,10 @@ app.include_router(workflows.router, prefix="/api/v1", dependencies=[Depends(get
 app.include_router(users.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
 app.include_router(risk_register.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
 app.include_router(bugs.router, prefix="/api/v1") # Open/loose auth for bug report catching
+
+# Admin Routes
+app.include_router(admin_customers.router, prefix="/api/v1/admin/customers", dependencies=[Depends(get_current_user)])
+app.include_router(admin_tiers.router, prefix="/api/v1/admin/tiers", dependencies=[Depends(get_current_user)])
 
 @app.get("/")
 async def root():

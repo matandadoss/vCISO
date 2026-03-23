@@ -5,7 +5,10 @@ import firebase_admin
 from firebase_admin import credentials, auth
 from app.db.session import get_db
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from app.models.domain import Organization, ServiceTier
+import uuid
 import logging
 logger = logging.getLogger(__name__)
 # We will create app.models.user shortly
@@ -89,3 +92,46 @@ def require_role(required_role: str):
             )
         return current_user
     return role_checker
+
+def require_minimum_tier(min_tier: ServiceTier):
+    """
+    Dependency factory to enforce subscription tier minimums.
+    """
+    async def tier_checker(current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+        tier_order = {
+            ServiceTier.basic: 0,
+            ServiceTier.professional: 1,
+            ServiceTier.enterprise: 2,
+            ServiceTier.elite: 3
+        }
+        
+        roles = current_user.get("roles", [])
+        if "admin" in roles or "superadmin" in roles:
+            return current_user
+            
+        org_id_str = current_user.get("org_id")
+        if not org_id_str:
+            raise HTTPException(status_code=403, detail="User not associated with an organization")
+            
+        try:
+            org_uuid = uuid.UUID(org_id_str)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid organization ID format")
+            
+        result = await db.execute(select(Organization).where(Organization.id == org_uuid))
+        org = result.scalar_one_or_none()
+        
+        if not org:
+            raise HTTPException(status_code=403, detail="Organization not found")
+            
+        current_tier_order = tier_order.get(org.subscription_tier, 0)
+        required_tier_order = tier_order.get(min_tier, 0)
+        
+        if current_tier_order < required_tier_order:
+            logger.warning(f"Tier check failed: Org {org_id_str} is {org.subscription_tier.name}, needs {min_tier.name}")
+            raise HTTPException(
+                status_code=403, 
+                detail=f"Operation not permitted. Requires minimum tier: {min_tier.name.title()}"
+            )
+        return current_user
+    return tier_checker

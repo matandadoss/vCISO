@@ -1,9 +1,15 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from typing import List, Dict, Any
 from app.services.simulation_engine import SimulationEngine
+from app.models.domain import ServiceTier
+from app.core.auth import require_minimum_tier
 
-router = APIRouter(prefix="/simulator", tags=["simulator"])
+router = APIRouter(
+    prefix="/simulator", 
+    tags=["simulator"],
+    dependencies=[Depends(require_minimum_tier(ServiceTier.professional))]
+)
 
 class SimulationRequest(BaseModel):
     query: str

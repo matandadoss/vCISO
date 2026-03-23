@@ -1,15 +1,19 @@
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Depends
 from typing import List, Optional, Dict, Any
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends
 from app.db.session import get_db
 from sqlalchemy import select, delete
-from app.models.domain import ComplianceFramework, Finding, Severity, FindingStatus, FindingType, WorkflowName
+from app.models.domain import ComplianceFramework, Finding, Severity, FindingStatus, FindingType, WorkflowName, ServiceTier
+from app.core.auth import require_minimum_tier
 import datetime
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/correlation", tags=["correlation"])
+router = APIRouter(
+    prefix="/correlation", 
+    tags=["correlation"],
+    dependencies=[Depends(require_minimum_tier(ServiceTier.enterprise))]
+)
 
 class RecalculateRequest(BaseModel):
     infra: List[Dict[str, Any]]

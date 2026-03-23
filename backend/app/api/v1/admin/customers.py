@@ -1,0 +1,130 @@
+from fastapi import APIRouter, Depends, HTTPException
+from typing import List, Dict, Any
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy import func, update
+import uuid
+from app.db.session import get_db
+from app.models.domain import Organization, User, ServiceTier
+from app.core.auth import require_role
+
+router = APIRouter(tags=["Admin Customers"])
+
+# Mock prices for MRR calculation based on tier
+TIER_PRICING = {
+    ServiceTier.basic: 0,
+    ServiceTier.professional: 200,
+    ServiceTier.enterprise: 800,
+    ServiceTier.elite: 2500
+}
+
+@router.get("/", response_model=List[Dict[str, Any]])
+async def get_all_customers(
+    db: AsyncSession = Depends(get_db),
+    admin_user: dict = Depends(require_role("admin"))
+):
+    """
+    Retrieves all organizations formatted as Customer entries for the Admin Portal.
+    """
+    result = await db.execute(select(Organization))
+    orgs = result.scalars().all()
+    
+    # Calculate users and status per org
+    user_stats_result = await db.execute(
+        select(
+            User.org_id, 
+            func.count(User.id).label('total_users'),
+            func.sum(func.cast(User.is_active, func.integer())).label('active_users')
+        ).group_by(User.org_id)
+    )
+    
+    user_stats = {}
+    for row in user_stats_result.all():
+        user_stats[str(row.org_id)] = {
+            "total": row.total_users,
+            "active_count": row.active_users or 0
+        }
+
+    customers = []
+    for org in orgs:
+        tier_price = TIER_PRICING.get(org.subscription_tier, 0)
+        stats = user_stats.get(str(org.id), {"total": 0, "active_count": 0})
+        
+        # Determine status: if it has users but NONE are active, it's suspended.
+        # Otherwise, treat as active.
+        status = "suspended" if (stats["total"] > 0 and stats["active_count"] == 0) else "active"
+        
+        customers.append({
+            "id": str(org.id),
+            "name": org.name,
+            "tier": org.subscription_tier.value.title(),
+            "users": stats["total"],
+            "status": status,
+            "mrr": tier_price,
+            "joinedAt": "2024-01-01" 
+        })
+        
+    return customers
+
+@router.put("/{org_id}/suspend")
+async def suspend_customer(
+    org_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin_user: dict = Depends(require_role("admin"))
+):
+    try:
+        org_uuid = uuid.UUID(org_id)
+        # Suspend by setting all users in the org to inactive
+        await db.execute(
+            update(User).where(User.org_id == org_uuid).values(is_active=False)
+        )
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+        
+    return {"message": f"Organization suspended successfully", "org_id": org_id, "status": "suspended"}
+
+@router.put("/{org_id}/activate")
+async def activate_customer(
+    org_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin_user: dict = Depends(require_role("admin"))
+):
+    try:
+        org_uuid = uuid.UUID(org_id)
+        # Reactivate by setting all users to active
+        await db.execute(
+            update(User).where(User.org_id == org_uuid).values(is_active=True)
+        )
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+        
+    return {"message": f"Organization activated successfully", "org_id": org_id, "status": "active"}
+
+@router.put("/{org_id}/tier")
+async def update_customer_tier(
+    org_id: str,
+    payload: Dict[str, str],
+    db: AsyncSession = Depends(get_db),
+    admin_user: dict = Depends(require_role("admin"))
+):
+    tier_str = payload.get("tier", "").lower()
+    try:
+        new_tier = ServiceTier(tier_str)
+        org_uuid = uuid.UUID(org_id)
+        
+        await db.execute(
+            update(Organization).where(Organization.id == org_uuid).values(subscription_tier=new_tier)
+        )
+        await db.commit()
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid tier: {tier_str}")
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+        
+    return {"message": "Tier updated successfully", "org_id": org_id, "tier": new_tier.value}
+

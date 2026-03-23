@@ -1,19 +1,59 @@
-import { useState } from 'react';
-import { Search, MoreVertical, CheckCircle, XCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, ShieldX, ShieldCheck, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { ApiService, Customer } from '../../services/api';
 import './CustomerManagement.css';
 
-// Mock Data
-const MOCK_CUSTOMERS = [
-  { id: '1', name: 'Acme Corp', tier: 'Enterprise', users: 120, status: 'active', mrr: 2500, joinedAt: '2025-01-15' },
-  { id: '2', name: 'Globex Inc', tier: 'Pro', users: 45, status: 'active', mrr: 800, joinedAt: '2025-02-10' },
-  { id: '3', name: 'Initech', tier: 'Starter', users: 12, status: 'suspended', mrr: 200, joinedAt: '2025-03-01' },
-  { id: '4', name: 'Umbrella Corp', tier: 'Enterprise', users: 850, status: 'active', mrr: 5000, joinedAt: '2024-11-20' },
-];
+const AVAILABLE_TIERS = ['Basic', 'Professional', 'Enterprise', 'Elite'];
 
 const CustomerManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  
-  const filtered = MOCK_CUSTOMERS.filter(c => 
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actingId, setActingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadCustomers();
+  }, []);
+
+  const loadCustomers = async () => {
+    try {
+      const data = await ApiService.getCustomers();
+      setCustomers(data);
+    } catch (err) {
+      console.error("Error loading customers", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async (customer: Customer) => {
+    if (actingId) return;
+    setActingId(customer.id);
+    const isCurrentlyActive = customer.status === 'active';
+    const action = isCurrentlyActive ? ApiService.suspendCustomer : ApiService.activateCustomer;
+    
+    const success = await action(customer.id);
+    if(success) {
+      setCustomers(prev => prev.map(c => 
+        c.id === customer.id ? { ...c, status: isCurrentlyActive ? 'suspended' : 'active' } : c
+      ));
+    }
+    setActingId(null);
+  };
+
+  const handleChangeTier = async (customerId: string, newTier: string) => {
+    if (actingId) return;
+    setActingId(customerId);
+    const success = await ApiService.changeCustomerTier(customerId, newTier);
+    if(success) {
+      setCustomers(prev => prev.map(c => 
+        c.id === customerId ? { ...c, tier: newTier.charAt(0).toUpperCase() + newTier.slice(1) } : c
+      ));
+    }
+    setActingId(null);
+  };
+
+  const filtered = customers.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -24,7 +64,7 @@ const CustomerManagement = () => {
           <h1>Customer Accounts</h1>
           <p className="text-muted">Manage tenant accounts, subscriptions, and platform access</p>
         </div>
-        <button className="btn btn-primary">Add Customer</button>
+        <button className="btn btn-primary" onClick={loadCustomers}>Refresh Data</button>
       </div>
 
       <div className="table-controls">
@@ -40,53 +80,75 @@ const CustomerManagement = () => {
       </div>
 
       <div className="data-table-container glass-card">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Company Name</th>
-              <th>Tier</th>
-              <th>Active Users</th>
-              <th>MRR</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(customer => (
-              <tr key={customer.id}>
-                <td className="font-medium">{customer.name}</td>
-                <td>
-                  <span className={`badge tier-${customer.tier.toLowerCase()}`}>
-                    {customer.tier}
-                  </span>
-                </td>
-                <td>{customer.users}</td>
-                <td>${customer.mrr}/mo</td>
-                <td>
-                  <span className={`status-pill ${customer.status}`}>
-                    {customer.status === 'active' ? <CheckCircle size={14} /> : <XCircle size={14} />}
-                    {customer.status}
-                  </span>
-                </td>
-                <td>
-                  <div className="action-menu">
-                    <button className="icon-btn" title="Manage Account">
-                      <MoreVertical size={18} />
-                    </button>
-                    {/* Additional quick actions could go here */}
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
+        {loading ? (
+          <div className="flex justify-center items-center py-10">
+            <Loader2 className="animate-spin text-accent-primary" size={32} />
+            <span className="ml-3 text-muted">Loading live data...</span>
+          </div>
+        ) : (
+          <table className="data-table">
+            <thead>
               <tr>
-                <td colSpan={6} className="text-center py-4 text-muted">
-                  No customers found matching "{searchTerm}"
-                </td>
+                <th>Company Name</th>
+                <th>Tier</th>
+                <th>Active Users</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map(customer => (
+                <tr key={customer.id} style={{ opacity: actingId === customer.id ? 0.5 : 1 }}>
+                  <td className="font-medium">{customer.name}</td>
+                  <td>
+                    <select 
+                      className="modern-input" 
+                      style={{ padding: '0.25rem 0.5rem', width: 'auto' }}
+                      value={customer.tier} 
+                      onChange={(e) => handleChangeTier(customer.id, e.target.value)}
+                      disabled={actingId === customer.id}
+                    >
+                      {AVAILABLE_TIERS.map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>{customer.users}</td>
+                  <td>
+                    <span className={`status-pill ${customer.status}`}>
+                      {customer.status === 'active' ? <CheckCircle size={14} /> : <XCircle size={14} />}
+                      {customer.status}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="action-menu" style={{ justifyContent: 'flex-start' }}>
+                      <button 
+                        className={`icon-btn ${customer.status === 'active' ? 'text-accent-danger' : 'text-accent-success'}`}
+                        title={customer.status === 'active' ? "Suspend Customer" : "Activate Customer"}
+                        onClick={() => handleToggleStatus(customer)}
+                        disabled={actingId === customer.id}
+                        style={{ border: '1px solid var(--border-subtle)', padding: '0.4rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600, gap: '0.5rem' }}
+                      >
+                        {customer.status === 'active' ? (
+                          <><ShieldX size={16}/> Suspend</>
+                        ) : (
+                          <><ShieldCheck size={16}/> Activate</>
+                        )}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="text-center py-4 text-muted">
+                    No customers found matching "{searchTerm}"
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
