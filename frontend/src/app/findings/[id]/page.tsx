@@ -193,6 +193,9 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
             <p className="text-sm text-muted-foreground flex items-center gap-2">
               Detected {formatDate(finding.detected_at)} via <span className="capitalize text-foreground font-medium">{finding.source_workflow ? finding.source_workflow.replace(/_/g, ' ') : 'Manual'} Workflow</span>
             </p>
+            <p className="text-sm font-medium text-blue-600 dark:text-blue-500 flex items-center gap-1.5 mt-1 border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 rounded w-fit">
+              <Globe className="h-3.5 w-3.5" /> Source: {(finding as any).raw_data?.source || (finding as any).source_finding_id || (finding.source_workflow ? finding.source_workflow.replace(/_/g, ' ') : 'System')}
+            </p>
             {(finding as any).assigned_to && (
                <p className="text-sm font-medium text-emerald-600 dark:text-emerald-500 flex items-center gap-1.5 mt-1 border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 rounded w-fit">
                  <User className="h-3.5 w-3.5" /> Assigned to: {(finding as any).assigned_to}

@@ -67,8 +67,8 @@ export default function OSINTCorrelationPage() {
          const savedInfra = JSON.parse(localStorage.getItem("vciso_company_infra") || '["Google Cloud Platform", "AWS", "Microsoft Azure"]');
          const savedTech = JSON.parse(localStorage.getItem("vciso_company_tech") || '["Node.js", "Python", "React", "PostgreSQL", "MongoDB", "Redis", "Docker", "Kubernetes"]');
          const savedTools = JSON.parse(localStorage.getItem("vciso_company_tools") || '[{"name": "CrowdStrike Falcon"}, {"name": "Palo Alto Prisma Cloud"}]');
-         const toolNames = savedTools.map((t: any) => t.name || t);
-         setUserStack([...savedInfra, ...savedTech, ...toolNames]);
+         const extractName = (arr: any[]) => arr.map((item: any) => typeof item === 'string' ? item : item?.name || 'Unknown');
+         setUserStack([...extractName(savedInfra), ...extractName(savedTech), ...extractName(savedTools)]);
       } catch (e) {
          console.error("Failed to parse local stack", e);
       }
@@ -87,7 +87,8 @@ export default function OSINTCorrelationPage() {
                   const savedInfra = JSON.parse(localStorage.getItem("vciso_company_infra") || '["Google Cloud Platform", "AWS"]');
                   const savedTech = JSON.parse(localStorage.getItem("vciso_company_tech") || '["Node.js", "React", "Docker"]');
                   const savedTools = JSON.parse(localStorage.getItem("vciso_company_tools") || '[{"name": "CrowdStrike Falcon"}]');
-                  const allTargets = [...savedInfra, ...savedTech, ...savedTools.map((t: any) => t.name || t)];
+                  const extractName = (arr: any[]) => arr.map((item: any) => typeof item === 'string' ? item : item?.name || 'Unknown');
+                  const allTargets = [...extractName(savedInfra), ...extractName(savedTech), ...extractName(savedTools)];
 
                   if (allTargets.length > 0) {
                      baseCorrelations = baseCorrelations.map((corr: any, idx: number) => {
@@ -226,8 +227,8 @@ export default function OSINTCorrelationPage() {
                      The following applications, infrastructure resources, and security frameworks defined in 'My Company' are currently being actively monitored across global threat telemetry:
                   </p>
                   <div className="flex flex-wrap gap-2">
-                     {userStack.map(item => (
-                        <span key={item} className="px-3 py-1.5 bg-muted border border-border rounded-md text-xs text-foreground font-medium hover:border-[#8b5cf6] transition-colors">
+                     {userStack.map((item, idx) => (
+                        <span key={idx} className="px-3 py-1.5 bg-muted border border-border rounded-md text-xs text-foreground font-medium hover:border-[#8b5cf6] transition-colors">
                            {item}
                         </span>
                      ))}
