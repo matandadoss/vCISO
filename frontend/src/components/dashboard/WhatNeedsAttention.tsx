@@ -71,7 +71,7 @@ export function WhatNeedsAttention() {
       </div>
       <div className="flex items-center justify-between mb-4 pr-6">
         <h3 className="text-lg font-semibold flex items-center gap-2">
-          What Needs My Attention Today
+          Action Needed
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-destructive/10 text-[10px] font-medium text-destructive">
             {items.filter(i => i.isUrgent).length}
           </span>

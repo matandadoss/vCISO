@@ -95,7 +95,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/20 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+    <div className="min-h-screen w-full bg-muted/20 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
       {/* Decorative background grid */}
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 blur-[120px] rounded-full pointer-events-none"></div>

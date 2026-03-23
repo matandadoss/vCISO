@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.domain import Severity, FindingStatus, FindingType, WorkflowName, Finding, RiskRegister
-from sqlalchemy import select, func
+from app.models.domain import Severity, FindingStatus, FindingType, WorkflowName, Finding, RiskRegister, User
+from sqlalchemy import select, func, or_
 from app.db.session import get_db
 from app.schemas.finding import FindingResponse, FindingUpdate
 
@@ -163,9 +163,26 @@ async def assign_finding(finding_id: str, request: AssignRequest, org_id: str, d
     """Assigns a finding to a specific user or team."""
     try:
         finding_uuid = uuid.UUID(finding_id)
+        org_uuid = uuid.UUID(org_id)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid finding ID format")
-        
+        try:
+            finding_uuid = uuid.UUID(finding_id)
+            org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6") # Fallback dummy
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid finding ID format")
+            
+    # Restrict assignment to system users
+    user_query = select(User).where(
+        User.org_id == org_uuid,
+        or_(User.email == request.owner_id, User.firebase_uid == request.owner_id, User.full_name == request.owner_id)
+    )
+    user_result = await db.execute(user_query)
+    if not user_result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=400, 
+            detail="Cannot assign finding: User does not exist in the system (No outside users allowed)."
+        )
+
     result = await db.execute(select(Finding).where(Finding.id == finding_uuid))
     db_finding = result.scalar_one_or_none()
     if not db_finding:
