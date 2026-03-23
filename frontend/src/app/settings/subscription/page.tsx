@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { fetchWithAuth } from "@/lib/api";
 
 import { useEffect, useState } from "react";
@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 export default function SubscriptionPage() {
   const [tier, setTier] = useState<string>("professional");
+  const [pricingTiers, setPricingTiers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -14,10 +15,17 @@ export default function SubscriptionPage() {
       .then(res => res.json())
       .then(data => {
         if (data.subscription_tier) setTier(data.subscription_tier);
+        return fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/tiers`);
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+           setPricingTiers(data);
+        }
         setIsLoading(false);
       })
       .catch(err => {
-        console.error("Failed to fetch org", err);
+        console.error("Failed to load subscription data", err);
         setIsLoading(false);
       });
   }, []);
@@ -39,36 +47,15 @@ export default function SubscriptionPage() {
     }
   };
 
-  const tiers = [
-    { 
-      id: "basic", 
-      name: "Basic", 
-      description: "Essential manual risk assessment.",
-      features: ["Manual infrastructure diagramming", "Manual compliance tracking", "Weekly threat digests"],
-      icon: Database 
-    },
-    { 
-      id: "professional", 
-      name: "Professional", 
-      description: "Basic real-time visibility.",
-      features: ["Basic real-time cloud sync", "Standard What-If simulations", "Daily threat alerts"],
-      icon: ShieldCheck 
-    },
-    { 
-      id: "enterprise", 
-      name: "Enterprise", 
-      description: "Advanced contextual analytics.",
-      features: ["Advanced real-time correlation", "Complex Hindsight simulations", "Automated compliance evidence"],
-      icon: Zap 
-    },
-    { 
-      id: "elite", 
-      name: "Elite", 
-      description: "Full automated platform capabilities.",
-      features: ["Full real-time correlation graphs", "Automated AI remediation", "Continuous Red Teaming"],
-      icon: Building 
-    },
-  ];
+  const getIconForTier = (tierId: string) => {
+    switch (tierId) {
+      case "basic": return Database;
+      case "professional": return ShieldCheck;
+      case "enterprise": return Zap;
+      case "elite": return Building;
+      default: return ShieldCheck;
+    }
+  };
 
   if (isLoading) return <div className="p-8 text-muted-foreground">Loading subscription details...</div>;
 
@@ -83,7 +70,9 @@ export default function SubscriptionPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-           {tiers.map((t) => (
+           {pricingTiers.map((t) => {
+              const TierIcon = getIconForTier(t.id);
+              return (
               <div 
                 key={t.id}
                 onClick={() => handleSave(t.id)}
@@ -100,20 +89,35 @@ export default function SubscriptionPage() {
                 )}
                 
                 <div className={`p-3 rounded-lg w-fit mb-4 ${tier === t.id ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                  <t.icon className="w-6 h-6" />
+                  <TierIcon className="w-6 h-6" />
                 </div>
                 
                 <h3 className={`text-xl font-bold tracking-tight mb-2 ${tier === t.id ? 'text-foreground' : 'text-foreground/80'}`}>
                   {t.name}
                 </h3>
                 
-                <p className="text-sm text-muted-foreground mb-6 min-h-[40px]">
+                <p className="text-sm text-muted-foreground mb-4 min-h-[40px]">
                   {t.description}
                 </p>
+
+                <div className="flex flex-col gap-1 mb-6">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold">${t.monthlyPrice}</span>
+                    <span className="text-sm text-muted-foreground">/mo base</span>
+                  </div>
+                  {(t.pricePerUser > 0 || t.id !== "basic") && (
+                    <div className="text-sm font-medium text-accent-success/90">
+                      + ${t.pricePerUser} per user /mo
+                    </div>
+                  )}
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {t.maxUsers === "Unlimited" ? "Unlimited users allowed" : `Up to ${t.maxUsers} max users`}
+                  </div>
+                </div>
                 
                 <div className="mt-auto space-y-3 pt-4 border-t border-border">
                   <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Includes:</p>
-                  {t.features.map((feature, idx) => (
+                  {t.features.map((feature: string, idx: number) => (
                     <div key={idx} className="flex flex-start gap-2">
                        <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
                        <span className="text-sm text-muted-foreground">{feature}</span>
@@ -121,7 +125,7 @@ export default function SubscriptionPage() {
                   ))}
                 </div>
               </div>
-           ))}
+           )})}
         </div>
       </div>
     </div>

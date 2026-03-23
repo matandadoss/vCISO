@@ -110,6 +110,7 @@ class ServiceTierConfig(BaseModel):
     name: Mapped[str] = mapped_column(String(50))
     description: Mapped[str] = mapped_column(Text)
     monthly_price: Mapped[int] = mapped_column(Integer)
+    price_per_user: Mapped[int] = mapped_column(Integer, default=0)
     max_users: Mapped[str] = mapped_column(String(50))
     features: Mapped[dict] = mapped_column(JSON)
     is_popular: Mapped[bool] = mapped_column(Boolean, default=False)

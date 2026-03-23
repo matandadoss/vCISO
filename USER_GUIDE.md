@@ -165,6 +165,10 @@ Configure platform-wide Single Sign-On (SSO), enforce Multi-Factor Authenticatio
 ### Subscription & Service Tier
 Manage your active financial subscription plan, upgrade your tier, and review billing statements to ensure continuity of the security service.
 
+> [!NOTE] 
+> **Dynamic Admin Synchronization**
+> Available Tiers, their respective pricing models (Base & Per-Seat limits), and the specific features included per tier are administered digitally via the external **vCISO Admin Portal**. Modifying Tier configurations inside the Admin Portal instantly iterates these constraints down to the main vCISO application and upgrades all client settings pages dynamically.
+
 ### Playbooks (SOAR)
 Configure automated response actions (SOAR). By automatically neutralizing low-level threats (like isolating a laptop exhibiting malware signatures via ED integrations), you drastically alleviate operational burden.
 

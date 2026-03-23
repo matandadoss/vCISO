@@ -18,6 +18,7 @@ export interface Tier {
   name: string;
   description: string;
   monthlyPrice: number;
+  pricePerUser: number;
   maxUsers: number | 'Unlimited';
   features: string[];
   popular: boolean;

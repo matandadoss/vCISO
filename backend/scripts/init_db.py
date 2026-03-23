@@ -20,6 +20,13 @@ async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(BaseModel.metadata.drop_all) # Optional: reset for clean slate MVP
         await conn.run_sync(BaseModel.metadata.create_all)
+        
+        # Safe migration for the newly added price_per_user column across existing databases
+        from sqlalchemy import text
+        try:
+            await conn.execute(text("ALTER TABLE service_tier_configs ADD COLUMN price_per_user INTEGER DEFAULT 0;"))
+        except Exception as e:
+            print("Column 'price_per_user' might already exist or table migration skipped:", e)
     
     print("Tables created successfully.")
     

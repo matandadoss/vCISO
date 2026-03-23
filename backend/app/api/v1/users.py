@@ -3,10 +3,11 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import func
 
 from app.db.session import get_db
 from app.core.auth import get_current_user
-from app.models.domain import User, Organization
+from app.models.domain import User, Organization, ServiceTierConfig
 from app.schemas.user import UserResponse, UserUpdate, UserInvite
 from app.services.email import send_invite_email
 
@@ -30,6 +31,27 @@ async def invite_user(invite: UserInvite, db: AsyncSession = Depends(get_db), cu
     
     org_id = uuid.UUID(current_user.get("org_id"))
     
+    # 1. Fetch Org
+    org_result = await db.execute(select(Organization).where(Organization.id == org_id))
+    org = org_result.scalar_one_or_none()
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+        
+    # 2. Enforce Tier Limits
+    tier_result = await db.execute(select(ServiceTierConfig).where(ServiceTierConfig.tier == org.subscription_tier))
+    tier_config = tier_result.scalar_one_or_none()
+    
+    if tier_config and tier_config.max_users.lower() != "unlimited":
+        max_users = int(tier_config.max_users)
+        count_result = await db.execute(select(func.count(User.id)).where(User.org_id == org_id, User.is_active == True))
+        active_users = count_result.scalar() or 0
+        
+        if active_users >= max_users:
+            raise HTTPException(
+                status_code=403, 
+                detail=f"Seat limit reached. Your {tier_config.name} subscription allows {max_users} max active users. Please upgrade your tier in the Admin settings to invite more users."
+            )
+    
     # Check if user exists
     existing = await db.execute(select(User).where(User.email == invite.email, User.org_id == org_id))
     if existing.scalar_one_or_none():
@@ -48,8 +70,6 @@ async def invite_user(invite: UserInvite, db: AsyncSession = Depends(get_db), cu
     await db.refresh(new_user)
     
     # Fetch Org Name for the email
-    org_result = await db.execute(select(Organization).where(Organization.id == org_id))
-    org = org_result.scalar_one_or_none()
     org_name = org.name if org else "the platform"
     
     # Create the invitation link using the dummy firebase UID (or generate a specific invite token)

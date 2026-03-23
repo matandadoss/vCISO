@@ -3,6 +3,29 @@ import { Edit2, Shield, Info, Loader2, Save, X, Plus } from 'lucide-react';
 import { ApiService, Tier } from '../../services/api';
 import './TierManagement.css';
 
+const AVAILABLE_FEATURES = [
+  "Select a feature...",
+  "Manual infrastructure diagramming",
+  "Manual compliance tracking",
+  "Weekly threat digests",
+  "Basic real-time cloud sync",
+  "Standard What-If simulations",
+  "Daily threat alerts",
+  "Advanced real-time correlation",
+  "Complex Hindsight simulations",
+  "Automated compliance evidence",
+  "Full real-time correlation graphs",
+  "Automated AI remediation",
+  "Continuous Red Teaming",
+  "SOC2 / HIPAA Framework Mapping",
+  "Automated Vendor Risk Scoring",
+  "Dark Web Threat Intelligence",
+  "External Attack Surface Management",
+  "Custom Reporting \u0026 Exports",
+  "Dedicated Customer Success Manager",
+  "SLA Guarantee (99.99%)"
+];
+
 const TierManagement = () => {
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +77,7 @@ const TierManagement = () => {
   };
 
   const addFeature = () => {
-    const newFeatures = [...(editForm.features || []), "New Feature"];
+    const newFeatures = [...(editForm.features || []), "Select a feature..."];
     setEditForm({ ...editForm, features: newFeatures });
   };
 
@@ -130,11 +153,11 @@ const TierManagement = () => {
                 </div>
 
                 <div className="tier-limits mb-4 p-3 bg-black/20 rounded-lg">
-                  <div className="limit-item flex justify-between items-center text-sm">
+                  <div className="limit-item flex justify-between items-center text-sm border-b border-border/20 pb-2 mb-2">
                     <span className="limit-label text-muted">User Limit</span>
                     {isEditing ? (
                        <input 
-                         className="bg-background/50 border border-border rounded px-2 py-1 text-right w-20 text-sm"
+                         className="bg-background/50 border border-border rounded px-2 py-1 text-right w-20 text-sm text-foreground"
                          value={editForm.maxUsers === 'Unlimited' ? 'Unlimited' : editForm.maxUsers || ''}
                          onChange={(e) => {
                            const val = e.target.value;
@@ -144,6 +167,23 @@ const TierManagement = () => {
                        />
                     ) : (
                        <span className="limit-value font-medium">{tier.maxUsers}</span>
+                    )}
+                  </div>
+                  <div className="limit-item flex justify-between items-center text-sm">
+                    <span className="limit-label text-muted">Additional Seat Price</span>
+                    {isEditing ? (
+                       <div className="flex items-center">
+                         <span className="text-muted mr-1">$</span>
+                         <input 
+                           type="number"
+                           className="bg-background/50 border border-border rounded px-2 py-1 text-right w-20 text-sm text-foreground"
+                           value={editForm.pricePerUser ?? 0}
+                           onChange={(e) => setEditForm({...editForm, pricePerUser: parseInt(e.target.value) || 0})}
+                         />
+                         <span className="text-muted text-xs ml-1">/mo</span>
+                       </div>
+                    ) : (
+                       <span className="limit-value font-medium text-accent-success">${tier.pricePerUser}<span className="text-muted text-xs font-normal ml-1">/mo</span></span>
                     )}
                   </div>
                 </div>
@@ -171,11 +211,18 @@ const TierManagement = () => {
                              <button className="mt-1 text-accent-danger hover:opacity-80" onClick={() => removeFeature(idx)}>
                                <X size={14} />
                              </button>
-                             <input 
-                               className="bg-background/50 border border-border rounded px-2 py-1 text-sm w-full"
+                             <select 
+                               className="bg-background/50 border border-border rounded px-2 py-1 text-sm w-full text-foreground"
                                value={feature}
                                onChange={(e) => handleFeatureChange(idx, e.target.value)}
-                             />
+                             >
+                               {!AVAILABLE_FEATURES.includes(feature) && (
+                                 <option value={feature}>{feature}</option>
+                               )}
+                               {AVAILABLE_FEATURES.map(f => (
+                                 <option key={f} value={f}>{f}</option>
+                               ))}
+                             </select>
                            </li>
                         ))}
                         <button className="flex items-center gap-1 text-sm text-accent-primary hover:underline mt-2" onClick={addFeature}>

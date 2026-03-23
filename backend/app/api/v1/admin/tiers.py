@@ -15,6 +15,7 @@ DEFAULT_TIERS = [
         "name": "Basic", 
         "description": "Essential manual risk assessment.",
         "monthlyPrice": 0, 
+        "pricePerUser": 0,
         "maxUsers": "5", 
         "features": ["Manual infrastructure diagramming", "Manual compliance tracking", "Weekly threat digests"],
         "popular": False,
@@ -25,6 +26,7 @@ DEFAULT_TIERS = [
         "name": "Professional", 
         "description": "Basic real-time visibility.",
         "monthlyPrice": 200, 
+        "pricePerUser": 10,
         "maxUsers": "25", 
         "features": ["Basic real-time cloud sync", "Standard What-If simulations", "Daily threat alerts"],
         "popular": False,
@@ -35,6 +37,7 @@ DEFAULT_TIERS = [
         "name": "Enterprise", 
         "description": "Advanced contextual analytics.",
         "monthlyPrice": 800, 
+        "pricePerUser": 25,
         "maxUsers": "100", 
         "features": ["Advanced real-time correlation", "Complex Hindsight simulations", "Automated compliance evidence"],
         "popular": True,
@@ -45,6 +48,7 @@ DEFAULT_TIERS = [
         "name": "Elite", 
         "description": "Full automated platform capabilities.",
         "monthlyPrice": 2500, 
+        "pricePerUser": 50,
         "maxUsers": 'Unlimited', 
         "features": ["Full real-time correlation graphs", "Automated AI remediation", "Continuous Red Teaming"],
         "popular": False,
@@ -56,6 +60,7 @@ class TierUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     monthlyPrice: int | None = None
+    pricePerUser: int | None = None
     maxUsers: str | int | None = None
     features: Optional[List[str]] = None
     popular: Optional[bool] = None
@@ -79,6 +84,7 @@ async def get_service_tiers(
                 name=bt["name"],
                 description=bt["description"],
                 monthly_price=bt["monthlyPrice"],
+                price_per_user=bt.get("pricePerUser", 0),
                 max_users=str(bt["maxUsers"]),
                 features=bt["features"],
                 is_popular=bt["popular"],
@@ -96,6 +102,7 @@ async def get_service_tiers(
             "name": c.name,
             "description": c.description,
             "monthlyPrice": c.monthly_price,
+            "pricePerUser": c.price_per_user,
             "maxUsers": int(c.max_users) if str(c.max_users).isdigit() else c.max_users,
             "features": c.features,
             "popular": c.is_popular,
@@ -124,6 +131,7 @@ async def update_service_tier(
     if payload.name is not None: config.name = payload.name
     if payload.description is not None: config.description = payload.description
     if payload.monthlyPrice is not None: config.monthly_price = payload.monthlyPrice
+    if payload.pricePerUser is not None: config.price_per_user = payload.pricePerUser
     if payload.maxUsers is not None: config.max_users = str(payload.maxUsers)
     if payload.features is not None: config.features = payload.features
     if payload.popular is not None: config.is_popular = payload.popular
