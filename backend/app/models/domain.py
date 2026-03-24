@@ -450,27 +450,25 @@ def apply_rls_ddl(target, connection, **kw):
     if connection.dialect.name != "postgresql":
         return
         
-    tables_to_protect = [
-        "users", "assets", "vulnerabilities", "threat_actors",
-        "threat_intel_indicators", "vendors", "security_controls",
-        "compliance_frameworks", "findings", "correlation_rules",
-        "chat_sessions", "audit_logs", "threat_feed_subscriptions",
-        "ai_query_logs", "internal_bug_logs", "risk_register", "org_ai_budgets",
-        "weekly_security_briefs"
-    ]
-    
-    for table in tables_to_protect:
+    for table_name, table in BaseModel.metadata.tables.items():
+        if table_name == "alembic_version":
+            continue
+            
+        has_org_id = any(c.name == "org_id" for c in table.columns)
+        if not has_org_id:
+            continue
+            
         try:
-            connection.execute(text(f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;"))
-            connection.execute(text(f"ALTER TABLE {table} FORCE ROW LEVEL SECURITY;"))
+            connection.execute(text(f"ALTER TABLE {table_name} ENABLE ROW LEVEL SECURITY;"))
+            connection.execute(text(f"ALTER TABLE {table_name} FORCE ROW LEVEL SECURITY;"))
             
             # Idempotency safety buffer
-            connection.execute(text(f"DROP POLICY IF EXISTS tenant_isolation_{table} ON {table};"))
+            connection.execute(text(f"DROP POLICY IF EXISTS tenant_isolation_{table_name} ON {table_name};"))
             
-            # Restrictive policy: blocks access unless rls.org_id exists AND physically matches
+            # Permissive policy: Grants access explicitly if the rls.org_id matches the table subset.
             connection.execute(text(f"""
-                CREATE POLICY tenant_isolation_{table} ON {table}
-                AS RESTRICTIVE FOR ALL TO PUBLIC
+                CREATE POLICY tenant_isolation_{table_name} ON {table_name}
+                AS PERMISSIVE FOR ALL TO PUBLIC
                 USING (
                     current_setting('rls.org_id', true) IS NOT NULL 
                     AND current_setting('rls.org_id', true) != ''
