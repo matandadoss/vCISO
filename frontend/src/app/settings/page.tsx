@@ -47,6 +47,13 @@ const settingModules = [
     status: "Active"
   },
   {
+    title: "Remediation SLAs",
+    description: "Configure mandatory resolution timelines mapped across critical and low severities.",
+    icon: <Settings className="h-6 w-6 text-teal-500" />,
+    href: "/settings/slas",
+    status: "Active"
+  },
+  {
     title: "General Security",
     description: "Configure SSO, MFA enforcement, and session timeouts.",
     icon: <Shield className="h-6 w-6 text-red-500" />,

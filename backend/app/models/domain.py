@@ -104,6 +104,7 @@ class Organization(BaseModel):
     size: Mapped[str] = mapped_column(String(50), nullable=True)
     gcp_project_id: Mapped[str] = mapped_column(String(255), nullable=True)
     subscription_tier: Mapped[ServiceTier] = mapped_column(SQLEnum(ServiceTier), default=ServiceTier.professional)
+    sla_settings: Mapped[dict] = mapped_column(JSON, nullable=True)
 
 class ServiceTierConfig(BaseModel):
     __tablename__ = "service_tier_configs"
@@ -479,4 +480,45 @@ def apply_rls_ddl(target, connection, **kw):
             print(f"Failed configuring Tenant Isolation Row-Level Security on {table}: {e}")
 
 event.listen(BaseModel.metadata, "after_create", apply_rls_ddl)
+
+
+def compute_finding_sla_deadline(mapper, connection, target):
+    """
+    SQLAlchemy hook that executes automatically before a Finding is inserted.
+    It fetches the target Organization's customized SLA logic or defaults to standard ranges, 
+    dynamically stamping the timeline prior to PostgreSQL flush.
+    """
+    if target.sla_deadline is not None:
+        return
+
+    try:
+        from datetime import timedelta
+        # Ensure we always fetch the actual UUID string equivalent regardless of mapping type.
+        org_id_val = str(target.org_id)
+        
+        # Pull custom configuration overrides from Postgres
+        stmt = text("SELECT sla_settings FROM organizations WHERE id = :org_id")
+        result = connection.execute(stmt, {"org_id": org_id_val}).fetchone()
+        
+        if result and result[0]:
+            sla_configs = result[0]
+        else:
+            sla_configs = {"critical": 3, "high": 7, "medium": 30, "low": 90, "informational": 180}
+
+        # Resolve the Enum or String severity gracefully
+        # Ensure we map it against the keys present inside the JSON block.
+        sev_key = target.severity
+        if hasattr(target.severity, "value"):
+            sev_key = target.severity.value
+        
+        days_to_fix = sla_configs.get(sev_key.lower(), 30)
+
+        # Baseline timestamp starting structure
+        base_time = target.detected_at or datetime.utcnow()
+        target.sla_deadline = base_time + timedelta(days=days_to_fix)
+        
+    except Exception as e:
+        print(f"Failed to compute automated SLA deadline for finding (org_id: {target.org_id}): {e}")
+
+event.listen(Finding, "before_insert", compute_finding_sla_deadline)
 

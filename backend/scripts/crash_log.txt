@@ -1,10 +1,10 @@
 ﻿---
-insertId: 9povxvd2pxc
+insertId: -dk4yrtd2ow0
 logName: projects/gen-lang-client-0873796692/logs/cloudaudit.googleapis.com%2Fsystem_event
 protoPayload:
   '@type': type.googleapis.com/google.cloud.audit.AuditLog
   methodName: /Services.ReplaceService
-  resourceName: namespaces/gen-lang-client-0873796692/revisions/vciso-backend-00097-lgv
+  resourceName: namespaces/gen-lang-client-0873796692/revisions/vciso-backend-00098-5z7
   response:
     '@type': type.googleapis.com/google.cloud.run.v1.Revision
     apiVersion: serving.knative.dev/v1
@@ -15,21 +15,21 @@ protoPayload:
         run.googleapis.com/client-name: gcloud
         run.googleapis.com/client-version: 560.0.0
         run.googleapis.com/cloudsql-instances: gen-lang-client-0873796692:us-central1:ciso-postgres
-        run.googleapis.com/operation-id: 51a71a61-40f3-4f6e-b47e-b432febc9660
+        run.googleapis.com/operation-id: 5c9f9d51-cbb3-4027-9783-82f90f3fdc9d
         run.googleapis.com/startup-cpu-boost: 'true'
         serving.knative.dev/creator: Matanda.Doss@gmail.com
-      creationTimestamp: '2026-03-24T12:48:23.158296Z'
+      creationTimestamp: '2026-03-24T12:54:13.077605Z'
       generation: 1
       labels:
-        client.knative.dev/nonce: zzhanwfptk
+        client.knative.dev/nonce: hktyvfpzkn
         cloud.googleapis.com/location: us-central1
         run.googleapis.com/startupProbeType: Default
         serving.knative.dev/configuration: vciso-backend
-        serving.knative.dev/configurationGeneration: '97'
+        serving.knative.dev/configurationGeneration: '98'
         serving.knative.dev/route: vciso-backend
         serving.knative.dev/service: vciso-backend
         serving.knative.dev/serviceUid: 27297f34-089d-46a8-a31e-e81c9c4b3d19
-      name: vciso-backend-00097-lgv
+      name: vciso-backend-00098-5z7
       namespace: '457240052356'
       ownerReferences:
       - apiVersion: serving.knative.dev/v1
@@ -38,16 +38,16 @@ protoPayload:
         kind: Configuration
         name: vciso-backend
         uid: 10fb8bd7-b56b-4a9e-b4cb-76f216a46230
-      resourceVersion: AAZNxJL8er4
-      selfLink: /apis/serving.knative.dev/v1/namespaces/457240052356/revisions/vciso-backend-00097-lgv
-      uid: f103c65d-be02-4fe1-afbc-bca8b71a6e2b
+      resourceVersion: AAZNxKeLxg8
+      selfLink: /apis/serving.knative.dev/v1/namespaces/457240052356/revisions/vciso-backend-00098-5z7
+      uid: 8110992a-84e4-484b-990a-eed408eb86bc
     spec:
       containerConcurrency: 80
       containers:
       - env:
         - name: GOOGLE_CLOUD_PROJECT
           value: gen-lang-client-0873796692
-        image: gcr.io/gen-lang-client-0873796692/vciso-backend@sha256:b805f56fddf7813a4d9e105bf763bfae80735c73a092e3a61f3045a43301d786
+        image: gcr.io/gen-lang-client-0873796692/vciso-backend@sha256:39fb65acad4779bf1c9015d326fcca1a974e95508f04b906bf8e3703bd7914a2
         name: vciso-backend-1
         ports:
         - containerPort: 8080
@@ -66,35 +66,35 @@ protoPayload:
       timeoutSeconds: 300
     status:
       conditions:
-      - lastTransitionTime: '2026-03-24T12:48:55.212734Z'
+      - lastTransitionTime: '2026-03-24T12:54:40.147983Z'
         message: |-
           The user-provided container failed to start and listen on the port defined provided by the PORT=8080 environment variable within the allocated timeout. This can happen when the container port is misconfigured or if the timeout is too short. The health check timeout can be extended. Logs for this revision might contain more information.
 
-          Logs URL: https://console.cloud.google.com/logs/viewer?project=gen-lang-client-0873796692&resource=cloud_run_revision/service_name/vciso-backend/revision_name/vciso-backend-00097-lgv&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22vciso-backend%22%0Aresource.labels.revision_name%3D%22vciso-backend-00097-lgv%22 
+          Logs URL: https://console.cloud.google.com/logs/viewer?project=gen-lang-client-0873796692&resource=cloud_run_revision/service_name/vciso-backend/revision_name/vciso-backend-00098-5z7&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22vciso-backend%22%0Aresource.labels.revision_name%3D%22vciso-backend-00098-5z7%22 
           For more troubleshooting guidance, see https://cloud.google.com/run/docs/troubleshooting#container-failed-to-start
         reason: HealthCheckContainerError
         status: 'False'
         type: Ready
-      - lastTransitionTime: '2026-03-24T12:48:55.212734Z'
+      - lastTransitionTime: '2026-03-24T12:54:40.147983Z'
         message: |-
           The user-provided container failed to start and listen on the port defined provided by the PORT=8080 environment variable within the allocated timeout. This can happen when the container port is misconfigured or if the timeout is too short. The health check timeout can be extended. Logs for this revision might contain more information.
 
-          Logs URL: https://console.cloud.google.com/logs/viewer?project=gen-lang-client-0873796692&resource=cloud_run_revision/service_name/vciso-backend/revision_name/vciso-backend-00097-lgv&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22vciso-backend%22%0Aresource.labels.revision_name%3D%22vciso-backend-00097-lgv%22 
+          Logs URL: https://console.cloud.google.com/logs/viewer?project=gen-lang-client-0873796692&resource=cloud_run_revision/service_name/vciso-backend/revision_name/vciso-backend-00098-5z7&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22vciso-backend%22%0Aresource.labels.revision_name%3D%22vciso-backend-00098-5z7%22 
           For more troubleshooting guidance, see https://cloud.google.com/run/docs/troubleshooting#container-failed-to-start
         reason: HealthCheckContainerError
         status: 'False'
         type: ContainerHealthy
-      - lastTransitionTime: '2026-03-24T12:48:47.657918Z'
-        message: Container image import completed in 23.83s.
+      - lastTransitionTime: '2026-03-24T12:54:37.426174Z'
+        message: Container image import completed in 23.72s.
         status: 'True'
         type: ContainerReady
-      - lastTransitionTime: '2026-03-24T12:48:49.881585Z'
-        message: Provisioning imported containers completed in 2.22s. Checking container
+      - lastTransitionTime: '2026-03-24T12:54:38.853721Z'
+        message: Provisioning imported containers completed in 1.42s. Checking container
           health. This will wait for up to 4m for the configured startup probe, including
           an initial delay of 0s.
         status: 'True'
         type: ResourcesAvailable
-      - lastTransitionTime: '2026-03-24T12:48:49.881585Z'
+      - lastTransitionTime: '2026-03-24T12:54:38.853721Z'
         message: System will retry after 00:00 from lastTransitionTime for attempt
           0.
         reason: ImmediateRetry
@@ -102,267 +102,46 @@ protoPayload:
         status: 'True'
         type: Retry
       containerStatuses:
-      - imageDigest: gcr.io/gen-lang-client-0873796692/vciso-backend@sha256:b805f56fddf7813a4d9e105bf763bfae80735c73a092e3a61f3045a43301d786
+      - imageDigest: gcr.io/gen-lang-client-0873796692/vciso-backend@sha256:39fb65acad4779bf1c9015d326fcca1a974e95508f04b906bf8e3703bd7914a2
         name: vciso-backend-1
-      imageDigest: gcr.io/gen-lang-client-0873796692/vciso-backend@sha256:b805f56fddf7813a4d9e105bf763bfae80735c73a092e3a61f3045a43301d786
-      logUrl: https://console.cloud.google.com/logs/viewer?project=gen-lang-client-0873796692&resource=cloud_run_revision/service_name/vciso-backend/revision_name/vciso-backend-00097-lgv&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22vciso-backend%22%0Aresource.labels.revision_name%3D%22vciso-backend-00097-lgv%22
+      imageDigest: gcr.io/gen-lang-client-0873796692/vciso-backend@sha256:39fb65acad4779bf1c9015d326fcca1a974e95508f04b906bf8e3703bd7914a2
+      logUrl: https://console.cloud.google.com/logs/viewer?project=gen-lang-client-0873796692&resource=cloud_run_revision/service_name/vciso-backend/revision_name/vciso-backend-00098-5z7&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22vciso-backend%22%0Aresource.labels.revision_name%3D%22vciso-backend-00098-5z7%22
       observedGeneration: 1
   serviceName: run.googleapis.com
   status:
     code: 9
     message: |-
-      Ready condition status changed to False for Revision vciso-backend-00097-lgv with message: The user-provided container failed to start and listen on the port defined provided by the PORT=8080 environment variable within the allocated timeout. This can happen when the container port is misconfigured or if the timeout is too short. The health check timeout can be extended. Logs for this revision might contain more information.
+      Ready condition status changed to False for Revision vciso-backend-00098-5z7 with message: The user-provided container failed to start and listen on the port defined provided by the PORT=8080 environment variable within the allocated timeout. This can happen when the container port is misconfigured or if the timeout is too short. The health check timeout can be extended. Logs for this revision might contain more information.
 
-      Logs URL: https://console.cloud.google.com/logs/viewer?project=gen-lang-client-0873796692&resource=cloud_run_revision/service_name/vciso-backend/revision_name/vciso-backend-00097-lgv&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22vciso-backend%22%0Aresource.labels.revision_name%3D%22vciso-backend-00097-lgv%22 
+      Logs URL: https://console.cloud.google.com/logs/viewer?project=gen-lang-client-0873796692&resource=cloud_run_revision/service_name/vciso-backend/revision_name/vciso-backend-00098-5z7&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22vciso-backend%22%0Aresource.labels.revision_name%3D%22vciso-backend-00098-5z7%22 
       For more troubleshooting guidance, see https://cloud.google.com/run/docs/troubleshooting#container-failed-to-start
-receiveTimestamp: '2026-03-24T12:48:55.992387500Z'
+receiveTimestamp: '2026-03-24T12:54:41.099004730Z'
 resource:
   labels:
     configuration_name: vciso-backend
     location: us-central1
     project_id: gen-lang-client-0873796692
-    revision_name: vciso-backend-00097-lgv
+    revision_name: vciso-backend-00098-5z7
     service_name: vciso-backend
   type: cloud_run_revision
 severity: ERROR
-timestamp: '2026-03-24T12:48:55.225928Z'
+timestamp: '2026-03-24T12:54:40.162420Z'
 ---
-insertId: 69c2883700033c5637e5916e
+insertId: 69c2899000023a15673a5cea
 labels:
-  instanceId: 00da6cd2c431d8da444bcec1902460881de23b8d89ee21ef3e4ef70e339690883a83dfa9f3c97b64d313b926d75458458d9f7294cb608289656a24e0b938ec7e516e983543f4832ad69f16dc7ae460
+  instanceId: 00da6cd2c47b90fecc3b32b6f3a79b95208b99b26291826640aaf0e1a1bdc4e8d2c0d1950c7c48ef4a7c30a222036dc81bedc20d8066bc36fc7fbbf7f75b07c8c0bc44c69f050bf1fba964cbece7cd
 logName: projects/gen-lang-client-0873796692/logs/run.googleapis.com%2Fvarlog%2Fsystem
-receiveTimestamp: '2026-03-24T12:48:55.317549296Z'
+receiveTimestamp: '2026-03-24T12:54:40.284212648Z'
 resource:
   labels:
     configuration_name: vciso-backend
     location: us-central1
     project_id: gen-lang-client-0873796692
-    revision_name: vciso-backend-00097-lgv
+    revision_name: vciso-backend-00098-5z7
     service_name: vciso-backend
   type: cloud_run_revision
 severity: ERROR
 textPayload: |-
   Default STARTUP TCP probe failed 1 time consecutively for container "vciso-backend-1" on port 8080. The instance was not started.
   Connection failed with status CANCELLED.
-timestamp: '2026-03-24T12:48:55.212054Z'
----
-errorGroups:
-- id: CKTV5Lz1x-SziAE
-insertId: 69c288360001223016168593
-labels:
-  instanceId: 00da6cd2c431d8da444bcec1902460881de23b8d89ee21ef3e4ef70e339690883a83dfa9f3c97b64d313b926d75458458d9f7294cb608289656a24e0b938ec7e516e983543f4832ad69f16dc7ae460
-logName: projects/gen-lang-client-0873796692/logs/run.googleapis.com%2Fstderr
-receiveTimestamp: '2026-03-24T12:48:54.284776587Z'
-resource:
-  labels:
-    configuration_name: vciso-backend
-    location: us-central1
-    project_id: gen-lang-client-0873796692
-    revision_name: vciso-backend-00097-lgv
-    service_name: vciso-backend
-  type: cloud_run_revision
-severity: ERROR
-textPayload: |-
-  Traceback (most recent call last):
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 373, in _close_connection
-      self._dialect.do_terminate(connection)
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 1127, in do_terminate
-      dbapi_connection.terminate()
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/connectors/asyncio.py", line 415, in terminate
-      self._terminate_force_close()
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 916, in _terminate_force_close
-      self._connection.terminate()
-    File "/usr/local/lib/python3.11/site-packages/asyncpg/connection.py", line 1524, in terminate
-      self._abort()
-    File "/usr/local/lib/python3.11/site-packages/asyncpg/connection.py", line 1576, in _abort
-      self._protocol.abort()
-    File "asyncpg/protocol/protocol.pyx", line 599, in asyncpg.protocol.protocol.BaseProtocol.abort
-    File "/usr/local/lib/python3.11/asyncio/selector_events.py", line 825, in abort
-      self._force_close(None)
-    File "/usr/local/lib/python3.11/asyncio/selector_events.py", line 895, in _force_close
-      self._loop.call_soon(self._call_connection_lost, exc)
-    File "/usr/local/lib/python3.11/asyncio/base_events.py", line 762, in call_soon
-      self._check_closed()
-    File "/usr/local/lib/python3.11/asyncio/base_events.py", line 520, in _check_closed
-      raise RuntimeError('Event loop is closed')
-  RuntimeError: Event loop is closed
-timestamp: '2026-03-24T12:48:54.074288Z'
----
-errorGroups:
-- id: CLLrjo7dlsiEvQE
-insertId: 69c28835000f00214419b0f3
-labels:
-  instanceId: 00da6cd2c431d8da444bcec1902460881de23b8d89ee21ef3e4ef70e339690883a83dfa9f3c97b64d313b926d75458458d9f7294cb608289656a24e0b938ec7e516e983543f4832ad69f16dc7ae460
-logName: projects/gen-lang-client-0873796692/logs/run.googleapis.com%2Fstderr
-receiveTimestamp: '2026-03-24T12:48:54.284776587Z'
-resource:
-  labels:
-    configuration_name: vciso-backend
-    location: us-central1
-    project_id: gen-lang-client-0873796692
-    revision_name: vciso-backend-00097-lgv
-    service_name: vciso-backend
-  type: cloud_run_revision
-severity: ERROR
-textPayload: |-
-  Traceback (most recent call last):
-    File "/app/scripts/init_db.py", line 105, in <module>
-      asyncio.run(init_db())
-    File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
-      return runner.run(main)
-             ^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
-      return self._loop.run_until_complete(task)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
-      return future.result()
-             ^^^^^^^^^^^^^^^
-    File "/app/scripts/init_db.py", line 67, in init_db
-      await seed_defaults_for_org(session, test_org_id)
-    File "/app/app/db/seeds.py", line 12, in seed_defaults_for_org
-      frameworks_result = await session.execute(
-                          ^^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/ext/asyncio/session.py", line 449, in execute
-      result = await greenlet_spawn(
-               ^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 203, in greenlet_spawn
-      result = context.switch(value)
-               ^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2351, in execute
-      return self._execute_internal(
-             ^^^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2228, in _execute_internal
-      ) = compile_state_cls.orm_pre_session_exec(
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 577, in orm_pre_session_exec
-      session._autoflush()
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3051, in _autoflush
-      raise e.with_traceback(sys.exc_info()[2])
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3040, in _autoflush
-      self.flush()
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4331, in flush
-      self._flush(objects)
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4466, in _flush
-      with util.safe_reraise():
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 121, in __exit__
-      raise exc_value.with_traceback(exc_tb)
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4427, in _flush
-      flush_context.execute()
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py", line 466, in execute
-      rec.execute(self)
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py", line 642, in execute
-      util.preloaded.orm_persistence.save_obj(
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
-      _emit_insert_statements(
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py", line 1233, in _emit_insert_statements
-      result = connection.execute(
-               ^^^^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
-      return meth(
-             ^^^^^
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 527, in _execute_on_connection
-      return connection._execute_clauseelement(
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
-      ret = self._execute_context(
-            ^^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
-      return self._exec_single_context(
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
-      self._handle_dbapi_exception(
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2363, in _handle_dbapi_exception
-      raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
-      self.dialect.do_execute(
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
-      cursor.execute(statement, parameters)
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 585, in execute
-      self._adapt_connection.await_(
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
-      return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
-      value = await result
-              ^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 563, in _prepare_and_execute
-      self._handle_exception(error)
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 513, in _handle_exception
-      self._adapt_connection._handle_exception(error)
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 797, in _handle_exception
-      raise translated_error from error
-  sqlalchemy.exc.IntegrityError: (raised as a result of Query-invoked autoflush; consider using a session.no_autoflush block if this flush is occurring prematurely)
-timestamp: '2026-03-24T12:48:53.983073Z'
----
-errorGroups:
-- id: CPfqpoyw2pOvNA
-insertId: 69c28835000e913111aac5fd
-labels:
-  instanceId: 00da6cd2c431d8da444bcec1902460881de23b8d89ee21ef3e4ef70e339690883a83dfa9f3c97b64d313b926d75458458d9f7294cb608289656a24e0b938ec7e516e983543f4832ad69f16dc7ae460
-logName: projects/gen-lang-client-0873796692/logs/run.googleapis.com%2Fstderr
-receiveTimestamp: '2026-03-24T12:48:54.284776587Z'
-resource:
-  labels:
-    configuration_name: vciso-backend
-    location: us-central1
-    project_id: gen-lang-client-0873796692
-    revision_name: vciso-backend-00097-lgv
-    service_name: vciso-backend
-  type: cloud_run_revision
-severity: ERROR
-textPayload: |-
-  Traceback (most recent call last):
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
-      self.dialect.do_execute(
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
-      cursor.execute(statement, parameters)
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 585, in execute
-      self._adapt_connection.await_(
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
-      return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
-      value = await result
-              ^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 563, in _prepare_and_execute
-      self._handle_exception(error)
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 513, in _handle_exception
-      self._adapt_connection._handle_exception(error)
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 797, in _handle_exception
-      raise translated_error from error
-  sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.IntegrityError: <class 'asyncpg.exceptions.ForeignKeyViolationError'>: insert or update on table "org_ai_budgets" violates foreign key constraint "org_ai_budgets_org_id_fkey"
-timestamp: '2026-03-24T12:48:53.954673Z'
----
-errorGroups:
-- id: COiwm_Pi2veaSw
-insertId: 69c28835000e7166d7edf404
-labels:
-  instanceId: 00da6cd2c431d8da444bcec1902460881de23b8d89ee21ef3e4ef70e339690883a83dfa9f3c97b64d313b926d75458458d9f7294cb608289656a24e0b938ec7e516e983543f4832ad69f16dc7ae460
-logName: projects/gen-lang-client-0873796692/logs/run.googleapis.com%2Fstderr
-receiveTimestamp: '2026-03-24T12:48:53.953832706Z'
-resource:
-  labels:
-    configuration_name: vciso-backend
-    location: us-central1
-    project_id: gen-lang-client-0873796692
-    revision_name: vciso-backend-00097-lgv
-    service_name: vciso-backend
-  type: cloud_run_revision
-severity: ERROR
-textPayload: |-
-  Traceback (most recent call last):
-    File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 550, in _prepare_and_execute
-      self._rows = deque(await prepared_stmt.fetch(*parameters))
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/asyncpg/prepared_stmt.py", line 177, in fetch
-      data = await self.__bind_execute(args, 0, timeout)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/asyncpg/prepared_stmt.py", line 268, in __bind_execute
-      data, status, _ = await self.__do_execute(
-                        ^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/local/lib/python3.11/site-packages/asyncpg/prepared_stmt.py", line 257, in __do_execute
-      return await executor(protocol)
-             ^^^^^^^^^^^^^^^^^^^^^^^^
-    File "asyncpg/protocol/protocol.pyx", line 205, in bind_execute
-  asyncpg.exceptions.ForeignKeyViolationError: insert or update on table "org_ai_budgets" violates foreign key constraint "org_ai_budgets_org_id_fkey"
-timestamp: '2026-03-24T12:48:53.946534Z'
+timestamp: '2026-03-24T12:54:40.145941Z'

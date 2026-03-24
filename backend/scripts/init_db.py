@@ -31,6 +31,13 @@ async def init_db():
             print("Migration: price_per_user column successfully applied.")
     except Exception as e:
         print("Column 'price_per_user' might already exist or table migration skipped:", e)
+        
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("ALTER TABLE organizations ADD COLUMN sla_settings JSON DEFAULT '{\"critical\": 3, \"high\": 7, \"medium\": 30, \"low\": 90, \"informational\": 180}'::json;"))
+            print("Migration: sla_settings JSON column successfully applied to organizations.")
+    except Exception as e:
+        print("Column 'sla_settings' might already exist or table migration skipped:", e)
     
     print("Seeding default data...")
     import datetime

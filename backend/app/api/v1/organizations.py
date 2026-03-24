@@ -1,8 +1,14 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import asyncio
+from typing import Dict, Any
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 from app.core.ai_provider import AIProviderClient, AIRequest, ModelTier
 from app.core.auth import get_current_user
+from app.db.session import get_db
+from app.models.domain import Organization
 
 router = APIRouter(prefix="/organizations", tags=["organizations"])
 
@@ -33,6 +39,48 @@ async def update_organization(org_id: str, request: OrgUpdateRequest):
     MOCK_ORG_STATE["subscription_tier"] = request.subscription_tier
     
     return MOCK_ORG_STATE
+
+class SLASettingsUpdate(BaseModel):
+    critical: int = Field(default=3, ge=1)
+    high: int = Field(default=7, ge=1)
+    medium: int = Field(default=30, ge=1)
+    low: int = Field(default=90, ge=1)
+    informational: int = Field(default=180, ge=1)
+
+@router.get("/me/sla-settings")
+async def get_sla_settings(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Retrieve the explicit SLA Remediation limits mapped to the calling Organization."""
+    org_id = current_user.get("org_id")
+    result = await db.execute(select(Organization).where(Organization.id == org_id))
+    org = result.scalar_one_or_none()
+    
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization context not found in database.")
+        
+    return org.sla_settings or {"critical": 3, "high": 7, "medium": 30, "low": 90, "informational": 180}
+
+@router.patch("/me/sla-settings")
+async def update_sla_settings(
+    settings: SLASettingsUpdate,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update canonical Database constraints for Severity-based response SLAs."""
+    org_id = current_user.get("org_id")
+    
+    result = await db.execute(select(Organization).where(Organization.id == org_id))
+    org = result.scalar_one_or_none()
+    
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization context not found.")
+    
+    org.sla_settings = settings.model_dump() if hasattr(settings, "model_dump") else settings.dict()
+    await db.commit()
+    
+    return org.sla_settings
 
 @router.post("/upload-architecture")
 async def upload_architecture(
