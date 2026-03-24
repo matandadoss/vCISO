@@ -14,6 +14,8 @@ export default function SubscriptionPage() {
   const [targetTier, setTargetTier] = useState<string | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"card" | "ach" | "apple_pay" | "google_pay">("card");
+  const [agreedToPayment, setAgreedToPayment] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   useEffect(() => {
     fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/organizations/test-org`)
@@ -277,6 +279,37 @@ export default function SubscriptionPage() {
                </div>
              </div>
 
+             {/* Payment Authorization */}
+             <div className="bg-muted/30 border border-border rounded-lg p-4 mb-6 space-y-3">
+               <p className="text-xs text-muted-foreground font-medium mb-3">
+                 By proceeding, you authorize SKPR.ai to securely vault your payment method and automatically charge the selected amount each month for this subscription tier.
+               </p>
+               <div className="flex items-start gap-3">
+                 <input 
+                   type="checkbox" 
+                   id="payment-agreement"
+                   checked={agreedToPayment}
+                   onChange={(e) => setAgreedToPayment(e.target.checked)}
+                   className="mt-1 flex-shrink-0" 
+                 />
+                 <label htmlFor="payment-agreement" className="text-sm text-foreground/90 cursor-pointer">
+                   I have read and agree to the <a href="#" className="text-primary hover:underline">Payment Processing Agreement</a>.
+                 </label>
+               </div>
+               <div className="flex items-start gap-3">
+                 <input 
+                   type="checkbox" 
+                   id="terms-of-service"
+                   checked={agreedToTerms}
+                   onChange={(e) => setAgreedToTerms(e.target.checked)}
+                   className="mt-1 flex-shrink-0" 
+                 />
+                 <label htmlFor="terms-of-service" className="text-sm text-foreground/90 cursor-pointer">
+                   I have read and agree to the <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Terms of Service</a>.
+                 </label>
+               </div>
+             </div>
+
              <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <button 
                   onClick={() => setIsCheckoutModalOpen(false)}
@@ -287,9 +320,9 @@ export default function SubscriptionPage() {
                 </button>
                 <button 
                   onClick={processFluidpayCheckout}
-                  disabled={isProcessingPayment || (selectedPaymentMethod === "apple_pay" || selectedPaymentMethod === "google_pay")}
+                  disabled={isProcessingPayment || (selectedPaymentMethod === "apple_pay" || selectedPaymentMethod === "google_pay") || !agreedToPayment || !agreedToTerms}
                   className={`px-5 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${
-                    isProcessingPayment || (selectedPaymentMethod === "apple_pay" || selectedPaymentMethod === "google_pay")
+                    isProcessingPayment || (selectedPaymentMethod === "apple_pay" || selectedPaymentMethod === "google_pay") || !agreedToPayment || !agreedToTerms
                     ? 'bg-primary/50 text-white cursor-not-allowed'
                     : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm'
                   }`}
@@ -304,7 +337,10 @@ export default function SubscriptionPage() {
                 {selectedPaymentMethod === "apple_pay" && !isProcessingPayment && (
                   <button 
                     onClick={processFluidpayCheckout}
-                    className="px-5 py-2 w-full max-w-[200px] h-10 bg-foreground text-background text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+                    disabled={!agreedToPayment || !agreedToTerms}
+                    className={`px-5 py-2 w-full max-w-[200px] h-10 text-background text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                      !agreedToPayment || !agreedToTerms ? 'bg-foreground/50 cursor-not-allowed' : 'bg-foreground'
+                    }`}
                   >
                     Pay with  Pay
                   </button>
@@ -313,7 +349,10 @@ export default function SubscriptionPage() {
                 {selectedPaymentMethod === "google_pay" && !isProcessingPayment && (
                   <button 
                     onClick={processFluidpayCheckout}
-                    className="px-5 py-2 w-full max-w-[200px] h-10 bg-white border border-gray-200 text-gray-800 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+                    disabled={!agreedToPayment || !agreedToTerms}
+                    className={`px-5 py-2 w-full max-w-[200px] h-10 border text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm ${
+                      !agreedToPayment || !agreedToTerms ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed' : 'bg-white border-gray-200 text-gray-800'
+                    }`}
                   >
                     <span className="text-blue-500">G</span><span className="text-red-500">o</span><span className="text-yellow-500">o</span><span className="text-blue-500">g</span><span className="text-green-500">l</span><span className="text-red-500">e</span> Pay
                   </button>

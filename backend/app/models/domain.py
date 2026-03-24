@@ -452,7 +452,7 @@ def apply_rls_ddl(target, connection, **kw):
         return
         
     for table_name, table in BaseModel.metadata.tables.items():
-        if table_name == "alembic_version":
+        if table_name in ["alembic_version", "internal_bug_logs"]:
             continue
             
         has_org_id = any(c.name == "org_id" for c in table.columns)
