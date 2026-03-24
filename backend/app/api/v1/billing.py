@@ -15,6 +15,7 @@ router = APIRouter(tags=["Billing"])
 class CheckoutRequest(BaseModel):
     tier_id: str
     payment_token: str
+    payment_method: str = "card" # card, ach, apple_pay, google_pay
 
 @router.post("/checkout")
 async def process_checkout(
@@ -49,7 +50,7 @@ async def process_checkout(
         charge_response = await fp.vault_and_charge(
             amount_cents=amount_cents,
             payment_token=payload.payment_token,
-            description=f"vCISO {tier_config.name} Subscription Upgrade - Org: {org.name}"
+            description=f"vCISO {tier_config.name} Subscription Upgrade ({payload.payment_method.upper()}) - Org: {org.name}"
         )
         
         if charge_response.get("status") != "success":

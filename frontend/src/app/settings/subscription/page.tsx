@@ -12,6 +12,7 @@ export default function SubscriptionPage() {
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [targetTier, setTargetTier] = useState<string | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"card" | "ach" | "apple_pay" | "google_pay">("card");
 
   useEffect(() => {
     fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/organizations/test-org`)
@@ -52,7 +53,8 @@ export default function SubscriptionPage() {
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify({ 
            tier_id: targetTier,
-           payment_token: secureMockToken 
+           payment_token: secureMockToken,
+           payment_method: selectedPaymentMethod 
          })
       });
       
@@ -155,42 +157,117 @@ export default function SubscriptionPage() {
       </div>
 
       {isCheckoutModalOpen && targetTier && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-card w-full max-w-md p-6 rounded-xl border border-border shadow-lg m-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-card w-full max-w-lg p-6 rounded-xl border border-border shadow-lg flex flex-col max-h-[90vh]">
              <h2 className="text-xl font-bold mb-2">Secure Checkout</h2>
              <p className="text-sm text-muted-foreground mb-6">
                You are upgrading your organization to the <strong>{targetTier.toUpperCase()}</strong> tier capability.
              </p>
              
-             {/* FluidPay PCI Simulator UI */}
-             <div className="space-y-4 mb-8 p-4 bg-muted/30 rounded-lg border border-border/50">
-                <div className="flex justify-between items-center mb-2">
-                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">FluidPay Secure Vaulting</span>
-                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs text-muted-foreground ml-1">Card Number</label>
-                  <div className="w-full h-10 bg-background border border-border rounded flex items-center px-3 opacity-60">
-                     <span className="text-sm text-foreground tracking-widest">•••• •••• •••• 4242</span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-xs text-muted-foreground ml-1">Expiry</label>
-                    <div className="w-full h-10 bg-background border border-border rounded flex items-center px-3 opacity-60">
-                       <span className="text-sm text-foreground tracking-widest">12 / 28</span>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs text-muted-foreground ml-1">CVC</label>
-                    <div className="w-full h-10 bg-background border border-border rounded flex items-center px-3 opacity-60">
-                       <span className="text-sm text-foreground tracking-widest">•••</span>
-                    </div>
-                  </div>
-                </div>
+             {/* Payment Method Selector */}
+             <div className="flex bg-muted/50 p-1 rounded-lg mb-6 border border-border/50 flex-wrap gap-1">
+               {(["card", "ach", "apple_pay", "google_pay"] as const).map(method => (
+                 <button
+                   key={method}
+                   onClick={() => setSelectedPaymentMethod(method)}
+                   className={`flex-1 min-w-[100px] text-xs font-semibold py-2 px-3 rounded-md transition-all ${
+                     selectedPaymentMethod === method 
+                     ? 'bg-background shadow-sm border border-border/80 text-foreground' 
+                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                   }`}
+                 >
+                   {method === "card" && "Credit Card"}
+                   {method === "ach" && "Bank Transfer"}
+                   {method === "apple_pay" && "Apple Pay"}
+                   {method === "google_pay" && "Google Pay"}
+                 </button>
+               ))}
              </div>
 
-             <div className="flex justify-end gap-3">
+             {/* Dynamic FluidPay PCI Simulator UI */}
+             <div className="flex-1 overflow-y-auto pr-2 mb-6">
+               <div className="p-5 bg-muted/20 rounded-xl border border-border">
+                  <div className="flex justify-between items-center mb-4">
+                     <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">FluidPay Secure Vaulting</span>
+                     <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                  </div>
+
+                  {selectedPaymentMethod === "card" && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <div className="space-y-2">
+                        <label className="text-xs text-muted-foreground ml-1">Card Number</label>
+                        <div className="w-full h-10 bg-background border border-border rounded flex items-center px-3 opacity-80 shadow-sm">
+                           <span className="text-sm text-foreground tracking-widest">•••• •••• •••• 4242</span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-xs text-muted-foreground ml-1">Expiry</label>
+                          <div className="w-full h-10 bg-background border border-border rounded flex items-center px-3 opacity-80 shadow-sm">
+                             <span className="text-sm text-foreground tracking-widest">12 / 28</span>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs text-muted-foreground ml-1">CVC</label>
+                          <div className="w-full h-10 bg-background border border-border rounded flex items-center px-3 opacity-80 shadow-sm">
+                             <span className="text-sm text-foreground tracking-widest">•••</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs text-muted-foreground ml-1">ZIP / Postal Code</label>
+                        <div className="w-full h-10 bg-background border border-border rounded flex items-center px-3 opacity-80 shadow-sm">
+                           <span className="text-sm text-foreground tracking-widest">90210</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedPaymentMethod === "ach" && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <div className="bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs p-3 rounded-md mb-4 flex items-start gap-2">
+                        <Zap className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                        <span>ACH transfers map directly to Plaid / Fluidpay backend verification routines. This requires up to 3 days to officially settle funds.</span>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs text-muted-foreground ml-1">Routing Number</label>
+                        <div className="w-full h-10 bg-background border border-border rounded flex items-center px-3 opacity-80 shadow-sm">
+                           <span className="text-sm text-foreground tracking-widest">110000000</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs text-muted-foreground ml-1">Account Number</label>
+                        <div className="w-full h-10 bg-background border border-border rounded flex items-center px-3 opacity-80 shadow-sm">
+                           <span className="text-sm text-foreground tracking-widest">000123456789</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedPaymentMethod === "apple_pay" && (
+                     <div className="flex flex-col items-center justify-center py-6 animate-in fade-in zoom-in-95 duration-300 space-y-4">
+                       <p className="text-sm text-muted-foreground text-center px-4">Secure biometric checkout mapped natively through macOS / iOS Apple Wallet payloads.</p>
+                       <div className="w-full max-w-[240px] h-12 bg-foreground rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:opacity-90 transition-opacity">
+                          <span className="text-background font-semibold text-lg"> Pay</span>
+                       </div>
+                     </div>
+                  )}
+
+                  {selectedPaymentMethod === "google_pay" && (
+                     <div className="flex flex-col items-center justify-center py-6 animate-in fade-in zoom-in-95 duration-300 space-y-4">
+                       <p className="text-sm text-muted-foreground text-center px-4">Fast and secure checkout via Google Wallet and Chrome saved cards.</p>
+                       <div className="w-full max-w-[240px] h-12 bg-white rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:opacity-90 transition-opacity border border-gray-200">
+                          {/* Emulating standard Google Pay button styling */}
+                          <span className="text-gray-800 font-semibold text-lg flex items-center gap-1">
+                            <span className="text-blue-500">G</span><span className="text-red-500">o</span><span className="text-yellow-500">o</span><span className="text-blue-500">g</span><span className="text-green-500">l</span><span className="text-red-500">e</span> Pay
+                          </span>
+                       </div>
+                     </div>
+                  )}
+               </div>
+             </div>
+
+             <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <button 
                   onClick={() => setIsCheckoutModalOpen(false)}
                   disabled={isProcessingPayment}
@@ -200,12 +277,37 @@ export default function SubscriptionPage() {
                 </button>
                 <button 
                   onClick={processFluidpayCheckout}
-                  disabled={isProcessingPayment}
-                  className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                  disabled={isProcessingPayment || (selectedPaymentMethod === "apple_pay" || selectedPaymentMethod === "google_pay")}
+                  className={`px-5 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${
+                    isProcessingPayment || (selectedPaymentMethod === "apple_pay" || selectedPaymentMethod === "google_pay")
+                    ? 'bg-primary/50 text-white cursor-not-allowed'
+                    : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm'
+                  }`}
+                  style={selectedPaymentMethod === "apple_pay" || selectedPaymentMethod === "google_pay" ? { display: 'none' } : {}}
                 >
                   {isProcessingPayment && <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />}
-                  {isProcessingPayment ? "Vaulting & Processing..." : "Authorize Secure Payment"}
+                  {isProcessingPayment 
+                    ? "Vaulting & Processing..." 
+                    : selectedPaymentMethod === "ach" ? "Authorize ACH Transfer" : "Authorize Secure Payment"}
                 </button>
+                
+                {selectedPaymentMethod === "apple_pay" && !isProcessingPayment && (
+                  <button 
+                    onClick={processFluidpayCheckout}
+                    className="px-5 py-2 w-full max-w-[200px] h-10 bg-foreground text-background text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    Pay with  Pay
+                  </button>
+                )}
+
+                {selectedPaymentMethod === "google_pay" && !isProcessingPayment && (
+                  <button 
+                    onClick={processFluidpayCheckout}
+                    className="px-5 py-2 w-full max-w-[200px] h-10 bg-white border border-gray-200 text-gray-800 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <span className="text-blue-500">G</span><span className="text-red-500">o</span><span className="text-yellow-500">o</span><span className="text-blue-500">g</span><span className="text-green-500">l</span><span className="text-red-500">e</span> Pay
+                  </button>
+                )}
              </div>
           </div>
         </div>
