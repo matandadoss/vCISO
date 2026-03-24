@@ -14,7 +14,7 @@ router = APIRouter(tags=["Billing"])
 
 class CheckoutRequest(BaseModel):
     tier_id: str
-    payment_token: str
+    payment_token: Optional[str] = None
     payment_method: str = "card" # card, ach, apple_pay, google_pay
 
 @router.post("/checkout")
@@ -41,31 +41,44 @@ async def process_checkout(
     if not tier_config:
         raise HTTPException(status_code=404, detail="Invalid target subscription tier.")
         
+    # 3. Assess if this is an Upgrade or Downgrade
+    is_downgrade = False
+    if org.subscription_tier:
+        current_tier_result = await db.execute(select(ServiceTierConfig).where(ServiceTierConfig.tier == org.subscription_tier))
+        current_tier_config = current_tier_result.scalar_one_or_none()
+        if current_tier_config and (tier_config.monthly_price < current_tier_config.monthly_price):
+            is_downgrade = True
+
     # Calculate initial charge (monthly base fee mapping to cents)
     amount_cents = tier_config.monthly_price * 100
     
-    # 3. Securely Charge via FluidPay SDK
-    fp = FluidpayClient()
-    try:
-        charge_response = await fp.vault_and_charge(
-            amount_cents=amount_cents,
-            payment_token=payload.payment_token,
-            description=f"vCISO {tier_config.name} Subscription Upgrade ({payload.payment_method.upper()}) - Org: {org.name}"
-        )
-        
-        if charge_response.get("status") != "success":
-            raise HTTPException(status_code=400, detail=f"Payment declined: {charge_response.get('msg', 'Unknown Error')}")
+    # 4. Securely Charge via FluidPay SDK (Only if Upgrading/New)
+    if not is_downgrade:
+        if not payload.payment_token:
+            raise HTTPException(status_code=400, detail="Payment token is required for subscription upgrades.")
             
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Transaction Failed: {str(e)}")
+        fp = FluidpayClient()
+        try:
+            charge_response = await fp.vault_and_charge(
+                amount_cents=amount_cents,
+                payment_token=payload.payment_token,
+                description=f"vCISO {tier_config.name} Subscription Upgrade ({payload.payment_method.upper()}) - Org: {org.name}"
+            )
+            
+            if charge_response.get("status") != "success":
+                raise HTTPException(status_code=400, detail=f"Payment declined: {charge_response.get('msg', 'Unknown Error')}")
+                
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Transaction Failed: {str(e)}")
         
-    # 4. If payment approved, update the Postgres database securely
+    # 5. If payment approved (or if downgrade), update the Postgres database securely
     # In a full flow we'd save `fluidpay_customer_id = charge_response['data']['vault_id']` inside the Org model.
     org.subscription_tier = payload.tier_id
     await db.commit()
     await db.refresh(org)
     
+    action_text = "downgraded" if is_downgrade else "upgraded"
     return {
         "status": "success", 
-        "detail": f"Successfully processed payment and upgraded organization to {tier_config.name}"
+        "detail": f"Successfully processed transaction and {action_text} organization to {tier_config.name}"
     }

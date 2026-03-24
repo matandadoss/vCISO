@@ -146,6 +146,14 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
     return <Cpu className="h-4 w-4 text-muted-foreground" />;
   };
 
+  const getLinkForItem = (item: LinkedItem) => {
+    const t = item.type.toLowerCase();
+    if (t.includes('finding')) return `/findings/${item.id}`;
+    if (t.includes('correlation') || t.includes('graph')) return `/correlation/${item.id}`;
+    if (t.includes('asset')) return `/company?asset=${item.id}`;
+    return "#";
+  };
+
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
       <div className="max-w-5xl mx-auto space-y-6">
@@ -387,7 +395,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
               </h3>
               <div className="space-y-3">
                 {finding.linked_items.map(item => (
-                  <Link key={item.id} href="#" className="flex items-start gap-3 p-2 rounded-md hover:bg-accent transition-colors group">
+                  <Link key={item.id} href={getLinkForItem(item)} className="flex items-start gap-3 p-2 rounded-md hover:bg-accent transition-colors group">
                     <LinkIcon className="h-4 w-4 text-muted-foreground group-hover:text-primary mt-0.5" />
                     <div>
                       <div className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">{item.name}</div>

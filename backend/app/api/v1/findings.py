@@ -12,6 +12,14 @@ from app.schemas.finding import FindingResponse, FindingUpdate
 
 router = APIRouter(prefix="/findings", tags=["findings"])
 
+class CreateIntelFindingRequest(BaseModel):
+    title: str
+    description: str
+    severity: Severity
+    source: str # e.g. 'Dark Web Monitoring' or 'Threat Indicator'
+    raw_data: Optional[Dict[str, Any]] = None
+
+
 class FindingsListResponse(BaseModel):
     items: List[FindingResponse]
     total: int
@@ -59,6 +67,34 @@ async def list_findings(
     
     # Fastapi will automatically parse SQLAlchemy models if response_model is correct
     return {"items": items, "total": total, "limit": limit, "offset": offset}
+
+@router.post("/from-intel", status_code=status.HTTP_201_CREATED)
+async def create_intel_finding(request: CreateIntelFindingRequest, org_id: str, db: AsyncSession = Depends(get_db)):
+    """Promotes a Threat Intelligence observation directly into a formalized tracked Finding."""
+    try:
+        org_uuid = uuid.UUID(org_id)
+    except ValueError:
+        org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        
+    finding_id = uuid.uuid4()
+    
+    new_finding = Finding(
+        id=finding_id,
+        org_id=org_uuid,
+        title=request.title,
+        description=request.description,
+        severity=request.severity,
+        status=FindingStatus.open,
+        finding_type=FindingType.threat_intel,
+        source_workflow=WorkflowName.osint,
+        raw_data=request.raw_data or {"source": request.source},
+        detected_at=datetime.utcnow()
+    )
+    
+    db.add(new_finding)
+    await db.commit()
+    
+    return {"status": "success", "finding_id": str(finding_id), "message": "Observation successfully promoted to Finding."}
 
 @router.get("/{finding_id}")
 async def get_finding(finding_id: str, org_id: str, db: AsyncSession = Depends(get_db)):

@@ -10,6 +10,7 @@ export default function SubscriptionPage() {
   const [pricingTiers, setPricingTiers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [isDowngradeModalOpen, setIsDowngradeModalOpen] = useState(false);
   const [targetTier, setTargetTier] = useState<string | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"card" | "ach" | "apple_pay" | "google_pay">("card");
@@ -37,7 +38,15 @@ export default function SubscriptionPage() {
   const initiateCheckout = (newTier: string) => {
     if (newTier === tier) return; // Already on this tier
     setTargetTier(newTier);
-    setIsCheckoutModalOpen(true);
+
+    const currentTierObj = pricingTiers.find(t => t.id === tier);
+    const newTierObj = pricingTiers.find(t => t.id === newTier);
+
+    if (currentTierObj && newTierObj && newTierObj.monthlyPrice < currentTierObj.monthlyPrice) {
+      setIsDowngradeModalOpen(true);
+    } else {
+      setIsCheckoutModalOpen(true);
+    }
   };
 
   const processFluidpayCheckout = async () => {
@@ -45,7 +54,7 @@ export default function SubscriptionPage() {
     setIsProcessingPayment(true);
     
     // In production, Fluidpay.js would generate this secure PCI-compliant token
-    const secureMockToken = "tok_fluidpay_vault_auth_xyz123";
+    const secureMockToken = isDowngradeModalOpen ? "" : "tok_fluidpay_vault_auth_xyz123";
     
     try {
       const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/billing/checkout`, {
@@ -61,10 +70,11 @@ export default function SubscriptionPage() {
       const data = await res.json();
       if (res.ok && data.status === "success") {
         setTier(targetTier);
-        toast.success(data.detail || `Successfully upgraded to ${targetTier.toUpperCase()}`);
+        toast.success(data.detail || `Successfully changed subscription to ${targetTier.toUpperCase()}`);
         setIsCheckoutModalOpen(false);
+        setIsDowngradeModalOpen(false);
       } else {
-        toast.error(data.detail || "Payment declined by the gateway.");
+        toast.error(data.detail || "Transaction declined by the gateway.");
       }
     } catch (err) {
       console.error(err);
@@ -308,6 +318,41 @@ export default function SubscriptionPage() {
                     <span className="text-blue-500">G</span><span className="text-red-500">o</span><span className="text-yellow-500">o</span><span className="text-blue-500">g</span><span className="text-green-500">l</span><span className="text-red-500">e</span> Pay
                   </button>
                 )}
+             </div>
+          </div>
+        </div>
+      )}
+
+      {isDowngradeModalOpen && targetTier && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-card w-full max-w-md p-6 rounded-xl border border-border shadow-lg">
+             <h2 className="text-xl font-bold mb-2 text-foreground">Confirm Subscription Downgrade</h2>
+             <p className="text-sm text-muted-foreground mb-6">
+               You are about to downgrade your organization to the <strong>{targetTier.toUpperCase()}</strong> tier capability.
+             </p>
+             
+             <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm p-4 rounded-lg mb-8 space-y-2">
+               <p className="font-semibold mb-1">Warning: Loss of Platform Features</p>
+               <p>By executing this downgrade, you will immediately lose access to advanced correlation engines, real-time remediation flows, and potentially exceed your active user maximums.</p>
+               <p className="text-xs opacity-80 mt-2 italic">Note: Zero funds will be explicitly charged during this parameter swap.</p>
+             </div>
+
+             <div className="flex justify-end gap-3">
+                <button 
+                  onClick={() => setIsDowngradeModalOpen(false)}
+                  disabled={isProcessingPayment}
+                  className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-lg transition-colors text-muted-foreground"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={processFluidpayCheckout}
+                  disabled={isProcessingPayment}
+                  className="px-5 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground text-sm font-medium rounded-lg transition-colors flex items-center gap-2 shadow-sm"
+                >
+                  {isProcessingPayment && <div className="w-4 h-4 border-2 border-destructive-foreground/30 border-t-destructive-foreground rounded-full animate-spin" />}
+                  {isProcessingPayment ? "Downgrading..." : "Confirm Downgrade"}
+                </button>
              </div>
           </div>
         </div>

@@ -64,6 +64,30 @@ export default function ThreatIntelPage() {
     }
   };
 
+  const handlePromoteToFinding = async (item: any, type: "indicator" | "darkweb") => {
+    try {
+      const payload = {
+        title: type === "darkweb" ? `Dark Web Alert: ${item.title}` : `Threat Indicator: ${item.value}`,
+        description: type === "darkweb" ? item.description : `Detected intelligence indicator ${item.value} associated with ${item.associated_actor_name || 'unknown actor'}.`,
+        severity: item.severity || "high",
+        source: type === "darkweb" ? "Dark Web Monitoring" : "Threat Intel Feed",
+        raw_data: item
+      };
+
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/findings/from-intel?org_id=default`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+         setExecutionSuccess(prev => ({ ...prev, [`promote_${item.id}`]: true }));
+      }
+    } catch (e) {
+      console.error("Failed to promote observation", e);
+    }
+  };
+
   const fetchBreaches = async (offset: number) => {
     try {
       const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/breach-reports?org_id=default&limit=${BREACH_LIMIT}&offset=${offset}`);
@@ -419,8 +443,14 @@ export default function ThreatIntelPage() {
                                          )}
                                        </button>
                                     )}
-                                    <button className="px-4 py-2 bg-card border border-border hover:bg-muted text-sm font-medium rounded transition-colors">
-                                      Create Ticket
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); handlePromoteToFinding(ind, 'indicator'); }}
+                                      disabled={executionSuccess[`promote_${ind.id}`]}
+                                      className="px-4 py-2 bg-card border border-border hover:bg-muted text-sm font-medium rounded transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                      {executionSuccess[`promote_${ind.id}`] ? (
+                                        <><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Promoted</>
+                                      ) : "Promote to Finding"}
                                     </button>
                                   </div>
                                 </div>
@@ -529,10 +559,19 @@ export default function ThreatIntelPage() {
                 </p>
                 
                 <div className="flex justify-between items-center text-xs text-muted-foreground mt-auto pt-4 border-t border-border/50">
-                  <span className="flex items-center gap-1 font-medium text-foreground bg-muted px-2 py-1 rounded">
+                  <span className="flex items-center gap-1 font-medium text-foreground bg-muted px-2 py-1 rounded hidden sm:flex">
                     Source: {alert.source}
                   </span>
-                  <span>{formatDate(alert.detected_at)}</span>
+                  <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                    <span>{formatDate(alert.detected_at)}</span>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handlePromoteToFinding(alert, 'darkweb'); }}
+                      disabled={executionSuccess[`promote_${alert.id}`]}
+                      className="px-2.5 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                    >
+                      {executionSuccess[`promote_${alert.id}`] ? "Converted to Risk" : "Convert to Finding"}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

@@ -1,7 +1,8 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { User, Shield, Key, Bell, Smartphone, Mail, AlertCircle } from "lucide-react";
+import { User, Shield, Key, Bell, Smartphone, Mail, AlertCircle, Palette } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -38,6 +39,16 @@ export default function ProfilePage() {
              <div className="space-y-4">
                  <p className="text-sm text-muted-foreground">Update your password or configure Two-Factor Authentication (2FA).</p>
                  <button className="bg-muted hover:bg-muted-foreground/20 text-foreground px-4 py-2 rounded-md text-sm font-medium transition-colors border border-border">Send Password Reset Email</button>
+             </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2"><Palette className="w-5 h-5 text-muted-foreground" /> Display & UI Preferences</h2>
+             <div className="space-y-4">
+                 <p className="text-sm text-muted-foreground">Customize your viewing experience globally across the vCISO platform.</p>
+                 <div className="mt-4">
+                    <ThemeToggle />
+                 </div>
              </div>
           </div>
 

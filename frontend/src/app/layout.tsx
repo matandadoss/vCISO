@@ -8,6 +8,7 @@ import { OnboardingGuard } from "@/components/layout/OnboardingGuard";
 import { AuthGuard } from "@/components/layout/AuthGuard";
 import { ControlTowerProvider } from "@/contexts/ControlTowerContext";
 import { ControlTowerDrawer } from "@/components/layout/ControlTowerDrawer";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,20 +23,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen flex antialiased bg-background`}>
-        <AuthProvider>
-          <RoleProvider>
-            <ControlTowerProvider>
-              <AuthGuard>
-                <OnboardingGuard>
-                  {children}
-                  <ControlTowerDrawer />
-                </OnboardingGuard>
-              </AuthGuard>
-            </ControlTowerProvider>
-          </RoleProvider>
-        </AuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <AuthProvider>
+            <RoleProvider>
+              <ControlTowerProvider>
+                <AuthGuard>
+                  <OnboardingGuard>
+                    {children}
+                    <ControlTowerDrawer />
+                  </OnboardingGuard>
+                </AuthGuard>
+              </ControlTowerProvider>
+            </RoleProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
