@@ -25,7 +25,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "[2/4] Deploying Backend to Cloud Run..."
-gcloud run deploy vciso-backend --image gcr.io/$PROJECT_ID/vciso-backend --region us-central1 --platform managed --allow-unauthenticated --set-env-vars GOOGLE_CLOUD_PROJECT=$PROJECT_ID
+gcloud run deploy vciso-backend --image gcr.io/$PROJECT_ID/vciso-backend --region us-central1 --platform managed --allow-unauthenticated --set-env-vars GOOGLE_CLOUD_PROJECT=$PROJECT_ID --service-account="vciso-backend-sa@$PROJECT_ID.iam.gserviceaccount.com"
 if ($LASTEXITCODE -ne 0) { 
     try { python .\backend\scripts\send_deployment_sms.py "ALERT: Cloud Run deployment FAILED during Backend deployment phase!" } catch {}
     Write-Error "Backend deployment failed"
@@ -41,7 +41,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "[4/4] Deploying Frontend to Cloud Run..."
-gcloud run deploy vciso-frontend --image gcr.io/$PROJECT_ID/vciso-frontend --region us-central1 --platform managed --allow-unauthenticated
+gcloud run deploy vciso-frontend --image gcr.io/$PROJECT_ID/vciso-frontend --region us-central1 --platform managed --allow-unauthenticated --service-account="vciso-frontend-sa@$PROJECT_ID.iam.gserviceaccount.com"
 if ($LASTEXITCODE -ne 0) { 
     try { python .\backend\scripts\send_deployment_sms.py "ALERT: Cloud Run deployment FAILED during final Frontend deployment phase!" } catch {}
     Write-Error "Frontend deployment failed"

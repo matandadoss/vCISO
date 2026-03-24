@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Bell, Mail, MessageSquare, AlertTriangle, Smartphone } from "lucide-react";
-import api from "@/lib/api";
+import { fetchWithAuth } from "@/lib/api";
 
 export default function NotificationsSettingsPage() {
   const [receiveWeeklyDigest, setReceiveWeeklyDigest] = useState(true);
@@ -14,7 +14,11 @@ export default function NotificationsSettingsPage() {
     try {
       setIsLoading(true);
       setReceiveWeeklyDigest(enabled);
-      await api.put("/users/me/preferences", { receives_weekly_digest: enabled });
+      await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me/preferences?org_id=default`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ receives_weekly_digest: enabled })
+      });
     } catch (e) {
       console.error("Failed to update preferences", e);
       setReceiveWeeklyDigest(!enabled); // revert on failure
