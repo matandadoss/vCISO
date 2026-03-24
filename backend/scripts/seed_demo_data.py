@@ -15,6 +15,7 @@ from sqlalchemy import select
 
 async def seed_robust_demo():
     print("Starting robust demo data seed...")
+    
     async with SessionLocal() as session:
         org_id = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
 
