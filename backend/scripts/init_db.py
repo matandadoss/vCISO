@@ -9,11 +9,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from sqlalchemy.ext.asyncio import create_async_engine
 from app.models.base import BaseModel
 from app.models.domain import * # Import all models to ensure metadata is populated
-from app.db.session import SQLALCHEMY_DATABASE_URL, SessionLocal
+from app.db.session import engine, SessionLocal
 
 async def init_db():
-    print(f"Connecting to database: {SQLALCHEMY_DATABASE_URL}")
-    engine = create_async_engine(SQLALCHEMY_DATABASE_URL, echo=True)
+    print("Connecting to database via dynamic Cloud SQL engine...")
     
     # Create all tables
     print("Creating database tables...")

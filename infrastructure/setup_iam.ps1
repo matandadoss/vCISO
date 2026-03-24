@@ -12,7 +12,13 @@ $BACKEND_SA = "vciso-backend-sa@$PROJECT_ID.iam.gserviceaccount.com"
 Write-Host "Binding roles to vciso-backend-sa..."
 $backendRoles = @(
     "roles/cloudsql.client",
+    "roles/cloudsql.instanceUser",
     "roles/aiplatform.user",
+    "roles/secretmanager.secretAccessor",
+    "roles/cloudtrace.agent",
+    "roles/logging.logWriter",
+    "roles/monitoring.metricWriter"
+)
     "roles/secretmanager.secretAccessor",
     "roles/cloudtrace.agent",
     "roles/logging.logWriter",
