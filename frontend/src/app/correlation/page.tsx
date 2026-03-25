@@ -42,8 +42,34 @@ export default function OSINTCorrelationPage() {
    const [metrics, setMetrics] = useState<EngineMetrics | null>(null);
    const [loading, setLoading] = useState(true);
    const [expandedRow, setExpandedRow] = useState<string | null>(null);
+   const [executionSuccess, setExecutionSuccess] = useState<Record<string, boolean>>({});
    const { setPageContext } = useControlTower();
    const [userStack, setUserStack] = useState<string[]>([]);
+
+   const handlePromoteToFinding = async (corr: OSINTCorrelation, e: React.MouseEvent) => {
+      e.stopPropagation();
+      try {
+         const payload = {
+            correlation_id: corr.id,
+            title: `Cyber Threat: ${corr.source_name} attacking ${corr.target_name}`,
+            description: corr.external_signal + "\n\nImpact: " + corr.impact_summary + "\n\nRecommendation: " + corr.recommended_action,
+            severity: corr.severity_tag,
+            raw_data: corr
+         };
+
+         const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/findings/from-correlation?org_id=default`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+         });
+
+         if (res.ok) {
+            setExecutionSuccess(prev => ({ ...prev, [`promote_${corr.id}`]: true }));
+         }
+      } catch (err) {
+         console.error("Failed to promote cyber threat analyzer finding", err);
+      }
+   };
 
    useEffect(() => {
       setPageContext({
@@ -256,7 +282,12 @@ export default function OSINTCorrelationPage() {
                               </div>
                            </div>
                            <div className="flex flex-wrap items-center gap-4 md:gap-6 self-start md:self-auto w-full md:w-auto justify-between md:justify-end">
-                              <div className="text-sm font-bold font-mono" style={{ color: corr.progress_color }}>Danger Level: {corr.progress_percent}%</div>
+                              <div className="group/tooltip relative">
+                                 <div className="text-sm font-bold font-mono cursor-help" style={{ color: corr.progress_color }}>Danger Level: {corr.progress_percent}%</div>
+                                 <div className="absolute right-0 top-full mt-2 w-64 bg-popover border border-border text-foreground text-xs font-normal rounded-md shadow-xl p-4 hidden group-hover/tooltip:block pointer-events-none text-left z-50 normal-case tracking-normal leading-relaxed">
+                                    Computed composite risk indicating the immediate threat to your business operations. This score is elevated because <strong>{corr.target_name}</strong> is present in your environment.
+                                 </div>
+                              </div>
                               {expandedRow === corr.id ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
                            </div>
                         </div>
@@ -269,13 +300,23 @@ export default function OSINTCorrelationPage() {
                                  <div>
                                      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Where we found this:</h4>
                                      <div className="flex items-center gap-2 text-sm text-foreground">
-                                        <div className="px-2 py-1 rounded bg-muted font-medium">{corr.source_name} ({corr.source_type})</div>
+                                        <div className="group/tooltip relative">
+                                           <div className="px-2 py-1 rounded bg-muted font-medium cursor-help">{corr.source_name} ({corr.source_type})</div>
+                                           <div className="absolute left-0 top-full mt-2 w-64 bg-popover border border-border text-foreground text-xs font-normal rounded-md shadow-xl p-4 hidden group-hover/tooltip:block pointer-events-none text-left z-50 normal-case tracking-normal leading-relaxed">
+                                              The external threat intelligence source or observation feed where this attack pattern or breach indicator was initially identified.
+                                           </div>
+                                        </div>
                                      </div>
                                  </div>
                                  <div>
                                      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">What is at risk:</h4>
                                      <div className="flex items-center gap-2 text-sm text-foreground">
-                                        <div className="px-2 py-1 rounded bg-muted border border-border font-medium">{corr.target_name}</div>
+                                        <div className="group/tooltip relative">
+                                           <div className="px-2 py-1 rounded bg-muted border border-border font-medium cursor-help">{corr.target_name}</div>
+                                           <div className="absolute left-0 top-full mt-2 w-64 bg-popover border border-border text-foreground text-xs font-normal rounded-md shadow-xl p-4 hidden group-hover/tooltip:block pointer-events-none text-left z-50 normal-case tracking-normal leading-relaxed">
+                                              The specific internal asset, software, or third-party vendor in your organization's footprint that matches the attacker's target profile.
+                                           </div>
+                                        </div>
                                      </div>
                                  </div>
                               </div>
@@ -294,8 +335,8 @@ export default function OSINTCorrelationPage() {
                               </div>
 
                               {/* Footer Items */}
-                              <div className="flex flex-col justify-between gap-4 mt-5 pt-4 border-t border-border text-xs text-muted-foreground">
-                                 <div className="flex flex-wrap items-center gap-4">
+                              <div className="flex flex-col md:flex-row justify-between gap-4 mt-5 pt-4 border-t border-border text-xs text-muted-foreground w-full">
+                                 <div className="flex flex-wrap items-center gap-4 flex-1">
                                     {corr.footer_stats?.map((stat, idx) => (
                                        <div key={idx} className="flex items-center gap-1.5">
                                           {idx === 0 && <AlertCircle className="w-3.5 h-3.5" />}
@@ -304,6 +345,15 @@ export default function OSINTCorrelationPage() {
                                        </div>
                                     ))}
                                  </div>
+                                 <button 
+                                    onClick={(e) => handlePromoteToFinding(corr, e)}
+                                    disabled={executionSuccess[`promote_${corr.id}`]}
+                                    className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium rounded transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full md:w-auto mt-2 md:mt-0"
+                                 >
+                                    {executionSuccess[`promote_${corr.id}`] ? (
+                                       <><Activity className="w-4 h-4" /> Promoted to Finding</>
+                                    ) : "Promote to Finding"}
+                                 </button>
                               </div>
                            </div>
                         )}

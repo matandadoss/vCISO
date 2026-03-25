@@ -1,7 +1,7 @@
 "use client";
 import { fetchWithAuth } from "@/lib/api";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { formatDate, cn } from "@/lib/utils";
 import { Search, FileCheck, CheckCircle2, AlertCircle, Clock, Plus, X, Info } from "lucide-react";
 import Link from "next/link";
@@ -14,6 +14,31 @@ export default function CompliancePage() {
   const [selectedFramework, setSelectedFramework] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [expandedReq, setExpandedReq] = useState<string | null>(null);
+  const [executionSuccess, setExecutionSuccess] = useState<Record<string, boolean>>({});
+
+  const handlePromoteToFinding = async (req: any) => {
+    try {
+      const payload = {
+        requirement_id: req.id,
+        title: `Compliance Gap: ${req.requirement_id_code} - ${req.title}`,
+        description: `Control failure for ${req.title}. Evidence status: ${req.evidence_status}. Details: ${req.description || 'N/A'}`
+      };
+
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/findings/from-compliance?org_id=default`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+         setExecutionSuccess(prev => ({ ...prev, [`promote_${req.id}`]: true }));
+         setRequirements(prev => prev.map(r => r.id === req.id ? { ...r, status: 'non_compliant' } : r));
+      }
+    } catch (e) {
+      console.error("Failed to promote requirement", e);
+    }
+  };
 
   useEffect(() => {
     // Fetch Frameworks
@@ -157,7 +182,14 @@ export default function CompliancePage() {
                       </td>
                     </tr>
                   ) : sortedRequirements.map((req: any) => (
-                    <tr key={req.id} className="hover:bg-muted/30 transition-colors group">
+                    <React.Fragment key={req.id}>
+                      <tr 
+                        onClick={() => setExpandedReq(expandedReq === req.id ? null : req.id)}
+                        className={cn(
+                          "transition-colors cursor-pointer group",
+                          expandedReq === req.id ? "bg-accent/50" : "hover:bg-muted/30"
+                        )}
+                      >
                       <td className="px-6 py-4">
                         <span className="font-mono font-medium text-foreground">{req.requirement_id_code}</span>
                       </td>
@@ -185,11 +217,61 @@ export default function CompliancePage() {
                           {req.evidence_status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right text-muted-foreground whitespace-nowrap">
+                      <td className="px-6 py-4 text-right text-muted-foreground whitespace-nowrap flex items-center justify-end gap-2">
                         {req.last_reviewed ? formatDate(req.last_reviewed) : "Never"}
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className={cn("h-4 w-4 transition-transform", expandedReq === req.id ? "rotate-180" : "rotate-0")}
+                        >
+                          <path d="m6 9 6 6 6-6"/>
+                        </svg>
                       </td>
                     </tr>
-                  ))}
+                    {expandedReq === req.id && (
+                      <tr className="bg-accent/10 border-b border-border">
+                        <td colSpan={5} className="px-0 py-0">
+                          <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-4 md:col-span-2">
+                                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Control Details</h4>
+                                <p className="text-sm text-muted-foreground">{req.description || "No description available."}</p>
+                                
+                                <div className="mt-4 flex gap-3">
+                                  <button 
+                                      onClick={(e) => { e.stopPropagation(); handlePromoteToFinding(req); }}
+                                      disabled={executionSuccess[`promote_${req.id}`] || req.status === 'compliant'}
+                                      className="px-4 py-2 bg-card border border-border hover:bg-muted text-sm font-medium rounded transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                      {executionSuccess[`promote_${req.id}`] ? (
+                                        <><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Promoted to Finding (Risk Tracked)</>
+                                      ) : req.status === 'compliant' ? "Compliant - No Risk" : "Promote to Finding (Track Risk)"}
+                                  </button>
+                                </div>
+                            </div>
+                            <div className="space-y-4 border-t md:border-t-0 md:border-l border-border/50 md:pl-6">
+                                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">Evidence Status</h4>
+                                <span className={cn(
+                                  "text-sm font-medium capitalize",
+                                  req.evidence_status === "collected" ? "text-green-500" :
+                                    req.evidence_status === "incomplete" ? "text-yellow-500" :
+                                      "text-red-500"
+                                )}>
+                                  {req.evidence_status}
+                                </span>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
                   {!loading && requirements.length === 0 && (
                     <tr>
                       <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">

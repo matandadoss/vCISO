@@ -5,6 +5,8 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-primary: var(--primary);
@@ -24,6 +26,8 @@
     --foreground: #0f172a;
     --card: #ffffff;
     --card-foreground: #0f172a;
+    --popover: #ffffff;
+    --popover-foreground: #0f172a;
     --border: #e2e8f0;
     --input: #e2e8f0;
     --primary: #2563eb;
@@ -42,6 +46,8 @@
     --foreground: #f8fafc;
     --card: #0f172a;
     --card-foreground: #f8fafc;
+    --popover: #0f172a;
+    --popover-foreground: #f8fafc;
     --border: #1e293b;
     --input: #1e293b;
     --primary: #3b82f6;

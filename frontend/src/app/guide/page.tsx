@@ -88,10 +88,12 @@ export default function UserGuidePage() {
                  <p className="text-base leading-relaxed">
                    The <strong>Dashboard</strong> is your daily command center. Think of it like a credit score, but for your company's safety.
                  </p>
-                 <p className="text-base leading-relaxed">
-                   At the top, you will see your <strong>Overall Security Score</strong>. A high score means your business is well-protected against attacks that could cause downtime or leak customer data. A dropping score means a new risk has appeared and needs your attention.
-                 </p>
-                 <p className="text-base leading-relaxed">
+                 <h3 className="text-xl font-bold mt-6 mb-2 text-foreground">Measurements Explained:</h3>
+                 <ul className="list-disc pl-5 space-y-2 mt-4 text-base">
+                   <li><strong>Overall Security Score (0-100):</strong> This represents your corporate risk baseline. It is dynamically dragged down by failing Compliance protocols, new High-Severity Findings, or failing Vendor software. A score under 70 is considered an immediate operational hazard.</li>
+                   <li><strong>Risk Trend Indicator:</strong> Displays the points gained or lost over the last 7 days. A consistent negative trend suggests a growing backlog of technical debt.</li>
+                 </ul>
+                 <p className="text-base leading-relaxed mt-4">
                    Below the score, the Dashboard highlights the most urgent issues—like a broken firewall or an exposed database—so your team knows exactly what to fix first without digging through confusing technical logs.
                  </p>
                </div>
@@ -108,18 +110,12 @@ export default function UserGuidePage() {
                  <p className="text-base leading-relaxed">
                    The <strong>Findings</strong> page represents your security "to-do list." Whenever the system discovers an open door or a weakened lock in your company's network, it puts a ticket here.
                  </p>
-                 <p className="text-base leading-relaxed">
-                   Instead of blasting you with thousands of confusing alerts, the platform automatically groups related problems together and organizes them from most dangerous to least dangerous. 
-                 </p>
-                 <div className="bg-muted border border-border rounded-lg p-6 mt-6">
-                   <h3 className="text-xl font-bold mt-0 mb-3 text-foreground">How to secure an issue:</h3>
-                   <ol className="list-decimal list-outside ml-5 space-y-2 text-base leading-relaxed marker:text-muted-foreground font-medium text-foreground/90 mb-0">
-                     <li>Open the <strong>Findings</strong> tab.</li>
-                     <li>Look for anything labeled <span className="text-red-500 font-bold">Critical</span> or <span className="text-orange-500 font-bold">High</span>.</li>
-                     <li>Click the issue to see a simple explanation of what went wrong.</li>
-                     <li>Send the provided step-by-step repair instructions directly to your IT team.</li>
-                   </ol>
-                 </div>
+                 <h3 className="text-xl font-bold mt-6 mb-2 text-foreground">Measurements & Fields Explained:</h3>
+                 <ul className="list-disc pl-5 space-y-2 mt-4 text-base">
+                   <li><strong>Severity:</strong> Either Critical, High, Medium, or Low. Critical means drop-everything, emergency patching required. Low usually means to schedule a fix for the next IT sprint.</li>
+                   <li><strong>Risk Score (0-10.0):</strong> An explicit, mathematically generated score based on the CVSS (Common Vulnerability Scoring System). A perfect 10.0 indicates remote hackers can immediately compromise the system without passwords.</li>
+                   <li><strong>Status:</strong> New (unacknowledged), In Progress (working), Resolved (fixed), or Accepted (the business accepts the risk and moves it to the Risk Register).</li>
+                 </ul>
                </div>
              </div>
            )}
@@ -132,14 +128,14 @@ export default function UserGuidePage() {
                <h2 className="text-3xl font-bold tracking-tight text-foreground">Compliance</h2>
                <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
                  <p className="text-base leading-relaxed">
-                   The <strong>Compliance</strong> tracker acts as your automated business auditor. Passing security audits (like SOC 2 or HIPAA) is often required to win big enterprise contracts and avoid massive government fines.
+                   The <strong>Compliance</strong> tracker acts as your automated business auditor. Passing security audits (like SOC 2 or HIPAA) is critical for enterprise sales.
                  </p>
-                 <p className="text-base leading-relaxed">
-                   Instead of spending weeks filling out confusing spreadsheets, this page automatically checks your systems against the official rulebooks 24/7.
-                 </p>
-                 <p className="text-base leading-relaxed">
-                   When you need to prove your safety to a client or an auditor, simply visit this page and click <strong>Export Report</strong> to instantly generate official proof that you are following the rules safely.
-                 </p>
+                 <h3 className="text-xl font-bold mt-6 mb-2 text-foreground">Measurements & Fields Explained:</h3>
+                 <ul className="list-disc pl-5 space-y-2 mt-4 text-base">
+                   <li><strong>Readiness Percentage:</strong> The total percentage of controls perfectly secured out of the required controls in your chosen framework (e.g., passing 80 out of 100 SOC 2 rules yields an 80% Readiness limit).</li>
+                   <li><strong>Control Status:</strong> Compliant (rule passed), Partial (passes on some servers, fails on others), Non-Compliant (completely fails the rule).</li>
+                   <li><strong>Evidence Status:</strong> "Collected" means the AI successfully pulled cryptographic proof from your AWS/GCP architecture. "Missing" means you must upload manual proof (like an HR policy PDF).</li>
+                 </ul>
                </div>
              </div>
            )}
@@ -152,11 +148,13 @@ export default function UserGuidePage() {
                <h2 className="text-3xl font-bold tracking-tight text-foreground">Vendor Risk</h2>
                <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
                  <p className="text-base leading-relaxed">
-                   Your business uses many third-party software tools (like payroll systems, accounting tools, or email providers). If they get hacked, your company data could easily get stolen too.
+                   Your business uses many third-party software tools (like payroll systems, accounting tools). If they get hacked, your company data could easily get stolen too.
                  </p>
-                 <p className="text-base leading-relaxed">
-                   The <strong>Vendor Risk</strong> module continuously performs background checks on your external partners. If a software company you use suffers a data breach or an outage, this page turns red to warn you. By doing this, your procurement team can accurately refuse to buy dangerous software before it's even installed on your employees' laptops.
-                 </p>
+                 <h3 className="text-xl font-bold mt-6 mb-2 text-foreground">Measurements & Fields Explained:</h3>
+                 <ul className="list-disc pl-5 space-y-2 mt-4 text-base">
+                   <li><strong>Risk Rating:</strong> Evaluates external posture into simple buckets (Critical, High, Medium, Low). Vendors scored High have active vulnerabilities or recent data-breach histories. Procurement teams should reject them.</li>
+                   <li><strong>Status:</strong> Shows if the vendor is Operational or currently hit by an Outage/Disruption affecting your supply chain.</li>
+                 </ul>
                </div>
              </div>
            )}
@@ -171,9 +169,11 @@ export default function UserGuidePage() {
                  <p className="text-base leading-relaxed">
                    The <strong>Threat Intel</strong> page is your early-warning radar for global cyber attacks. It reads the news 24/7 to track what hackers are doing worldwide.
                  </p>
-                 <p className="text-base leading-relaxed">
-                   If a new hacking trick is discovered on the internet, the Virtual CISO automatically checks to see if your company happens to use the targeted equipment. If you are vulnerable to the breaking headline, a massive banner will warn you instantly: <strong>"Your business is affected."</strong>
-                 </p>
+                 <h3 className="text-xl font-bold mt-6 mb-2 text-foreground">Measurements & Fields Explained:</h3>
+                 <ul className="list-disc pl-5 space-y-2 mt-4 text-base">
+                   <li><strong>Match Confidence (%):</strong> Represents the mathematical certainty that you use the exact hardware or software the hackers are aggressively targeting worldwide.</li>
+                   <li><strong>Severity Level:</strong> Determines how deeply the global threat could disrupt core corporate metrics (Critical vs. High).</li>
+                 </ul>
                </div>
              </div>
            )}
@@ -186,11 +186,20 @@ export default function UserGuidePage() {
                <h2 className="text-3xl font-bold tracking-tight text-foreground">Cyber Threat Analyzer</h2>
                <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
                  <p className="text-base leading-relaxed">
-                   This is the core brain behind your Virtual CISO. The <strong>Cyber Threat Analyzer</strong> acts like an expert detective connecting the dots.
+                   This is the core brain behind your Virtual CISO. The <strong>Cyber Threat Analyzer</strong> maps global threat actor activity directly against your specific infrastructure footprint to surface highly actionable attack paths.
                  </p>
-                 <p className="text-base leading-relaxed">
-                   It looks at a hacker's strategy, looks at an open door on your network, and draws a red line showing exactly how an attack could happen. By showing the visual path of a potential disaster before it ever occurs, you can confidently block the hacker before they even try.
-                 </p>
+                 <h3 className="text-xl font-bold mt-6 mb-2 text-foreground">Key Health Metrics Explained:</h3>
+                 <ul className="list-disc pl-5 space-y-2 mt-4 text-base">
+                   <li><strong>Targeted Threats Found:</strong> The total number of unique hacker campaigns, dark web breaches, or botnets currently scanning the internet for tools you have told the system your company uses. (A red "+2" means new threats were detected today).</li>
+                   <li><strong>Immediate Action Required:</strong> The total count of verified, highly-exploitable attack vectors where a firewall or defense mechanism has failed. This number should absolutely stay at ZERO.</li>
+                   <li><strong>Current Mitigation Score (%):</strong> An averaged 'defensive strength' score. If the score is 68%, it means your firewalls, WAFs, and Multi-Factor Auth setups only successfully block 68% of the attack strategies employed by the specific hackers actively targeting you.</li>
+                   <li><strong>Data Sources Scanned:</strong> Shows internal connectivity; it represents the number of external news feeds, dark web streams, and government vulnerability databases actively supplying intelligence to the AI.</li>
+                 </ul>
+                 <h3 className="text-xl font-bold mt-6 mb-2 text-foreground">Threat Listing Fields:</h3>
+                 <ul className="list-disc pl-5 space-y-2 mt-4 text-base">
+                   <li><strong>Danger Level (%):</strong> Every mapped row displays a percentage (e.g., 95%). This is the composite chance of your business experiencing catastrophic financial or operational failure due specifically to that threat.</li>
+                   <li><strong>Promote to Finding:</strong> An action button inside expanded details. It lets you extract these AI predictions and drop them straight into your active IT workflow queue as an actionable Finding.</li>
+                 </ul>
                </div>
              </div>
            )}
@@ -203,11 +212,13 @@ export default function UserGuidePage() {
                <h2 className="text-3xl font-bold tracking-tight text-foreground">Security Testing</h2>
                <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
                  <p className="text-base leading-relaxed">
-                   The <strong>Security Testing</strong> page answers the ultimate question: "Do our locks actually work in the real world?" 
+                   Instead of waiting to get hurt, this tool sends safe, friendly robots to try and break into your website. It tests if your team set up the defenses correctly.
                  </p>
-                 <p className="text-base leading-relaxed">
-                   Instead of waiting to get hurt, this tool sends safe, friendly robots to try and break into your website. It tests if your team set up the defenses correctly. If our robots can break in, it proves that real thieves can too. We will hand you a detailed list of everything we bypassed so you can patch the holes safely and cleanly.
-                 </p>
+                 <h3 className="text-xl font-bold mt-6 mb-2 text-foreground">Measurements Explained:</h3>
+                 <ul className="list-disc pl-5 space-y-2 mt-4 text-base">
+                   <li><strong>Findings Discovered:</strong> The absolute number of real vulnerabilities our simulation officially exploited. False positives are weeded out before they reach this metric.</li>
+                   <li><strong>Campaign Status:</strong> Can be Scheduled (waiting in queue), Running (actively attacking), or Completed (done, read logs).</li>
+                 </ul>
                </div>
              </div>
            )}
@@ -220,10 +231,7 @@ export default function UserGuidePage() {
                <h2 className="text-3xl font-bold tracking-tight text-foreground">My Company</h2>
                <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
                  <p className="text-base leading-relaxed">
-                   The <strong>My Company</strong> page is where you teach the Virtual CISO what stuff you own. 
-                 </p>
-                 <p className="text-base leading-relaxed">
-                   By actively listing your servers, websites, security tools, and the rules you must follow, you allow the AI to protect you effectively. If the AI doesn't know you own a specific website, it cannot warn you if that website gets targeted. Keeping this list accurate mathematically prevents false alarms.
+                   The <strong>My Company</strong> page is where you teach the Virtual CISO what stuff you own. By actively listing your servers, websites, security tools, and the rules you must follow, you allow the AI to protect you effectively. If the AI doesn't know you own a specific website, it cannot warn you if that website gets targeted. Keeping this list accurate mathematically prevents false alarms.
                  </p>
                </div>
              </div>
@@ -237,10 +245,7 @@ export default function UserGuidePage() {
                <h2 className="text-3xl font-bold tracking-tight text-foreground">AI Control Tower</h2>
                <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
                  <p className="text-base leading-relaxed">
-                   The <strong>AI Control Tower</strong> is your personal AI assistant. It lives inside the platform and understands everything happening securely about your company's setup behind the scenes. 
-                 </p>
-                 <p className="text-base leading-relaxed">
-                   Whenever you don't understand a security alert or an error message, simply open the AI Control Tower on the right side of the screen. You can ask it straight-forward questions like <em>"What does this warning mean for my revenue?"</em> or <em>"How do I rapidly fix this?"</em> and it will explain the answers clearly.
+                   The <strong>AI Control Tower</strong> is your personal AI assistant. It lives inside the platform and understands everything happening securely about your company's setup behind the scenes. Whenever you don't understand a security alert or an error message, simply open the AI Control Tower on the right side of the screen. You can ask it straight-forward questions like <em>"What does this warning mean for my revenue?"</em> or <em>"How do I rapidly fix this?"</em> and it will explain the answers clearly.
                  </p>
                </div>
              </div>
@@ -254,10 +259,7 @@ export default function UserGuidePage() {
                <h2 className="text-3xl font-bold tracking-tight text-foreground">Control Panel</h2>
                <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
                  <p className="text-base leading-relaxed">
-                   The <strong>Control Panel</strong> is the engine room. This is where your top administrators safely configure passwords, invite new employees, and manage your billing choices.
-                 </p>
-                 <p className="text-base leading-relaxed">
-                   Because the settings here heavily control the entire platform, access is restricted exclusively to upper management to mathematically defend against accidental disruptions.
+                   The <strong>Control Panel</strong> is the engine room. This is where your top administrators safely configure passwords, invite new employees, and manage your billing choices. Because the settings here heavily control the entire platform, access is restricted exclusively to upper management to mathematically defend against accidental disruptions.
                  </p>
                </div>
              </div>

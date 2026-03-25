@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.domain import Severity, FindingStatus, FindingType, WorkflowName, Finding, RiskRegister, User
+from app.models.domain import Severity, FindingStatus, FindingType, WorkflowName, Finding, RiskRegister, User, ComplianceRequirement
 from sqlalchemy import select, func, or_
 from app.db.session import get_db
 from app.schemas.finding import FindingResponse, FindingUpdate
@@ -106,6 +106,90 @@ async def create_intel_finding(request: CreateIntelFindingRequest, org_id: str, 
     await db.commit()
     
     return {"status": "success", "finding_id": str(finding_id), "message": "Observation successfully promoted to Finding."}
+
+class CreateComplianceFindingRequest(BaseModel):
+    requirement_id: str
+    title: str
+    description: str
+
+@router.post("/from-compliance", status_code=status.HTTP_201_CREATED)
+async def create_compliance_finding(request: CreateComplianceFindingRequest, org_id: str, db: AsyncSession = Depends(get_db)):
+    """Promotes a Compliance Control gap into a formalized tracked Finding."""
+    try:
+        org_uuid = uuid.UUID(org_id)
+    except ValueError:
+        org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        
+    finding_id = uuid.uuid4()
+    
+    new_finding = Finding(
+        id=finding_id,
+        org_id=org_uuid,
+        title=request.title,
+        description=request.description,
+        severity=Severity.high,
+        status=FindingStatus.new,
+        finding_type=FindingType.compliance_gap,
+        source_workflow=WorkflowName.compliance,
+        related_control_ids={"requirement_id": request.requirement_id},
+        detected_at=datetime.utcnow()
+    )
+    
+    # Also mark the requirement as non_compliant locally
+    try:
+        req_uuid = uuid.UUID(request.requirement_id)
+        req_result = await db.execute(select(ComplianceRequirement).where(ComplianceRequirement.id == req_uuid))
+        req = req_result.scalar_one_or_none()
+        if req:
+            req.status = "non_compliant"
+    except ValueError:
+        pass
+
+    db.add(new_finding)
+    await db.commit()
+    
+    return {"status": "success", "finding_id": str(finding_id), "message": "Compliance gap successfully promoted to Finding."}
+
+class CreateCorrelationFindingRequest(BaseModel):
+    correlation_id: str
+    title: str
+    description: str
+    severity: str
+    raw_data: Optional[Dict[str, Any]] = None
+
+@router.post("/from-correlation", status_code=status.HTTP_201_CREATED)
+async def create_correlation_finding(request: CreateCorrelationFindingRequest, org_id: str, db: AsyncSession = Depends(get_db)):
+    """Promotes a Cyber Threat Analyzer correlation into a formalized tracked Finding."""
+    try:
+        org_uuid = uuid.UUID(org_id)
+    except ValueError:
+        org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        
+    finding_id = uuid.uuid4()
+    
+    severity_val = Severity.high
+    try:
+        severity_val = Severity(request.severity.lower())
+    except ValueError:
+        pass
+        
+    new_finding = Finding(
+        id=finding_id,
+        org_id=org_uuid,
+        title=request.title,
+        description=request.description,
+        severity=severity_val,
+        status=FindingStatus.new,
+        finding_type=FindingType.correlation_result,
+        source_workflow=WorkflowName.correlation_engine,
+        raw_data=request.raw_data or {"correlation_id": request.correlation_id},
+        detected_at=datetime.utcnow()
+    )
+
+    db.add(new_finding)
+    await db.commit()
+    
+    return {"status": "success", "finding_id": str(finding_id), "message": "Correlation successfully promoted to Finding."}
 
 @router.get("/{finding_id}")
 async def get_finding(finding_id: str, org_id: str, db: AsyncSession = Depends(get_db)):
@@ -259,6 +343,20 @@ async def mark_remediated(finding_id: str, org_id: str, db: AsyncSession = Depen
         
     db_finding.status = FindingStatus.resolved
     db_finding.resolved_at = datetime.utcnow()
+
+    # Handle compliance_gap
+    if db_finding.finding_type == FindingType.compliance_gap and db_finding.related_control_ids:
+        req_id = db_finding.related_control_ids.get("requirement_id")
+        if req_id:
+            try:
+                req_uuid = uuid.UUID(req_id)
+                req_result = await db.execute(select(ComplianceRequirement).where(ComplianceRequirement.id == req_uuid))
+                req = req_result.scalar_one_or_none()
+                if req:
+                    req.status = "compliant"
+            except ValueError:
+                pass
+
     await db.commit()
     return {"status": "success", "action": "remediated", "finding_id": finding_id, "new_status": "resolved"}
 
