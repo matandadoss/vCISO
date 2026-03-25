@@ -119,6 +119,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         await signInWithPopup(auth, provider);
       } catch (popupError: any) {
+        if (popupError.code === 'auth/popup-closed-by-user') {
+            console.log("User closed the popup, aborting sign in.");
+            return;
+        }
         console.warn("Popup blocked or unsupported, falling back to redirect:", popupError.code);
         // Fallback to redirect if popup is blocked or environment doesn't support it (e.g. some incognito modes)
         await signInWithRedirect(auth, provider);
@@ -144,6 +148,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         await signInWithPopup(auth, provider);
       } catch (popupError: any) {
+        if (popupError.code === 'auth/popup-closed-by-user') {
+            console.log("User closed the Microsoft popup, aborting sign in.");
+            return;
+        }
         console.warn("Popup blocked or unsupported for Microsoft, falling back to redirect:", popupError.code);
         await signInWithRedirect(auth, provider);
       }

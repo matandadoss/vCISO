@@ -152,6 +152,47 @@ export default function SimulatorPage() {
     }
   };
 
+  const handleModelEnvironment = async () => {
+    try {
+      setUploading(true);
+      
+      const savedInfra = JSON.parse(localStorage.getItem("vciso_company_infra") || '["Google Cloud Platform", "AWS"]');
+      const savedTech = JSON.parse(localStorage.getItem("vciso_company_tech") || '["Node.js", "React", "Docker"]');
+      const savedTools = JSON.parse(localStorage.getItem("vciso_company_tools") || '[{"name": "CrowdStrike Falcon"}]');
+      
+      const extractName = (arr: any[]) => arr.map((item: any) => typeof item === 'string' ? item : item?.name || 'Unknown');
+
+      const payload = {
+         infra: extractName(savedInfra),
+         tech: extractName(savedTech),
+         tools: extractName(savedTools)
+      };
+
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/v1/pentest/threat-model-environment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        toast.success("Threat Model Generated", {
+          description: "Environment analysis complete. Redirecting to findings...",
+        });
+        setTimeout(() => {
+            router.push('/findings');
+        }, 1500);
+      } else {
+        const err = await res.json();
+        toast.error("Generation Failed", { description: err.detail || "Could not generate threat model." });
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Generation Failed", { description: "Failed to model current environment" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const getNodeColor = (node: any) => {
     switch (node.status) {
       case "critical": return "#ef4444"; 
@@ -340,31 +381,45 @@ export default function SimulatorPage() {
                   AI Threat Modeler (MITRE)
                 </h3>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Upload an architecture diagram or SBOM to natively generate an automated Threat Model utilizing MITRE ATT&CK.
+                  Upload an architecture diagram or SBOM to natively generate an automated Threat Model utilizing MITRE ATT&CK. Or, run a model dynamically against your actively scanned company environment configuration.
                 </p>
               </div>
-              <label 
-                className={cn(
-                  "w-full flex flex-col items-center justify-center gap-3 px-4 py-6 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-slate-900/50 transition-colors bg-accent/20",
-                  uploading ? "opacity-50 cursor-not-allowed" : ""
-                )}
-              >
-                {uploading ? (
-                  <><Loader2 className="h-5 w-5 animate-spin text-emerald-400" /> <span className="text-xs font-medium text-muted-foreground">Analyzing Diagram...</span></>
-                ) : (
-                  <>
-                     <Upload className="h-5 w-5 text-emerald-400" /> 
-                     <span className="font-medium text-xs">Select Diagram (.png, .pdf)</span>
-                  </>
-                )}
-                <input 
-                  type="file" 
-                  accept=".pdf,image/png,image/jpeg,image/webp" 
-                  className="hidden" 
-                  onChange={handleFileUpload}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={handleModelEnvironment}
                   disabled={uploading}
-                />
-              </label>
+                  className={cn(
+                    "flex-1 flex flex-col items-center justify-center gap-3 px-4 py-6 border-2 border-border border-dashed rounded-lg cursor-pointer hover:bg-slate-900/50 transition-colors bg-accent/10",
+                    uploading ? "opacity-50 cursor-not-allowed" : ""
+                  )}
+                >
+                  <Cpu className="h-5 w-5 text-emerald-400" /> 
+                  <span className="font-medium text-xs">Model Current Environment</span>
+                </button>
+
+                <label 
+                  className={cn(
+                    "flex-1 flex flex-col items-center justify-center gap-3 px-4 py-6 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-slate-900/50 transition-colors bg-accent/20",
+                    uploading ? "opacity-50 cursor-not-allowed" : ""
+                  )}
+                >
+                  {uploading ? (
+                    <><Loader2 className="h-5 w-5 animate-spin text-emerald-400" /> <span className="text-xs font-medium text-muted-foreground">Analyzing Diagram...</span></>
+                  ) : (
+                    <>
+                       <Upload className="h-5 w-5 text-emerald-400" /> 
+                       <span className="font-medium text-xs">Select Diagram (.png, .pdf)</span>
+                    </>
+                  )}
+                  <input 
+                    type="file" 
+                    accept=".pdf,image/png,image/jpeg,image/webp" 
+                    className="hidden" 
+                    onChange={handleFileUpload}
+                    disabled={uploading}
+                  />
+                </label>
+              </div>
            </div>
         </div>
       </div>

@@ -9,6 +9,7 @@ import { AuthGuard } from "@/components/layout/AuthGuard";
 import { ControlTowerProvider } from "@/contexts/ControlTowerContext";
 import { ControlTowerDrawer } from "@/components/layout/ControlTowerDrawer";
 import { ThemeProvider } from "@/components/theme-provider";
+import { GlobalErrorTracker } from "@/lib/errorTracking";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,6 +27,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen flex antialiased bg-background`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <GlobalErrorTracker />
           <AuthProvider>
             <RoleProvider>
               <ControlTowerProvider>

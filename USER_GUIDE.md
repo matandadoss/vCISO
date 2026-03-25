@@ -45,6 +45,22 @@ The **Findings** module acts as your continuously updated, dynamically prioritiz
 
 ---
 
+*Risk > Risk Register*
+
+## Risk Register
+
+The **Risk Register** is the formalized business ledger for vulnerabilities and security issues that the organization has consciously chosen to accept rather than remediate immediately (due to operational constraints, cost, or compensating controls).
+
+### Functionality & AI Categorization
+When you accept a risk from the `Findings` module, it transitions here. The platform utilizes contextual AI heuristics to automatically evaluate the finding's title and description, instantaneously stripping it down and categorizing it against your core corporate risk pillars (e.g., **Compliance**, **Cyber**, **Legal**, **Operational**, **Financial**).
+
+### Core Features
+* **Expiration Boundaries:** Every risk carries an expiration date. Once a risk expires, the system triggers alerts demanding reassessment. You can formally extend these boundaries up to 365 days.
+* **Revert to Finding:** If the underlying environment changes and the risk must now be patched instead of tolerated, you can use the **Revert to Finding** action. This securely revokes the risk entry and transitions the item back to the Findings queue under a `Reviewed` status for immediate triage.
+* **Auto-Origin Tracking:** The platform explicitly tracks the `Source / Origin` of the risk (e.g. from a Penetration Test versus the Threat Modeler) so auditors have full context on discovery.
+
+---
+
 *Risk > Compliance*
 
 ## Compliance

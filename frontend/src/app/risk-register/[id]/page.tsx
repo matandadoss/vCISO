@@ -36,16 +36,19 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
   
   // Editable states
   const [editLevel, setEditLevel] = useState("");
-  const [editCategories, setEditCategories] = useState("");
+  const [editCategories, setEditCategories] = useState<string[]>([]);
   const [editOwner, setEditOwner] = useState("");
   const [editActionPlan, setEditActionPlan] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [reverting, setReverting] = useState(false);
   
   const [editSource, setEditSource] = useState("");
   const [extendDate, setExtendDate] = useState("");
   const [extending, setExtending] = useState(false);
   const [showExtendDialog, setShowExtendDialog] = useState(false);
+  
+  const AVAILABLE_CATEGORIES = ["Compliance", "Cyber", "Financial", "Legal", "Operational", "Regulatory", "Reputational"];
   
   const isExpired = risk?.expiration_date ? new Date(risk.expiration_date) < new Date() : false;
 
@@ -68,7 +71,7 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
         
         // Initialize editable states
         setEditLevel(data.risk_level);
-        setEditCategories(data.risk_categories.join(", "));
+        setEditCategories(data.risk_categories || []);
         setEditOwner(data.owner || "");
         setEditActionPlan(data.action_plan || "");
         setEditSource(data.source || "");
@@ -85,13 +88,12 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
     if (!risk) return;
     setSaving(true);
     try {
-      const catsArray = editCategories.split(",").map(c => c.trim()).filter(c => c);
       const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/risk-register/${risk.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           risk_level: editLevel,
-          risk_categories: catsArray,
+          risk_categories: editCategories,
           owner: editOwner,
           action_plan: editActionPlan,
           source: editSource
@@ -105,6 +107,27 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
       console.error("Failed to save", err);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleRevert = async () => {
+    if (!risk) return;
+    setReverting(true);
+    try {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/risk-register/${risk.id}/revert`, {
+        method: "POST"
+      });
+      if (res.ok) {
+        toast.success("Risk Reverted", { description: "The risk has been successfully reverted back to a 'Reviewed' Finding." });
+        window.location.href = "/risk-register";
+      } else {
+        const err = await res.json();
+        toast.error("Revert Failed", { description: err.detail });
+      }
+    } catch (e) {
+      toast.error("Revert Failed");
+    } finally {
+      setReverting(false);
     }
   };
 
@@ -273,11 +296,20 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
                 </Link>
              )}
           </div>
-          <div className="flex items-center gap-3 w-full xl:w-auto">
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
+             {risk.finding_id && (
+                <button 
+                  onClick={handleRevert}
+                  disabled={reverting}
+                  className="px-4 py-2 bg-muted text-foreground border border-border text-sm font-medium rounded-md shadow hover:bg-accent hover:text-accent-foreground transition-colors w-full sm:w-auto text-center"
+                >
+                  {reverting ? "Reverting..." : "Revert to Finding"}
+                </button>
+             )}
              <button 
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md shadow hover:bg-primary/90 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md shadow hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
              >
                 <Save className="w-4 h-4" /> {saving ? "Saving..." : "Save Changes"}
              </button>
@@ -330,16 +362,25 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
 
                  <div className="space-y-2">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                      <Tag className="w-3.5 h-3.5" /> Macro Categories
+                      <Tag className="w-3.5 h-3.5" /> Risk Categories
                     </label>
-                    <p className="text-[10px] text-muted-foreground mb-1">Comma separated (e.g. Operational, Security)</p>
-                    <input 
-                       type="text" 
-                       value={editCategories}
-                       onChange={(e) => setEditCategories(e.target.value)}
-                       className="w-full px-3 py-2 bg-background border border-border rounded text-sm focus:outline-none focus:ring-1 ring-primary"
-                       placeholder="e.g. Threat Intel, Operational Risk"
-                    />
+                    <p className="text-[10px] text-muted-foreground mb-1">Select one or more applicable categories. AI pre-populates based on finding metrics.</p>
+                    <div className="flex flex-col gap-1.5 p-3 bg-background border border-border rounded">
+                       {AVAILABLE_CATEGORIES.map(cat => (
+                           <label key={cat} className="flex items-center gap-2 text-sm text-foreground cursor-pointer hover:bg-muted/50 p-1 rounded">
+                              <input 
+                                 type="checkbox"
+                                 className="rounded border-border text-primary focus:ring-primary h-4 w-4 bg-background"
+                                 checked={editCategories.includes(cat)}
+                                 onChange={(e) => {
+                                    if (e.target.checked) setEditCategories(prev => [...prev, cat]);
+                                    else setEditCategories(prev => prev.filter(c => c !== cat));
+                                 }}
+                              />
+                              {cat}
+                           </label>
+                       ))}
+                    </div>
                  </div>
 
                  <div className="space-y-2">
@@ -362,19 +403,21 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                       <FileText className="w-3.5 h-3.5" /> Source / Origin
                     </label>
-                    <select 
+                    <input 
+                       list="source-options"
                        value={editSource}
                        onChange={(e) => setEditSource(e.target.value)}
                        className="w-full px-3 py-2 bg-background border border-border rounded text-sm focus:outline-none focus:ring-1 ring-primary"
-                    >
-                       <option value="">Select an Origin Source...</option>
-                       <option value="Security Audit">Security Audit</option>
-                       <option value="Penetration Test">Penetration Test</option>
-                       <option value="Threat Modeler">Threat Modeler</option>
-                       <option value="Automated Scanner">Automated Scanner</option>
-                       <option value="Bug Bounty">Bug Bounty</option>
-                       <option value="Manual Entry">Manual Entry</option>
-                    </select>
+                       placeholder="Select or type an origin..."
+                    />
+                    <datalist id="source-options">
+                       <option value="Security Audit" />
+                       <option value="Penetration Test" />
+                       <option value="Threat Modeler" />
+                       <option value="Automated Scanner" />
+                       <option value="Bug Bounty" />
+                       <option value="Manual Entry" />
+                    </datalist>
                  </div>
 
               </div>

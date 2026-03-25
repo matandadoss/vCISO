@@ -44,6 +44,7 @@ class Severity(str, enum.Enum):
 class FindingStatus(str, enum.Enum):
     new = "new"
     triaged = "triaged"
+    reviewed = "reviewed"
     in_progress = "in_progress"
     resolved = "resolved"
     accepted = "accepted"

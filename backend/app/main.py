@@ -95,6 +95,55 @@ app.add_middleware(
 )
 
 # Include Routers with global authentication
+from fastapi.responses import JSONResponse
+import traceback
+import sys
+from app.models.domain import InternalBugLog
+from app.db.session import SessionLocal
+import uuid
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    # Log unhandled crashes (500s) to the database
+    try:
+        from fastapi import HTTPException
+        # Ignore normal client errors
+        if isinstance(exc, HTTPException) and exc.status_code < 500:
+            raise exc
+            
+        stack_trace = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+        route = request.url.path
+        
+        async with SessionLocal() as db:
+            org_id_str = getattr(request.state, "org_id", None)
+            user_id = getattr(request.state, "user_id", None)
+            org_uuid = None
+            if org_id_str:
+                try: org_uuid = uuid.UUID(org_id_str)
+                except ValueError: pass
+                    
+            new_bug = InternalBugLog(
+                org_id=org_uuid,
+                user_id=user_id,
+                error_code="500",
+                error_message=str(exc) or "Unknown Exception",
+                stack_trace=stack_trace,
+                url=str(request.url),
+                route=route,
+                status="open"
+            )
+            db.add(new_bug)
+            await db.commit()
+            
+    except Exception as inner_e:
+        print(f"CRITICAL: Failed to log exception to DB: {inner_e}")
+        pass
+        
+    return JSONResponse(
+        status_code=500,
+        content={"message": "Internal System Error Caught. Our engineers have been notified.", "status": "error"}
+    )
+
 app.include_router(ai_settings.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
 app.include_router(chat.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
 app.include_router(findings.router, prefix="/api/v1", dependencies=[Depends(get_current_user)])

@@ -137,3 +137,30 @@ async def extend_risk(risk_id: str, payload: RiskExtendRequest, org_id: str = "d
     await db.commit()
     await db.refresh(item)
     return await get_risk(risk_id, org_id, db)
+
+@router.post("/{risk_id}/revert")
+async def revert_risk_to_finding(risk_id: str, org_id: str = "default", db: AsyncSession = Depends(get_db)):
+    """Reverts a Risk back to its corresponding Finding, changing its status to 'reviewed'"""
+    # Fetch the Risk
+    res = await db.execute(select(RiskRegister).where(RiskRegister.id == uuid.UUID(risk_id)))
+    risk_item = res.scalar_one_or_none()
+    
+    if not risk_item:
+        raise HTTPException(status_code=404, detail="Risk item not found")
+        
+    if risk_item.finding_id:
+        from app.models.domain import Finding, FindingStatus
+        finding_res = await db.execute(select(Finding).where(Finding.id == uuid.UUID(risk_item.finding_id)))
+        finding_item = finding_res.scalar_one_or_none()
+        
+        if finding_item:
+            # Revert the status to "reviewed" as requested by user
+            finding_item.status = FindingStatus.reviewed
+            finding_item.remediation_notes = (finding_item.remediation_notes or "") + "\n[System] Risk acceptance revoked. Reverted back to findings."
+            
+    # Remove the risk from the register
+    await db.delete(risk_item)
+    await db.commit()
+    
+    return {"status": "success", "message": "Risk successfully reverted back to finding"}
+

@@ -1,0 +1,14 @@
+You are an AI programming assistant working on the Virtual CISO platform.
+
+## CRITICAL RULE: Maintain the System Manifest
+There is a file located at the root of the project called `manifest.md`. It acts as the comprehensive tracking document for the entire application's features and technical architecture.
+
+Whenever you perform a task that involves:
+1. **Adding a new feature, workflow, or tool to the platform (e.g., building a Threat Modeler, a new Dashboard widget, or a new User Flow).**
+2. Adding, modifying, or removing a database model or schema.
+3. Creating, modifying, or removing an API route or defining a new data structure.
+4. Modifying the global state architecture, Context Providers, or fundamental App Router mechanics.
+5. Changing deployment pipelines (e.g., modifying `cloudbuild.yaml` or Dockerfiles).
+6. Installing significant new third-party dependencies or altering the global styling definitions.
+
+You **MUST** proactively update `manifest.md` to reflect these changes before concluding your task. If you added a new feature, you must add it to the 'Features & Active Modules' tracking section so the user and other agents know it exists. The user expects this file to remain a perfectly accurate, 1-to-1 reflection of the current codebase capabilities at all times.

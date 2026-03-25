@@ -377,16 +377,26 @@ async def accept_risk(finding_id: str, request: AcceptRiskRequest, org_id: str, 
     db_finding.remediation_notes = f"Risk Accepted. Justification: {request.justification}. Expires: {request.expiration_date}"
     
     # AI/Contextual Risk Categorization
+    # Auto-Categorization (Simulating AI Contextual Tagging)
     categories = []
-    if db_finding.finding_type == FindingType.compliance_gap:
-        categories.append("Compliance Risk")
-    if db_finding.severity in [Severity.critical, Severity.high]:
-        categories.append("Operational Risk")
-    if db_finding.finding_type in [FindingType.data_leak, FindingType.access_sale, FindingType.credential_exposure]:
-        categories.append("Reputational Risk")
-        categories.append("Legal Risk")
+    title_desc = f"{db_finding.title} {db_finding.description}".lower()
+    
+    if "compliance" in title_desc or "audit" in title_desc or db_finding.finding_type == FindingType.compliance_gap:
+        categories.append("Compliance")
+    if "cve" in title_desc or "exploit" in title_desc or db_finding.finding_type in [FindingType.vulnerability, FindingType.correlation_result, FindingType.threat_indicator]:
+        categories.append("Cyber")
+    if "cost" in title_desc or "budget" in title_desc or "fraud" in title_desc or "ransomware" in title_desc:
+        categories.append("Financial")
+    if "leak" in title_desc or "exposure" in title_desc or "sale" in title_desc:
+        categories.append("Legal")
+        categories.append("Reputational")
+    if "misconfiguration" in title_desc or "server" in title_desc or "outage" in title_desc:
+        categories.append("Operational")
+    if "gdpr" in title_desc or "hipaa" in title_desc or "soc2" in title_desc:
+        categories.append("Regulatory")
+
     if not categories:
-        categories.append("Security Risk")
+        categories.append("Cyber") # Fallback default
         
     risk_entry = RiskRegister(
         org_id=db_finding.org_id,
@@ -394,8 +404,9 @@ async def accept_risk(finding_id: str, request: AcceptRiskRequest, org_id: str, 
         title=f"Accepted Risk: {db_finding.title}",
         description=db_finding.description,
         risk_level=db_finding.severity,
-        risk_categories=categories,
+        risk_categories=list(set(categories)), # unique only
         owner=db_finding.assigned_to,
+        source=db_finding.source_workflow.value if hasattr(db_finding.source_workflow, 'value') else str(db_finding.source_workflow),
         action_plan=f"Risk formally accepted. Justification: {request.justification}. Expires: {request.expiration_date}"
     )
     db.add(risk_entry)
