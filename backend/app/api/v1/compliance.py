@@ -115,7 +115,6 @@ async def create_framework(
     
     # Optionally seed some dummy requirements based on name
     dummy_req = ComplianceRequirement(
-        org_id=org_uuid,
         framework_id=fw.id,
         requirement_id_code="REQ-1",
         title=f"Initial setup for {fw.framework_name}",
@@ -242,22 +241,50 @@ async def list_requirements(
     if existing_count == 0:
         fw_res = await db.execute(select(ComplianceFramework).where(ComplianceFramework.id == framework_uuid))
         fw = fw_res.scalar_one_or_none()
-        if fw and "CIS" in fw.framework_name:
-            cis_controls = [
-                ("CIS-3", "Data Protection", "partial", "incomplete"),
-                ("CIS-4", "Secure Configuration of Assets", "non_compliant", "missing"),
-                ("CIS-5", "Account Management", "compliant", "collected"),
-                ("CIS-6", "Access Control Management", "compliant", "collected"),
-                ("CIS-7", "Continuous Vulnerability Management", "partial", "incomplete"),
-                ("CIS-8", "Audit Log Management", "non_compliant", "missing")
-            ]
-            for r_code, r_title, r_stat, r_ev in cis_controls:
+        if fw:
+            if "CIS" in fw.framework_name:
+                controls = [
+                    ("CIS-3", "Data Protection", "partial", "incomplete"),
+                    ("CIS-4", "Secure Configuration of Assets", "non_compliant", "missing"),
+                    ("CIS-5", "Account Management", "compliant", "collected"),
+                    ("CIS-6", "Access Control Management", "compliant", "collected"),
+                    ("CIS-7", "Continuous Vulnerability Management", "partial", "incomplete"),
+                    ("CIS-8", "Audit Log Management", "non_compliant", "missing")
+                ]
+                desc_prefix = "Automatically mapped CIS requirement."
+            elif "NIST" in fw.framework_name:
+                controls = [
+                    ("ID.AM-1", "Inventory Physical Devices", "compliant", "collected"),
+                    ("PR.AC-1", "Manage Identities and Credentials", "partial", "incomplete"),
+                    ("PR.DS-1", "Data-at-rest is Protected", "compliant", "collected"),
+                    ("DE.CM-1", "Network is Monitored", "non_compliant", "missing"),
+                    ("RS.RP-1", "Response Plan is Executed", "compliant", "collected")
+                ]
+                desc_prefix = "Automatically mapped NIST CSF requirement."
+            elif "OWASP" in fw.framework_name:
+                controls = [
+                    ("A01:2021", "Broken Access Control", "partial", "incomplete"),
+                    ("A02:2021", "Cryptographic Failures", "compliant", "collected"),
+                    ("A03:2021", "Injection", "compliant", "collected"),
+                    ("A04:2021", "Insecure Design", "non_compliant", "missing"),
+                    ("A05:2021", "Security Misconfiguration", "partial", "incomplete")
+                ]
+                desc_prefix = "Automatically mapped OWASP requirement."
+            else:
+                controls = [
+                    (f"{fw.framework_name[:3].upper()}-1", "Access Control Policy", "compliant", "collected"),
+                    (f"{fw.framework_name[:3].upper()}-2", "Data Encryption", "partial", "incomplete"),
+                    (f"{fw.framework_name[:3].upper()}-3", "Audit Logging", "non_compliant", "missing"),
+                    (f"{fw.framework_name[:3].upper()}-4", "Incident Response", "compliant", "collected")
+                ]
+                desc_prefix = f"Automatically mapped {fw.framework_name} requirement."
+                
+            for r_code, r_title, r_stat, r_ev in controls:
                 db.add(ComplianceRequirement(
-                    org_id=uuid.UUID(org_id) if org_id != "default" else fw.org_id,
                     framework_id=fw.id,
                     requirement_id_code=r_code,
                     title=r_title,
-                    description="Automatically mapped CIS requirement.",
+                    description=desc_prefix,
                     status=r_stat,
                     evidence_status=r_ev
                 ))

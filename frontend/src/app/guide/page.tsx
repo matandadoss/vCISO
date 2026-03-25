@@ -19,7 +19,7 @@ const GUIDE_SECTIONS = [
   { id: "testing", label: "Security Testing", icon: FlaskConical },
   { id: "company", label: "My Company", icon: Building },
   { id: "integrations", label: "Integrations & Sync", icon: Plug },
-  { id: "ai", label: "Control Tower AI", icon: Bot },
+  { id: "ai", label: "AI Control Tower", icon: Bot },
   { id: "settings", label: "Control Panel", icon: Settings },
 ];
 
@@ -232,15 +232,15 @@ export default function UserGuidePage() {
            {activeTab === "ai" && (
              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
                <div className="flex items-center text-sm font-medium text-muted-foreground gap-1.5 mb-2">
-                 Guide <ChevronRight className="w-4 h-4" /> Control Tower AI
+                 Guide <ChevronRight className="w-4 h-4" /> AI Control Tower
                </div>
-               <h2 className="text-3xl font-bold tracking-tight text-foreground">Control Tower AI</h2>
+               <h2 className="text-3xl font-bold tracking-tight text-foreground">AI Control Tower</h2>
                <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
                  <p className="text-base leading-relaxed">
-                   The <strong>Control Tower</strong> is your personal AI assistant. It lives inside the platform and understands everything happening securely about your company's setup behind the scenes. 
+                   The <strong>AI Control Tower</strong> is your personal AI assistant. It lives inside the platform and understands everything happening securely about your company's setup behind the scenes. 
                  </p>
                  <p className="text-base leading-relaxed">
-                   Whenever you don't understand a security alert or an error message, simply open the Control Tower on the right side of the screen. You can ask it straight-forward questions like <em>"What does this warning mean for my revenue?"</em> or <em>"How do I rapidly fix this?"</em> and it will explain the answers clearly.
+                   Whenever you don't understand a security alert or an error message, simply open the AI Control Tower on the right side of the screen. You can ask it straight-forward questions like <em>"What does this warning mean for my revenue?"</em> or <em>"How do I rapidly fix this?"</em> and it will explain the answers clearly.
                  </p>
                </div>
              </div>

@@ -35,7 +35,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
                className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors mr-2 border border-border/50 bg-background/50 shadow-sm"
             >
                <MessageSquare className="w-4 h-4 text-primary" />
-               <span className="text-sm font-medium hidden sm:inline-block">Control Tower</span>
+               <span className="text-sm font-medium hidden sm:inline-block">AI Control Tower</span>
             </button>
             <Link href="/profile" className="flex items-center gap-3 hover:opacity-80 transition-opacity" title="Account Settings">
               <div className="hidden sm:flex flex-col items-end">

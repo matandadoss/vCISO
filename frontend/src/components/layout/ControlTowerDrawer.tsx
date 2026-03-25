@@ -26,7 +26,7 @@ export function ControlTowerDrawer() {
     {
       id: "1",
       role: "assistant",
-      content: "**Control Tower Online**\n\nI am aware of your current context. How can I assist you with this page?",
+      content: "I am aware of your current context. How can I assist you?",
     }
   ]);
   const [input, setInput] = useState("");
@@ -148,7 +148,7 @@ export function ControlTowerDrawer() {
              </div>
              <div>
                <h2 className="text-sm font-bold text-foreground inline-flex items-center gap-2">
-                  Control Tower
+                  AI Control Tower
                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                </h2>
                <p className="text-[10px] text-muted-foreground">
@@ -212,11 +212,11 @@ export function ControlTowerDrawer() {
           )}
           
           {/* Question Bubbles / Suggestions */}
-          {!isTyping && pageContext?.suggestions && pageContext.suggestions.length > 0 && (
+          {!isTyping && messages.length === 1 && (
              <div className="flex flex-col gap-2 mt-4 ml-9">
                 <div className="text-xs text-muted-foreground font-medium mb-1">Suggested Questions:</div>
                 <div className="flex flex-col gap-2 items-start">
-                   {pageContext.suggestions.map((sug, i) => (
+                   {(pageContext?.suggestions?.length ? pageContext.suggestions : ["What are my top risks right now?", "Summarize the latest threat intelligence", "Are there any critical findings?"]).map((sug, i) => (
                       <button 
                         key={i}
                         onClick={() => handleSend(sug)}
@@ -238,7 +238,7 @@ export function ControlTowerDrawer() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              placeholder={isListening ? "Listening..." : "Ask Control Tower..."}
+              placeholder={isListening ? "Listening..." : "Ask AI Control Tower..."}
               className={cn(
                  "w-full bg-background border rounded-lg py-2.5 pl-3 pr-16 text-sm focus:outline-none transition-colors",
                  isListening ? "border-red-500/50 ring-1 ring-red-500/50" : "border-border hover:border-border/80 focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
