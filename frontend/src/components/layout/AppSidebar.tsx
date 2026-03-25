@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -79,6 +79,12 @@ export function AppSidebar({ mobileOpen = false, setMobileOpen }: AppSidebarProp
   const pathname = usePathname();
   const { role, setRole } = useRole();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (pathname.startsWith("/guide")) {
+      setIsCollapsed(true);
+    }
+  }, [pathname]);
 
   const filteredGroups = NAV_GROUPS.map(group => ({
     ...group,

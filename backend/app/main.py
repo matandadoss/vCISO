@@ -82,7 +82,7 @@ app.add_middleware(
         "https://gen-lang-client-0873796692.firebaseapp.com"
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 

@@ -22,6 +22,7 @@ google-cloud-pubsub
 google-cloud-securitycenter
 google-cloud-asset
 boto3==1.34.106 # For AWS Bedrock
+openai>=1.14.0
 
 # Utilities
 httpx==0.27.0

@@ -81,6 +81,7 @@ class CostTracker:
         threshold = datetime.datetime.utcnow() - datetime.timedelta(days=days-1)
         threshold = threshold.replace(hour=0, minute=0, second=0, microsecond=0)
         
+        from sqlalchemy import text
         # Postgres date_trunc trick
         stmt = select(
             func.date_trunc('day', AIQueryLog.timestamp).label('day'),
@@ -88,12 +89,10 @@ class CostTracker:
         ).where(
             AIQueryLog.org_id == uuid.UUID(org_id),
             AIQueryLog.timestamp >= threshold
-        ).group_by(
-            func.date_trunc('day', AIQueryLog.timestamp)
-        ).order_by('day')
+        ).group_by(text("1")).order_by(text("1"))
         
         res = await self.db.execute(stmt)
-        data_map = {r.day.date(): r.cost for r in res}
+        data_map = {getattr(r.day, 'date', lambda: r.day)(): r.cost for r in res}
         
         trends = []
         for i in range(days - 1, -1, -1):

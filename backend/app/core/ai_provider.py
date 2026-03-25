@@ -60,6 +60,11 @@ class AIProviderClient:
             "amazon.nova-lite-v1:0": {"input": 0.06, "output": 0.24},
             "amazon.nova-pro-v1:0": {"input": 0.80, "output": 3.20},
         },
+        AIProvider.OPENAI: {
+            "gpt-4o-mini": {"input": 0.15, "output": 0.60},
+            "gpt-4o": {"input": 2.50, "output": 10.00},
+            "o1-preview": {"input": 15.00, "output": 60.00},
+        },
     }
 
     def __init__(self, config=None, cost_tracker=None, db=None):
@@ -78,6 +83,7 @@ class AIProviderClient:
         self._vertex_client = None
         self._anthropic_client = None
         self._bedrock_client = None
+        self._openai_client = None
 
         if self.active_provider == AIProvider.VERTEX_AI:
             try:
@@ -99,6 +105,13 @@ class AIProviderClient:
                     self._anthropic_client = AsyncAnthropic(api_key=self.config.ANTHROPIC_API_KEY)
             except ImportError:
                 pass
+        elif self.active_provider == AIProvider.OPENAI:
+            try:
+                from openai import AsyncOpenAI
+                if self.config.OPENAI_API_KEY:
+                    self._openai_client = AsyncOpenAI(api_key=self.config.OPENAI_API_KEY)
+            except ImportError:
+                pass
         elif self.active_provider == AIProvider.AWS_BEDROCK:
             pass # Stub for boto3
 
@@ -118,6 +131,11 @@ class AIProviderClient:
                 ModelTier.FAST_CHEAP: "amazon.nova-lite-v1:0",
                 ModelTier.BALANCED: "amazon.nova-pro-v1:0",
                 ModelTier.DEEP: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+            },
+            AIProvider.OPENAI: {
+                ModelTier.FAST_CHEAP: "gpt-4o-mini",
+                ModelTier.BALANCED: "gpt-4o",
+                ModelTier.DEEP: "o1-preview",
             },
         }
         return self.active_provider, tier_map[self.active_provider][tier]
@@ -148,6 +166,8 @@ class AIProviderClient:
                 raw_content, in_tokens, out_tokens = await self._complete_vertex(request, model)
             elif provider == AIProvider.ANTHROPIC_DIRECT:
                 raw_content, in_tokens, out_tokens = await self._complete_anthropic(request, model)
+            elif provider == AIProvider.OPENAI:
+                raw_content, in_tokens, out_tokens = await self._complete_openai(request, model)
             elif provider == AIProvider.AWS_BEDROCK:
                 raw_content, in_tokens, out_tokens = await self._complete_bedrock(request, model)
             else:
@@ -171,6 +191,46 @@ class AIProviderClient:
         )
 
         return response
+
+    async def _complete_openai(self, request: AIRequest, model: str):
+        if self._openai_client:
+            tools = []
+            if request.structured_output_schema:
+                schema_no_title = request.structured_output_schema.copy()
+                if "title" in schema_no_title:
+                     del schema_no_title["title"]
+                tools = [{
+                    "type": "function",
+                    "function": {
+                        "name": "structured_output",
+                        "description": "Output according to schema",
+                        "parameters": schema_no_title
+                    }
+                }]
+            
+            # o1 models do not support system messages, tools, or temperature explicitly in standard mapping
+            is_o1 = model.startswith("o1")
+            messages = []
+            if not is_o1:
+                messages.append({"role": "system", "content": request.system_prompt})
+                messages.append({"role": "user", "content": request.user_prompt})
+            else:
+                messages.append({"role": "user", "content": f"{request.system_prompt}\n\n{request.user_prompt}"})
+                
+            res = await self._openai_client.chat.completions.create(
+                model=model,
+                max_tokens=request.max_tokens if not is_o1 else None,
+                temperature=request.temperature if not is_o1 else 1.0,
+                messages=messages,
+                tools=tools if tools and not is_o1 else None,
+                tool_choice={"type": "function", "function": {"name": "structured_output"}} if tools and not is_o1 else None
+            )
+            if tools and not is_o1:
+                content = res.choices[0].message.tool_calls[0].function.arguments if res.choices[0].message.tool_calls else "{}"
+            else:
+                content = res.choices[0].message.content
+            return content, res.usage.prompt_tokens, res.usage.completion_tokens
+        return "OpenAI not configured. Please set OPENAI_API_KEY", 0, 0
 
     async def _complete_vertex(self, request: AIRequest, model: str):
         if not self._vertex_client:

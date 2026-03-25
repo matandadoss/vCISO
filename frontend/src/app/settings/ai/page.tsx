@@ -13,6 +13,7 @@ export default function AISettingsPage() {
   const [saving, setSaving] = useState(false);
   
   const [provider, setProvider] = useState<string>("Anthropic Direct");
+  const [activeProviderRaw, setActiveProviderRaw] = useState<string>("anthropic_direct");
 
   useEffect(() => {
     async function fetchData() {
@@ -33,7 +34,10 @@ export default function AISettingsPage() {
          setTrendData(trend.trend || []);
          setWorkflows(cost.by_workflow || []);
          if (provData && provData.active_provider) {
-             setProvider(provData.active_provider === 'vertex_ai' ? 'Vertex AI (Gemini)' : 'Anthropic Direct');
+             setActiveProviderRaw(provData.active_provider);
+             if (provData.active_provider === 'vertex_ai') setProvider('Vertex AI (Gemini)');
+             else if (provData.active_provider === 'openai') setProvider('OpenAI (GPT-4o)');
+             else setProvider('Anthropic Direct');
          }
        } catch (e) {
          console.error(e);
@@ -65,12 +69,14 @@ export default function AISettingsPage() {
      }
   };
 
-  const handleToggleProvider = async () => {
-     const isAnthropic = provider === 'Anthropic Direct';
-     const nextVal = isAnthropic ? 'vertex_ai' : 'anthropic';
-     const nextDisp = isAnthropic ? 'Vertex AI (Gemini)' : 'Anthropic Direct';
+  const handleSwapProvider = async (e: any) => {
+     const nextVal = e.target.value;
      
-     // Optimistic update
+     let nextDisp = 'Vertex AI (Gemini)';
+     if (nextVal === 'anthropic_direct') nextDisp = 'Anthropic Direct';
+     else if (nextVal === 'openai') nextDisp = 'OpenAI (GPT-4o)';
+     
+     setActiveProviderRaw(nextVal);
      setProvider(nextDisp);
      
      try {
@@ -79,10 +85,8 @@ export default function AISettingsPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ provider: nextVal })
         });
-     } catch(e) {
-        // Revert on fail
-        setProvider(isAnthropic ? 'Anthropic Direct' : 'Vertex AI (Gemini)');
-        console.error("Failed to update AI provider", e);
+     } catch(err) {
+        console.error("Failed to update AI provider", err);
      }
   };
 
@@ -140,25 +144,34 @@ export default function AISettingsPage() {
           <div className="bg-card border border-border rounded-lg p-6 flex flex-col items-start h-full">
             <div className="w-full">
                <h3 className="text-lg font-semibold mb-4 flex items-center">
-                 <Settings className="w-5 h-5 mr-2 text-primary" /> Active Provider
+                 <Settings className="w-5 h-5 mr-2 text-primary" /> Global Ecosystem Root Model
                </h3>
                <div className="space-y-4">
-                 <div className="flex justify-between items-center p-3 border border-border rounded-md bg-muted/50">
-                   <span className="font-medium">Primary LLM</span>
-                   <span className="text-sm bg-primary/10 text-primary px-2 py-1 rounded">{provider}</span>
+                 <div className="flex flex-col p-4 border border-border rounded-md bg-muted/30 shadow-sm">
+                   <label className="text-sm font-semibold text-muted-foreground mb-2">Active Master Provider</label>
+                   <select 
+                     value={activeProviderRaw} 
+                     onChange={handleSwapProvider}
+                     className="bg-background border border-border rounded-md px-3 py-2 text-sm w-full focus:border-primary focus:outline-none focus:ring-1 ring-primary shadow-sm"
+                   >
+                     <option value="anthropic_direct">Anthropic Direct (Claude 3.5)</option>
+                     <option value="openai">OpenAI (GPT-4o & o1 Models)</option>
+                     <option value="vertex_ai">Google Vertex AI (Gemini Pro/Flash)</option>
+                   </select>
                  </div>
+                 
                  <div className="flex justify-between items-center p-3 border border-border rounded-md bg-muted/50">
-                   <span className="font-medium">Fallback LLM</span>
+                   <span className="font-medium text-sm text-muted-foreground">Fallback Failover</span>
                    <span className="text-sm bg-muted-foreground/10 text-muted-foreground px-2 py-1 rounded">
-                      {provider === 'Anthropic Direct' ? 'Vertex AI (Gemini)' : 'Anthropic Direct'}
+                      Autoscale Active
                    </span>
                  </div>
                </div>
             </div>
             
-            <button onClick={handleToggleProvider} className="mt-8 text-sm text-primary flex items-center hover:underline bg-primary/5 px-4 py-2 rounded-md transition-colors border border-primary/10">
-              Swap Primary & Fallback Provider <RefreshCw className="w-3.5 h-3.5 ml-2" />
-            </button>
+            <p className="mt-8 text-xs text-muted-foreground flex items-center bg-primary/5 px-4 py-2 rounded-md transition-colors border border-primary/10">
+              <RefreshCw className="w-3.5 h-3.5 mr-2 text-primary" /> Modifying the master LLM takes effect on all incoming requests instantly.
+            </p>
           </div>
 
           <div className="bg-card border border-border rounded-lg p-6">
