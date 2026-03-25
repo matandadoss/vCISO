@@ -239,16 +239,19 @@ export default function SetupWizard({ onComplete, uid }: SetupWizardProps) {
                       <div className="flex items-center justify-between mb-3">
                          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">Infrastructure & Cloud Providers</h3>
                          {activeInput === "infra" ? (
-                            <input 
-                              type="text" 
-                              autoFocus 
-                              className="bg-background border border-border rounded-md px-2 py-1 text-xs focus:outline-none focus:border-primary max-w-[150px]" 
-                              placeholder="e.g. EC2, ACK, GKE, etc.." 
-                              value={inputText}
-                              onChange={(e) => setInputText(e.target.value)}
-                              onKeyDown={(e) => handleKeyDown(e, "infra")}
-                              onBlur={() => handleAddSubmit("infra")}
-                            />
+                            <div className="flex items-center gap-1.5">
+                              <input 
+                                type="text" 
+                                autoFocus 
+                                className="bg-background border border-border rounded-md px-2 py-1 text-xs focus:outline-none focus:border-primary max-w-[150px]" 
+                                placeholder="e.g. EC2, ACK, GKE, etc.." 
+                                value={inputText}
+                                onChange={(e) => setInputText(e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(e, "infra")}
+                              />
+                              <button onClick={() => handleAddSubmit("infra")} className="bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium hover:bg-primary/90 transition-colors">Add</button>
+                              <button onClick={() => { setInputText(""); setActiveInput(null); }} className="text-muted-foreground hover:text-foreground px-1.5 py-1 text-xs font-medium transition-colors">✕</button>
+                            </div>
                          ) : (
                             <button onClick={() => setActiveInput("infra")} className="text-xs text-primary hover:text-primary/80 font-medium">+ Add Component</button>
                          )}
@@ -274,24 +277,25 @@ export default function SetupWizard({ onComplete, uid }: SetupWizardProps) {
                       <div className="flex items-center justify-between mb-3">
                          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">Core Application Stack</h3>
                          {activeInput === "tech" ? (
-                            <>
-                            <input 
-                              type="text" 
-                              autoFocus 
-                              list="setup-tech"
-                              className="bg-background border border-border rounded-md px-2 py-1 text-xs focus:outline-none focus:border-primary max-w-[150px]" 
-                              placeholder="e.g. S3, Terraform..." 
-                              value={inputText}
-                              onChange={(e) => setInputText(e.target.value)}
-                              onKeyDown={(e) => handleKeyDown(e, "tech")}
-                              onBlur={() => handleAddSubmit("tech")}
-                            />
-                            <datalist id="setup-tech">
-                              {TECH_SUGGESTIONS.map(s => <option key={s} value={s} />)}
-                            </datalist>
-                            </>
+                            <div className="flex items-center gap-1.5">
+                              <input 
+                                type="text" 
+                                autoFocus 
+                                list="setup-tech"
+                                className="bg-background border border-border rounded-md px-2 py-1 text-xs focus:outline-none focus:border-primary max-w-[150px]" 
+                                placeholder="e.g. S3, Terraform..." 
+                                value={inputText}
+                                onChange={(e) => setInputText(e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(e, "tech")}
+                              />
+                              <datalist id="setup-tech">
+                                {TECH_SUGGESTIONS.map(s => <option key={s} value={s} />)}
+                              </datalist>
+                              <button onClick={() => handleAddSubmit("tech")} className="bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium hover:bg-primary/90 transition-colors">Add</button>
+                              <button onClick={() => { setInputText(""); setActiveInput(null); }} className="text-muted-foreground hover:text-foreground px-1.5 py-1 text-xs font-medium transition-colors">✕</button>
+                            </div>
                          ) : (
-                            <button onClick={() => setActiveInput("tech")} className="text-xs text-muted-foreground hover:text-foreground font-medium transition-colors">+ Add Custom</button>
+                            <button onClick={() => setActiveInput("tech")} className="text-xs text-muted-foreground hover:text-foreground font-medium transition-colors">+ Add to App Stack</button>
                          )}
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -405,7 +409,30 @@ export default function SetupWizard({ onComplete, uid }: SetupWizardProps) {
                     {regionOptions.map(region => (
                       <button
                         key={region}
-                        onClick={() => toggleArrayItem("regions", region)}
+                        onClick={() => {
+                          if (region === "Global") {
+                             if (data.regions.includes("Global")) {
+                               setData({ ...data, regions: [] });
+                             } else {
+                               setData({ ...data, regions: [...regionOptions] });
+                             }
+                          } else {
+                             let newRegions = [...data.regions];
+                             if (newRegions.includes(region)) {
+                               // Remove the region and also remove 'Global' since it's no longer global
+                               newRegions = newRegions.filter(r => r !== region && r !== "Global");
+                             } else {
+                               newRegions.push(region);
+                               // Check if all native regions are now selected, if so, auto-select Global
+                               const allOthers = regionOptions.filter(r => r !== "Global");
+                               const hasAllOthers = allOthers.every(r => newRegions.includes(r));
+                               if (hasAllOthers && !newRegions.includes("Global")) {
+                                 newRegions.push("Global");
+                               }
+                             }
+                             setData({ ...data, regions: newRegions });
+                          }
+                        }}
                         className={`p-4 rounded-xl border text-left transition-all flex items-center justify-between
                           ${data.regions.includes(region) 
                             ? "bg-purple-500/10 border-purple-500/50 text-foreground" 
