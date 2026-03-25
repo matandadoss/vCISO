@@ -127,6 +127,18 @@ class OrgAIBudget(BaseModel):
     active_provider: Mapped[str] = mapped_column(String(50), default="vertex_ai")
     alert_webhook_url: Mapped[str] = mapped_column(String(2048), nullable=True)
 
+class WorkflowAIConfig(BaseModel):
+    __tablename__ = "workflow_ai_configs"
+    org_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("organizations.id"))
+    workflow_name: Mapped[str] = mapped_column(String(100))
+    daily_cap: Mapped[float] = mapped_column(Float, default=5.0)
+    model_preference: Mapped[str] = mapped_column(String(50), default="balanced")
+    alert_threshold: Mapped[int] = mapped_column(Integer, default=80)
+
+    __table_args__ = (
+        Index("ix_workflow_ai_configs_composite", "org_id", "workflow_name"),
+    )
+
 class User(BaseModel):
     __tablename__ = "users"
     org_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("organizations.id"))
@@ -440,6 +452,19 @@ class WeeklySecurityBrief(BaseModel):
 
     __table_args__ = (
         Index("ix_security_briefs_composite", "org_id", "user_id", "created_at"),
+    )
+
+class OrganizationIntegration(BaseModel):
+    __tablename__ = "organization_integrations"
+    org_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("organizations.id"))
+    integration_key: Mapped[str] = mapped_column(String(100))
+    status: Mapped[str] = mapped_column(String(50), default="connected")
+    last_sync: Mapped[datetime] = mapped_column(nullable=True)
+    credentials_secret: Mapped[str] = mapped_column(Text, nullable=True)
+    config_data: Mapped[dict] = mapped_column(JSON, nullable=True)
+
+    __table_args__ = (
+        Index("ix_org_integrations_key", "org_id", "integration_key"),
     )
 
 def apply_rls_ddl(target, connection, **kw):

@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 import { fetchWithAuth } from "@/lib/api";
 
 import { useState, useEffect } from "react";
-import { Settings, Shield, AlertTriangle, ArrowRight, TrendingUp, Clock, BarChart3, Save } from "lucide-react";
+import { Settings, Shield, AlertTriangle, ArrowRight, TrendingUp, Clock, BarChart3, Save, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function AISettingsPage() {
@@ -11,23 +11,30 @@ export default function AISettingsPage() {
   const [trendData, setTrendData] = useState<any[]>([]);
   const [workflows, setWorkflows] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
+  
+  const [provider, setProvider] = useState<string>("Anthropic Direct");
 
   useEffect(() => {
     async function fetchData() {
        try {
-         const [roiRes, trendRes, costRes] = await Promise.all([
-            fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/roi-metrics?org_id=test-org`),
-            fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/budget-trends?org_id=test-org&days=7`),
-            fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/cost-breakdown?org_id=test-org`)
+         const [roiRes, trendRes, costRes, provRes] = await Promise.all([
+            fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/roi-metrics`),
+            fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/budget-trends?days=7`),
+            fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/cost-breakdown`),
+            fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/provider`)
          ]);
          
          const roi = await roiRes.json();
          const trend = await trendRes.json();
          const cost = await costRes.json();
+         const provData = await provRes.json();
 
          setRoiData(roi);
          setTrendData(trend.trend || []);
          setWorkflows(cost.by_workflow || []);
+         if (provData && provData.active_provider) {
+             setProvider(provData.active_provider === 'vertex_ai' ? 'Vertex AI (Gemini)' : 'Anthropic Direct');
+         }
        } catch (e) {
          console.error(e);
        } finally {
@@ -45,9 +52,38 @@ export default function AISettingsPage() {
 
   const handleSaveConfigs = async () => {
      setSaving(true);
-     // Mock sending updates to backend
-     await new Promise(r => setTimeout(r, 800));
-     setSaving(false);
+     try {
+       await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/workflow-config-bulk`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ configs: workflows })
+       });
+     } catch (err) {
+        console.error("Failed to save AI configs:", err);
+     } finally {
+        setSaving(false);
+     }
+  };
+
+  const handleToggleProvider = async () => {
+     const isAnthropic = provider === 'Anthropic Direct';
+     const nextVal = isAnthropic ? 'vertex_ai' : 'anthropic';
+     const nextDisp = isAnthropic ? 'Vertex AI (Gemini)' : 'Anthropic Direct';
+     
+     // Optimistic update
+     setProvider(nextDisp);
+     
+     try {
+        await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/provider`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ provider: nextVal })
+        });
+     } catch(e) {
+        // Revert on fail
+        setProvider(isAnthropic ? 'Anthropic Direct' : 'Vertex AI (Gemini)');
+        console.error("Failed to update AI provider", e);
+     }
   };
 
   if (loading) {
@@ -101,22 +137,27 @@ export default function AISettingsPage() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
-              <Settings className="w-5 h-5 mr-2 text-primary" /> Active Provider
-            </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 border border-border rounded-md bg-muted/50">
-                <span className="font-medium">Primary LLM</span>
-                <span className="text-sm bg-primary/10 text-primary px-2 py-1 rounded">Anthropic Direct</span>
-              </div>
-              <div className="flex justify-between items-center p-3 border border-border rounded-md bg-muted/50">
-                <span className="font-medium">Fallback LLM</span>
-                <span className="text-sm bg-muted-foreground/10 text-muted-foreground px-2 py-1 rounded">Vertex AI (Gemini)</span>
-              </div>
+          <div className="bg-card border border-border rounded-lg p-6 flex flex-col items-start h-full">
+            <div className="w-full">
+               <h3 className="text-lg font-semibold mb-4 flex items-center">
+                 <Settings className="w-5 h-5 mr-2 text-primary" /> Active Provider
+               </h3>
+               <div className="space-y-4">
+                 <div className="flex justify-between items-center p-3 border border-border rounded-md bg-muted/50">
+                   <span className="font-medium">Primary LLM</span>
+                   <span className="text-sm bg-primary/10 text-primary px-2 py-1 rounded">{provider}</span>
+                 </div>
+                 <div className="flex justify-between items-center p-3 border border-border rounded-md bg-muted/50">
+                   <span className="font-medium">Fallback LLM</span>
+                   <span className="text-sm bg-muted-foreground/10 text-muted-foreground px-2 py-1 rounded">
+                      {provider === 'Anthropic Direct' ? 'Vertex AI (Gemini)' : 'Anthropic Direct'}
+                   </span>
+                 </div>
+               </div>
             </div>
-            <button className="mt-6 text-sm text-primary flex items-center hover:underline">
-              Change Provider Settings <ArrowRight className="w-4 h-4 ml-1" />
+            
+            <button onClick={handleToggleProvider} className="mt-8 text-sm text-primary flex items-center hover:underline bg-primary/5 px-4 py-2 rounded-md transition-colors border border-primary/10">
+              Swap Primary & Fallback Provider <RefreshCw className="w-3.5 h-3.5 ml-2" />
             </button>
           </div>
 
@@ -172,37 +213,37 @@ export default function AISettingsPage() {
                <button 
                  onClick={handleSaveConfigs}
                  disabled={saving}
-                 className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium text-sm hover:bg-primary/90 transition-colors disabled:opacity-70"
+                 className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium text-sm hover:bg-primary/90 transition-colors disabled:opacity-70 shadow-sm"
                >
                  {saving ? <Settings className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                 Save Changes
+                 Save Thresholds
                </button>
             </div>
-             <div className="overflow-x-auto border rounded-xl border-border bg-background">
+             <div className="overflow-x-auto border rounded-xl border-border bg-background shadow-inner">
                 <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-muted-foreground uppercase bg-muted/50">
-                    <tr className="bg-muted/30">
-                      <th className="px-4 py-3 border-b border-border">Workflow Name</th>
-                      <th className="px-4 py-3 border-b border-border text-center">Current Cost (7d)</th>
-                      <th className="px-4 py-3 border-b border-border">Daily Cap ($)</th>
-                      <th className="px-4 py-3 border-b border-border pointer-events-auto">Model Mode</th>
-                      <th className="px-4 py-3 border-b border-border">Alert Threshold (%)</th>
+                  <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Workflow Engine Component</th>
+                      <th className="px-4 py-3 text-center font-semibold border-l border-r border-border/50">Current Spend (7d)</th>
+                      <th className="px-4 py-3 font-semibold">Daily Cap ($)</th>
+                      <th className="px-4 py-3 font-semibold pointer-events-auto">Model Mode</th>
+                      <th className="px-4 py-3 font-semibold">Alert Threshold (%)</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody className="divide-y divide-border/50">
                     {workflows.map((wf, idx) => (
                       <tr key={idx} className="hover:bg-muted/10 transition-colors">
                         <td className="px-4 py-4 font-medium capitalize flex items-center gap-2">
-                           <div className="w-2 h-2 rounded-full bg-primary/70"></div>
+                           <div className="w-2 h-2 rounded-full bg-primary/70 ring-2 ring-primary/20"></div>
                            {wf.workflow.replace('_', ' ')}
                         </td>
-                        <td className="px-4 py-4 text-center font-mono text-sm">${wf.cost.toFixed(2)}</td>
+                        <td className="px-4 py-4 text-center font-mono text-sm border-l border-r border-border/50 bg-muted/10 text-foreground/80">${wf.cost.toFixed(2)}</td>
                         <td className="px-4 py-4">
                            <div className="relative max-w-[120px]">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">$</span>
                               <input 
                                 type="number" 
-                                className="w-full bg-muted/50 border border-border rounded-md py-1.5 pl-7 pr-3 text-sm focus:border-primary focus:ring-1 ring-primary focus:outline-none"
+                                className="w-full bg-muted/30 border border-border rounded-md py-1.5 pl-6 pr-3 text-sm focus:border-primary focus:ring-1 ring-primary focus:outline-none transition-all shadow-sm"
                                 value={wf.cap}
                                 onChange={(e) => handleUpdateWorkflow(idx, 'cap', parseFloat(e.target.value))}
                                 step="0.5"
@@ -212,13 +253,13 @@ export default function AISettingsPage() {
                         </td>
                         <td className="px-4 py-4">
                            <select 
-                             className="bg-muted/50 border border-border rounded-md px-3 py-1.5 text-sm w-full max-w-[180px] focus:border-primary focus:outline-none"
+                             className="bg-muted/30 border border-border rounded-md px-3 py-1.5 text-sm w-full max-w-[180px] focus:border-primary focus:outline-none transition-all shadow-sm"
                              value={wf.model_preference}
                              onChange={(e) => handleUpdateWorkflow(idx, 'model_preference', e.target.value)}
                            >
                               <option value="fast_cheap">Fast / Cheap (Small LLM)</option>
-                              <option value="balanced">Balanced</option>
-                              <option value="deep">Accurate / Expensive (Large LLM)</option>
+                              <option value="balanced">Balanced Runtime (Mid LLM)</option>
+                              <option value="deep">Deep Analysis (Large LLM)</option>
                            </select>
                         </td>
                         <td className="px-4 py-4">
@@ -226,11 +267,11 @@ export default function AISettingsPage() {
                               <input 
                                 type="range" 
                                 min="50" max="100" step="5"
-                                className="w-full accent-primary"
+                                className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
                                 value={wf.alert_threshold}
                                 onChange={(e) => handleUpdateWorkflow(idx, 'alert_threshold', parseInt(e.target.value))}
                               />
-                              <span className="text-sm font-mono w-10 text-right">{wf.alert_threshold}%</span>
+                              <span className="text-xs font-mono w-10 text-right font-medium text-muted-foreground">{wf.alert_threshold}%</span>
                            </div>
                         </td>
                       </tr>
@@ -238,8 +279,9 @@ export default function AISettingsPage() {
                   </tbody>
                 </table>
              </div>
-             <p className="text-xs text-muted-foreground mt-4 italic">
-                * Adjusting to "Fast / Cheap" will automatically route queries for that workflow to the configured fallback model (e.g. Gemini Flash or Haiku) to conserve budget.
+             <p className="text-xs text-muted-foreground mt-4 italic flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                Adjusting any workflow setting to "Fast / Cheap" will automatically route correlation queries to the configured fallback model (e.g. Gemini Flash/Haiku) to conserve maximum budget.
              </p>
         </div>
 
