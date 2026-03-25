@@ -18,10 +18,18 @@ export default function LoginPage() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   useEffect(() => {
-    // If the user becomes authenticated, determine where to route them
     if (!loading && user) {
       const hasCompletedSetup = localStorage.getItem(`vCISO_Setup_${user.uid}`);
-      if (hasCompletedSetup === "true") {
+      
+      // Track login attempts to gracefully bypass wizard after 3 skips
+      let loginCounter = parseInt(localStorage.getItem(`vCISO_Logins_${user.uid}`) || "0", 10);
+      if (!sessionStorage.getItem(`counted_login_${user.uid}`)) {
+        loginCounter += 1;
+        localStorage.setItem(`vCISO_Logins_${user.uid}`, loginCounter.toString());
+        sessionStorage.setItem(`counted_login_${user.uid}`, "true");
+      }
+
+      if (hasCompletedSetup === "true" || loginCounter >= 3) {
         router.push("/"); // Standard dashboard
       } else {
         router.push("/setup"); // First-time onboarding flow
