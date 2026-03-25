@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
+import { SessionTimeoutProvider } from "@/contexts/SessionTimeoutProvider";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -35,7 +36,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   // Authenticated Layout
   return (
-    <>
+    <SessionTimeoutProvider>
       <AppSidebar mobileOpen={isMobileMenuOpen} setMobileOpen={setIsMobileMenuOpen} />
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
          <AppHeader onMenuClick={() => setIsMobileMenuOpen(true)} />
@@ -44,6 +45,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
             {children}
          </div>
       </main>
-    </>
+    </SessionTimeoutProvider>
   );
 }
