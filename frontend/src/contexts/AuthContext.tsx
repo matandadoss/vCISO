@@ -7,6 +7,7 @@ import {
   GoogleAuthProvider,
   OAuthProvider,
   signInWithRedirect,
+  signInWithPopup,
   getRedirectResult,
   signOut as firebaseSignOut,
   createUserWithEmailAndPassword,
@@ -114,7 +115,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       const { auth } = await import("@/lib/firebase");
       const provider = new GoogleAuthProvider();
-      await signInWithRedirect(auth, provider);
+      // Try popup first since it avoids cross-origin redirect state loss in many scenarios
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (popupError: any) {
+        console.warn("Popup blocked or unsupported, falling back to redirect:", popupError.code);
+        // Fallback to redirect if popup is blocked or environment doesn't support it (e.g. some incognito modes)
+        await signInWithRedirect(auth, provider);
+      }
     } catch (error) {
       console.error("Error signing in with Google", error);
       throw error;
@@ -133,7 +141,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       const { auth } = await import("@/lib/firebase");
       const provider = new OAuthProvider('microsoft.com');
-      await signInWithRedirect(auth, provider);
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (popupError: any) {
+        console.warn("Popup blocked or unsupported for Microsoft, falling back to redirect:", popupError.code);
+        await signInWithRedirect(auth, provider);
+      }
     } catch (error) {
       console.error("Error signing in with Microsoft", error);
       throw error;
