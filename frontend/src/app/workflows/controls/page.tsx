@@ -3,6 +3,13 @@
 import { useState } from "react";
 import { WorkflowCanvas, WorkflowStep } from "@/components/workflows/WorkflowCanvas";
 import { Wrench, Search, Filter, ShieldCheck, Zap, Activity } from "lucide-react";
+import { useSortableTable } from "@/hooks/useSortableTable";
+import { SortableHeader } from "@/components/ui/SortableHeader";
+
+const MOCK_CONTROLS = [
+  { id: "c1", name: "CrowdStrike Falcon", category: "EDR", coverage: "94%", health: "Healthy" },
+  { id: "c2", name: "Splunk Enterprise", category: "SIEM", coverage: "88%", health: "Log Drop" }
+];
 
 const CONTROL_STEPS: WorkflowStep[] = [
   { id: "inventory", label: "Tool Inventory", description: "EDR, SIEM, WAF list" },
@@ -14,6 +21,7 @@ const CONTROL_STEPS: WorkflowStep[] = [
 
 export default function ControlsWorkflowPage() {
   const [activeStep, setActiveStep] = useState<string>("inventory");
+  const { items: sortedControls, requestSort, sortConfig } = useSortableTable(MOCK_CONTROLS);
 
   const renderStepContent = () => {
     switch (activeStep) {
@@ -59,36 +67,34 @@ export default function ControlsWorkflowPage() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-muted/50 text-muted-foreground">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Tool Name</th>
-                    <th className="px-4 py-3 font-medium">Category</th>
-                    <th className="px-4 py-3 font-medium">Coverage</th>
-                    <th className="px-4 py-3 font-medium">Health Status</th>
+                    <SortableHeader label="Tool Name" sortKey="name" currentSort={sortConfig} requestSort={requestSort} />
+                    <SortableHeader label="Category" sortKey="category" currentSort={sortConfig} requestSort={requestSort} />
+                    <SortableHeader label="Coverage" sortKey="coverage" currentSort={sortConfig} requestSort={requestSort} />
+                    <SortableHeader label="Health Status" sortKey="health" currentSort={sortConfig} requestSort={requestSort} />
                     <th className="px-4 py-3 font-medium text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  <tr className="hover:bg-muted/30">
-                    <td className="px-4 py-3 font-medium text-foreground flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-primary" /> CrowdStrike Falcon
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">EDR</td>
-                    <td className="px-4 py-3">94%</td>
-                    <td className="px-4 py-3"><span className="text-green-500 flex items-center gap-1"><Zap className="w-3 h-3"/> Healthy</span></td>
-                    <td className="px-4 py-3 text-right">
-                      <button onClick={() => setActiveStep("testing")} className="text-primary hover:text-primary/80 font-medium text-xs">Test Efficacy</button>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-muted/30">
-                    <td className="px-4 py-3 font-medium text-foreground flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-purple-500" /> Splunk Enterprise
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">SIEM</td>
-                    <td className="px-4 py-3">88%</td>
-                    <td className="px-4 py-3"><span className="text-orange-500 flex items-center gap-1"><Activity className="w-3 h-3"/> Log Drop</span></td>
-                    <td className="px-4 py-3 text-right">
-                      <button onClick={() => setActiveStep("health")} className="text-primary hover:text-primary/80 font-medium text-xs">View Agents</button>
-                    </td>
-                  </tr>
+                  {sortedControls.map(ctrl => (
+                    <tr key={ctrl.id} className="hover:bg-muted/30">
+                      <td className="px-4 py-3 font-medium text-foreground flex items-center gap-2">
+                        <ShieldCheck className={`w-4 h-4 ${ctrl.name.includes("CrowdStrike") ? "text-primary" : "text-purple-500"}`} /> {ctrl.name}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{ctrl.category}</td>
+                      <td className="px-4 py-3">{ctrl.coverage}</td>
+                      <td className="px-4 py-3">
+                        <span className={`${ctrl.health === "Healthy" ? "text-green-500" : "text-orange-500"} flex items-center gap-1`}>
+                           {ctrl.health === "Healthy" ? <Zap className="w-3 h-3"/> : <Activity className="w-3 h-3"/>}
+                           {ctrl.health}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button onClick={() => setActiveStep(ctrl.health === "Healthy" ? "testing" : "health")} className="text-primary hover:text-primary/80 font-medium text-xs">
+                          {ctrl.health === "Healthy" ? "Test Efficacy" : "View Agents"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

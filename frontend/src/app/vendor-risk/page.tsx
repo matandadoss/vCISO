@@ -7,7 +7,8 @@ import {
   Smartphone, Cloud, Key, FileCode2, Edit2, Trash2, Upload, Plus
 } from "lucide-react";
 import { cn, formatDate } from "@/lib/utils";
-
+import { useSortableTable } from "@/hooks/useSortableTable";
+import { SortableHeader } from "@/components/ui/SortableHeader";
 
 type Vendor = {
   id: string;
@@ -50,7 +51,7 @@ export default function VendorRiskPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredVendors = vendors.filter(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()));
-
+  const { items: sortedVendors, requestSort, sortConfig } = useSortableTable(filteredVendors, { key: "risk_score", direction: "desc" });
   const fetchVendors = async () => {
     if (!orgId) return;
     setLoading(true);
@@ -286,16 +287,16 @@ export default function VendorRiskPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-border bg-muted/30">
-                      <th className="py-4 px-6 font-medium text-sm text-muted-foreground">Vendor Name</th>
-                      <th className="py-4 px-6 font-medium text-sm text-muted-foreground">Status</th>
-                      <th className="py-4 px-6 font-medium text-sm text-muted-foreground">Risk Score</th>
-                      <th className="py-4 px-6 font-medium text-sm text-muted-foreground">Tech Stack Mapping</th>
-                      <th className="py-4 px-6 font-medium text-sm text-muted-foreground">Last Assessment</th>
+                      <SortableHeader label="Vendor Name" sortKey="name" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
+                      <SortableHeader label="Status" sortKey="status" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
+                      <SortableHeader label="Risk Score" sortKey="risk_score" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
+                      <SortableHeader label="Tech Stack Mapping" sortKey="tech_stack" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
+                      <SortableHeader label="Last Assessment" sortKey="last_assessment" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
                       <th className="py-4 px-6 font-medium text-sm text-muted-foreground text-right relative min-w-[160px]">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {filteredVendors.map(vendor => (
+                    {sortedVendors.map(vendor => (
                       <tr key={vendor.id} className="hover:bg-muted/10 transition-colors group">
                         <td className="py-4 px-6 font-medium text-foreground flex items-center gap-3">
                            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">

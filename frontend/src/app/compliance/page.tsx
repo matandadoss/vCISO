@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { formatDate, cn } from "@/lib/utils";
 import { Search, FileCheck, CheckCircle2, AlertCircle, Clock, Plus, X, Info } from "lucide-react";
 import Link from "next/link";
+import { useSortableTable } from "@/hooks/useSortableTable";
+import { SortableHeader } from "@/components/ui/SortableHeader";
 
 export default function CompliancePage() {
   const [frameworks, setFrameworks] = useState<any[]>([]);
@@ -53,6 +55,7 @@ export default function CompliancePage() {
     (req.title?.toLowerCase() || "").includes(searchQuery.toLowerCase())
   );
 
+  const { items: sortedRequirements, requestSort, sortConfig } = useSortableTable(filteredRequirements);
 
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
@@ -139,11 +142,11 @@ export default function CompliancePage() {
               <table className="w-full text-sm text-left min-w-[800px]">
                 <thead className="bg-muted text-muted-foreground border-b border-border">
                   <tr>
-                    <th className="px-6 py-4 font-medium uppercase tracking-wider w-[120px]">Control ID</th>
-                    <th className="px-6 py-4 font-medium uppercase tracking-wider">Requirement</th>
-                    <th className="px-6 py-4 font-medium uppercase tracking-wider text-center">Status</th>
-                    <th className="px-6 py-4 font-medium uppercase tracking-wider text-center">Evidence</th>
-                    <th className="px-6 py-4 font-medium uppercase tracking-wider text-right">Last Reviewed</th>
+                    <SortableHeader label="Control ID" sortKey="requirement_id_code" currentSort={sortConfig} requestSort={requestSort} className="w-[120px]" />
+                    <SortableHeader label="Requirement" sortKey="title" currentSort={sortConfig} requestSort={requestSort} />
+                    <SortableHeader label="Status" sortKey="status" currentSort={sortConfig} requestSort={requestSort} className="text-center" />
+                    <SortableHeader label="Evidence" sortKey="evidence_status" currentSort={sortConfig} requestSort={requestSort} className="text-center" />
+                    <SortableHeader label="Last Reviewed" sortKey="last_reviewed" currentSort={sortConfig} requestSort={requestSort} className="text-right" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
@@ -153,7 +156,7 @@ export default function CompliancePage() {
                         Loading requirements...
                       </td>
                     </tr>
-                  ) : filteredRequirements.map((req: any) => (
+                  ) : sortedRequirements.map((req: any) => (
                     <tr key={req.id} className="hover:bg-muted/30 transition-colors group">
                       <td className="px-6 py-4">
                         <span className="font-mono font-medium text-foreground">{req.requirement_id_code}</span>

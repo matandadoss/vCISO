@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { WorkflowCanvas, WorkflowStep } from "@/components/workflows/WorkflowCanvas";
 import { Cloud, Search, Filter, ShieldAlert, CheckCircle2, ServerCog, AlertTriangle } from "lucide-react";
+import { useSortableTable } from "@/hooks/useSortableTable";
+import { SortableHeader } from "@/components/ui/SortableHeader";
 
 const INFRASTRUCTURE_STEPS: WorkflowStep[] = [
   { id: "discovery", label: "Asset Discovery", description: "Enumerate multi-cloud resources" },
@@ -21,6 +23,7 @@ const MOCK_ASSETS = [
 
 export default function InfrastructureWorkflowPage() {
   const [activeStep, setActiveStep] = useState<string>("discovery");
+  const { items: sortedAssets, requestSort, sortConfig } = useSortableTable(MOCK_ASSETS);
 
   const renderStepContent = () => {
     switch (activeStep) {
@@ -69,15 +72,15 @@ export default function InfrastructureWorkflowPage() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-muted/50 text-muted-foreground">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Resource Name</th>
-                    <th className="px-4 py-3 font-medium">Type</th>
-                    <th className="px-4 py-3 font-medium">Environment</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 font-medium">Last Scan</th>
+                    <SortableHeader label="Resource Name" sortKey="name" currentSort={sortConfig} requestSort={requestSort} />
+                    <SortableHeader label="Type" sortKey="type" currentSort={sortConfig} requestSort={requestSort} />
+                    <SortableHeader label="Environment" sortKey="env" currentSort={sortConfig} requestSort={requestSort} />
+                    <SortableHeader label="Status" sortKey="status" currentSort={sortConfig} requestSort={requestSort} />
+                    <SortableHeader label="Last Scan" sortKey="lastScan" currentSort={sortConfig} requestSort={requestSort} />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {MOCK_ASSETS.map(asset => (
+                  {sortedAssets.map(asset => (
                     <tr key={asset.id} className="hover:bg-muted/30">
                       <td className="px-4 py-3 font-medium text-foreground flex items-center gap-2">
                         <ServerCog className="w-4 h-4 text-muted-foreground" />

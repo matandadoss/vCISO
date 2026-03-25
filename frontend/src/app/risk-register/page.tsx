@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { formatDate, cn } from "@/lib/utils";
 import { Search, Filter, ArrowRight, ShieldAlert, FolderCheck } from "lucide-react";
 import Link from "next/link";
+import { useSortableTable } from "@/hooks/useSortableTable";
+import { SortableHeader } from "@/components/ui/SortableHeader";
 import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function RiskRegisterPage() {
@@ -31,6 +33,8 @@ export default function RiskRegisterPage() {
     }
     fetchRisks();
   }, [severityFilter]);
+
+  const { items: sortedRisks, requestSort, sortConfig } = useSortableTable(risks);
 
   const handleLevelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = e.target.value;
@@ -83,12 +87,12 @@ export default function RiskRegisterPage() {
           <table className="w-full text-sm text-left">
             <thead className="bg-muted text-muted-foreground">
               <tr>
-                <th className="px-6 py-4 font-medium uppercase tracking-wider">Risk Line Item</th>
-                <th className="px-6 py-4 font-medium uppercase tracking-wider">Level</th>
-                <th className="px-6 py-4 font-medium uppercase tracking-wider">Categories</th>
-                <th className="px-6 py-4 font-medium uppercase tracking-wider">Owner</th>
-                <th className="px-6 py-4 font-medium uppercase tracking-wider">Date Entered</th>
-                <th className="px-6 py-4 font-medium uppercase tracking-wider">Expires</th>
+                <SortableHeader label="Risk Line Item" sortKey="title" currentSort={sortConfig} requestSort={requestSort} />
+                <SortableHeader label="Level" sortKey="risk_level" currentSort={sortConfig} requestSort={requestSort} />
+                <SortableHeader label="Categories" sortKey="risk_categories" currentSort={sortConfig} requestSort={requestSort} />
+                <SortableHeader label="Owner" sortKey="owner" currentSort={sortConfig} requestSort={requestSort} />
+                <SortableHeader label="Date Entered" sortKey="date_entered" currentSort={sortConfig} requestSort={requestSort} />
+                <SortableHeader label="Expires" sortKey="expiration_date" currentSort={sortConfig} requestSort={requestSort} />
                 <th className="px-6 py-4 font-medium uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
@@ -99,7 +103,7 @@ export default function RiskRegisterPage() {
                        No risks currently recorded in the registry.
                     </td>
                  </tr>
-              ) : risks.map((r: any) => (
+              ) : sortedRisks.map((r: any) => (
                 <tr key={r.id} className="hover:bg-muted/50 transition-colors">
                   <td className="px-6 py-4">
                     <p className="font-semibold text-foreground truncate max-w-sm">{r.title}</p>

@@ -6,6 +6,7 @@ import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { Search, Filter, ArrowRight, Clock, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from 'next/navigation';
+import { SortableHeader } from "@/components/ui/SortableHeader";
 
 export default function FindingsPage() {
   const [findings, setFindings] = useState<any[]>([]);
@@ -18,6 +19,8 @@ export default function FindingsPage() {
   const limit = 10;
   const statusFilter = searchParams?.get('status') || '';
   const severityFilter = searchParams?.get('severity') || '';
+  const sortBy = searchParams?.get('sort_by') || 'detected_at';
+  const sortDir = searchParams?.get('sort_dir') || 'desc';
 
   useEffect(() => {
     async function fetchFindings() {
@@ -30,6 +33,7 @@ export default function FindingsPage() {
         // Append filters if they exist
         if (severityFilter) url += `&severity=${severityFilter}`;
         if (statusFilter) url += `&status=${statusFilter}`;
+        url += `&sort_by=${sortBy}&sort_dir=${sortDir}`;
 
         const res = await fetchWithAuth(url);
         if (res.ok) {
@@ -42,7 +46,16 @@ export default function FindingsPage() {
       }
     }
     fetchFindings();
-  }, [page, statusFilter, severityFilter]);
+  }, [page, statusFilter, severityFilter, sortBy, sortDir]);
+
+  const handleSort = (key: string) => {
+    const newDir = (sortBy === key && sortDir === 'asc') ? 'desc' : 'asc';
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.set('sort_by', key);
+    params.set('sort_dir', newDir);
+    params.set('page', '1');
+    router.push(`/findings?${params.toString()}`);
+  };
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = e.target.value;
@@ -99,13 +112,13 @@ export default function FindingsPage() {
           <table className="w-full text-sm text-left">
             <thead className="bg-muted text-muted-foreground">
               <tr>
-                <th className="px-6 py-4 font-medium uppercase tracking-wider">Finding</th>
-                <th className="px-6 py-4 font-medium uppercase tracking-wider">Severity</th>
-                <th className="px-6 py-4 font-medium uppercase tracking-wider">Source</th>
-                <th className="px-6 py-4 font-medium uppercase tracking-wider">Risk Score</th>
-                <th className="px-6 py-4 font-medium uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 font-medium uppercase tracking-wider">Detected</th>
-                <th className="px-6 py-4 font-medium uppercase tracking-wider">Fix Deadline</th>
+                <SortableHeader label="Finding" sortKey="title" currentSort={{ key: sortBy, direction: sortDir as any }} requestSort={handleSort as any} />
+                <SortableHeader label="Severity" sortKey="severity" currentSort={{ key: sortBy, direction: sortDir as any }} requestSort={handleSort as any} />
+                <SortableHeader label="Source" sortKey="source_workflow" currentSort={{ key: sortBy, direction: sortDir as any }} requestSort={handleSort as any} />
+                <SortableHeader label="Risk Score" sortKey="risk_score" currentSort={{ key: sortBy, direction: sortDir as any }} requestSort={handleSort as any} />
+                <SortableHeader label="Status" sortKey="status" currentSort={{ key: sortBy, direction: sortDir as any }} requestSort={handleSort as any} />
+                <SortableHeader label="Detected" sortKey="detected_at" currentSort={{ key: sortBy, direction: sortDir as any }} requestSort={handleSort as any} />
+                <SortableHeader label="Fix Deadline" sortKey="sla_deadline" currentSort={{ key: sortBy, direction: sortDir as any }} requestSort={handleSort as any} />
                 <th className="px-6 py-4 font-medium uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>

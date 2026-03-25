@@ -6,6 +6,8 @@ import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { Search, ShieldAlert, Activity, Users, BookOpen, FlaskConical } from "lucide-react";
 import Link from "next/link";
 import { useControlTower } from "@/contexts/ControlTowerContext";
+import { useSortableTable } from "@/hooks/useSortableTable";
+import { SortableHeader } from "@/components/ui/SortableHeader";
 
 export default function ThreatIntelPage() {
   const [actors, setActors] = useState([]);
@@ -24,6 +26,8 @@ export default function ThreatIntelPage() {
   const [executionSuccess, setExecutionSuccess] = useState<Record<string, boolean>>({});
 
   const { setIsOpen, setPageContext } = useControlTower();
+
+  const { items: sortedIndicators, requestSort, sortConfig } = useSortableTable(indicators);
 
   const handleActorClick = (actor: any) => {
     setPageContext({
@@ -267,16 +271,16 @@ export default function ThreatIntelPage() {
             <table className="w-full text-sm text-left">
               <thead className="bg-muted text-muted-foreground border-b border-border">
                 <tr>
-                  <th className="px-6 py-4 font-medium uppercase tracking-wider">Indicator Type</th>
-                  <th className="px-6 py-4 font-medium uppercase tracking-wider">Value</th>
-                  <th className="px-6 py-4 font-medium uppercase tracking-wider">Severity</th>
-                  <th className="px-6 py-4 font-medium uppercase tracking-wider">Relevance</th>
-                  <th className="px-6 py-4 font-medium uppercase tracking-wider">Confidence</th>
-                  <th className="px-6 py-4 font-medium uppercase tracking-wider text-right">Valid From</th>
+                  <SortableHeader label="Indicator Type" sortKey="indicator_type" currentSort={sortConfig} requestSort={requestSort} />
+                  <SortableHeader label="Value" sortKey="value" currentSort={sortConfig} requestSort={requestSort} />
+                  <SortableHeader label="Severity" sortKey="severity" currentSort={sortConfig} requestSort={requestSort} />
+                  <SortableHeader label="Relevance" sortKey="relevance_score" currentSort={sortConfig} requestSort={requestSort} />
+                  <SortableHeader label="Confidence" sortKey="confidence" currentSort={sortConfig} requestSort={requestSort} />
+                  <SortableHeader label="Valid From" sortKey="valid_from" currentSort={sortConfig} requestSort={requestSort} className="text-right" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
-                {indicators.map((ind: any) => (
+                {sortedIndicators.map((ind: any) => (
                   <React.Fragment key={ind.id}>
                     <tr 
                       onClick={() => toggleIoc(ind.id)}

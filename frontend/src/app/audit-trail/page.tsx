@@ -1,9 +1,11 @@
-﻿"use client";
+"use client";
 import { fetchWithAuth } from "@/lib/api";
 
 import { useState, useEffect } from "react";
 import { ShieldAlert, Terminal, CheckCircle2, Clock, Search, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSortableTable } from "@/hooks/useSortableTable";
+import { SortableHeader } from "@/components/ui/SortableHeader";
 
 type LogEntry = {
     id: string;
@@ -33,6 +35,8 @@ export default function AuditTrailPage() {
     }
     fetchAuditTrail();
   }, []);
+
+  const { items: sortedLogs, requestSort, sortConfig } = useSortableTable(logs);
 
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
@@ -75,15 +79,15 @@ export default function AuditTrailPage() {
               <table className="w-full text-sm text-left">
                 <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
                   <tr>
-                    <th className="px-6 py-4 font-semibold">Timestamp</th>
-                    <th className="px-6 py-4 font-semibold">Action Executed</th>
-                    <th className="px-6 py-4 font-semibold">Target Asset/IP</th>
-                    <th className="px-6 py-4 font-semibold">Executed By</th>
-                    <th className="px-6 py-4 font-semibold">Status</th>
+                    <SortableHeader label="Timestamp" sortKey="timestamp" currentSort={sortConfig} requestSort={requestSort} />
+                    <SortableHeader label="Action Executed" sortKey="action_name" currentSort={sortConfig} requestSort={requestSort} />
+                    <SortableHeader label="Target Asset/IP" sortKey="target" currentSort={sortConfig} requestSort={requestSort} />
+                    <SortableHeader label="Executed By" sortKey="executed_by" currentSort={sortConfig} requestSort={requestSort} />
+                    <SortableHeader label="Status" sortKey="status" currentSort={sortConfig} requestSort={requestSort} />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {logs.map((log) => (
+                  {sortedLogs.map((log) => (
                     <tr key={log.id} className="hover:bg-muted/30 transition-colors group cursor-pointer">
                       <td className="px-6 py-4 font-mono text-xs text-muted-foreground border-l-2 border-transparent group-hover:border-primary transition-colors">
                          {new Date(log.timestamp).toLocaleString()}

@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { Users, UserPlus, Shield, MoreVertical, Search, CheckCircle2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fetchWithAuth } from "@/lib/api";
+import { useSortableTable } from "@/hooks/useSortableTable";
+import { SortableHeader } from "@/components/ui/SortableHeader";
 
 type User = {
   id: string;
@@ -125,6 +127,8 @@ export default function UsersSettingsPage() {
     u.name.toLowerCase().includes(search.toLowerCase()) || 
     u.email.toLowerCase().includes(search.toLowerCase())
   );
+  
+  const { items: sortedUsers, requestSort, sortConfig } = useSortableTable(filteredUsers);
 
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
@@ -200,10 +204,10 @@ export default function UsersSettingsPage() {
             <table className="w-full text-sm text-left relative">
               <thead className="text-xs text-muted-foreground bg-accent/50 border-b border-border">
                 <tr>
-                  <th className="px-6 py-4 font-medium uppercase tracking-wider">User</th>
-                  <th className="px-6 py-4 font-medium uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-4 font-medium uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 font-medium uppercase tracking-wider">Last Active</th>
+                  <SortableHeader label="User" sortKey="name" currentSort={sortConfig} requestSort={requestSort} />
+                  <SortableHeader label="Role" sortKey="role" currentSort={sortConfig} requestSort={requestSort} />
+                  <SortableHeader label="Status" sortKey="status" currentSort={sortConfig} requestSort={requestSort} />
+                  <SortableHeader label="Last Active" sortKey="lastActive" currentSort={sortConfig} requestSort={requestSort} />
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
@@ -219,7 +223,7 @@ export default function UsersSettingsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredUsers.map((user) => (
+                  sortedUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-accent/30 transition-colors">
                       <td className="px-6 py-4">
                         <div className="font-medium text-foreground">{user.name}</div>

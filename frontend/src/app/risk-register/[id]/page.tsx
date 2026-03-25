@@ -21,9 +21,17 @@ interface RiskDetail {
   source?: string;
 }
 
+interface SystemUser {
+  id: string;
+  email: string;
+  full_name?: string;
+  role: string;
+}
+
 export default function RiskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = use(params);
   const [risk, setRisk] = useState<RiskDetail | null>(null);
+  const [users, setUsers] = useState<SystemUser[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Editable states
@@ -42,12 +50,21 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
   const isExpired = risk?.expiration_date ? new Date(risk.expiration_date) < new Date() : false;
 
   useEffect(() => {
-    async function fetchRisk() {
+    async function fetchData() {
       try {
-        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/risk-register/${unwrappedParams.id}`);
-        if (!res.ok) throw new Error("Failed to fetch risk details");
-        const data = await res.json();
+        const [riskRes, usersRes] = await Promise.all([
+           fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/risk-register/${unwrappedParams.id}`),
+           fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/users`)
+        ]);
+        
+        if (!riskRes.ok) throw new Error("Failed to fetch risk details");
+        const data = await riskRes.json();
         setRisk(data);
+        
+        if (usersRes.ok) {
+           const usersData = await usersRes.json();
+           setUsers(usersData);
+        }
         
         // Initialize editable states
         setEditLevel(data.risk_level);
@@ -61,7 +78,7 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
         setLoading(false);
       }
     }
-    fetchRisk();
+    fetchData();
   }, [unwrappedParams.id]);
 
   const handleSave = async () => {
@@ -329,13 +346,16 @@ export default function RiskDetailPage({ params }: { params: Promise<{ id: strin
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                       <UserIcon className="w-3.5 h-3.5" /> Assigned Owner
                     </label>
-                    <input 
-                       type="text" 
+                    <select 
                        value={editOwner}
                        onChange={(e) => setEditOwner(e.target.value)}
                        className="w-full px-3 py-2 bg-background border border-border rounded text-sm focus:outline-none focus:ring-1 ring-primary"
-                       placeholder="Assign an owner..."
-                    />
+                    >
+                       <option value="">Unassigned</option>
+                       {users.map(u => (
+                          <option key={u.id} value={u.email}>{u.full_name || u.email} ({u.role})</option>
+                       ))}
+                    </select>
                  </div>
 
                  <div className="space-y-2">

@@ -3,6 +3,13 @@
 import { useState } from "react";
 import { WorkflowCanvas, WorkflowStep } from "@/components/workflows/WorkflowCanvas";
 import { LineChart, Search, Filter, ShieldAlert, FileText, ArrowRight, Target } from "lucide-react";
+import { useSortableTable } from "@/hooks/useSortableTable";
+import { SortableHeader } from "@/components/ui/SortableHeader";
+
+const MOCK_GAPS = [
+  { id: "g1", gap: "Missing MFA on Legacy VPN", domain: "Identity & Access", severity: "Critical" },
+  { id: "g2", gap: "No EDR coverage on Contractor Subnet", domain: "Endpoint Security", severity: "Critical" }
+];
 
 const GAP_STEPS: WorkflowStep[] = [
   { id: "threat", label: "Threat Review", description: "What we face" },
@@ -14,6 +21,7 @@ const GAP_STEPS: WorkflowStep[] = [
 
 export default function GapAnalysisWorkflowPage() {
   const [activeStep, setActiveStep] = useState<string>("gap_id");
+  const { items: sortedGaps, requestSort, sortConfig } = useSortableTable(MOCK_GAPS);
 
   const renderStepContent = () => {
     switch (activeStep) {
@@ -63,33 +71,25 @@ export default function GapAnalysisWorkflowPage() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-muted/50 text-muted-foreground">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Identified Gap</th>
-                    <th className="px-4 py-3 font-medium">Domain</th>
-                    <th className="px-4 py-3 font-medium">Severity</th>
+                    <SortableHeader label="Identified Gap" sortKey="gap" currentSort={sortConfig} requestSort={requestSort} />
+                    <SortableHeader label="Domain" sortKey="domain" currentSort={sortConfig} requestSort={requestSort} />
+                    <SortableHeader label="Severity" sortKey="severity" currentSort={sortConfig} requestSort={requestSort} />
                     <th className="px-4 py-3 font-medium text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  <tr className="hover:bg-muted/30">
-                    <td className="px-4 py-3 font-medium text-foreground">Missing MFA on Legacy VPN</td>
-                    <td className="px-4 py-3 text-muted-foreground">Identity & Access</td>
-                    <td className="px-4 py-3"><span className="text-red-500 font-semibold bg-red-500/10 px-2 py-1 rounded">Critical</span></td>
-                    <td className="px-4 py-3 text-right">
-                      <button onClick={() => setActiveStep("roadmap")} className="text-primary hover:text-primary/80 font-medium text-xs flex items-center justify-end gap-1 ml-auto">
-                        Add to Roadmap <ArrowRight className="w-3 h-3"/>
-                      </button>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-muted/30">
-                    <td className="px-4 py-3 font-medium text-foreground">No EDR coverage on Contractor Subnet</td>
-                    <td className="px-4 py-3 text-muted-foreground">Endpoint Security</td>
-                    <td className="px-4 py-3"><span className="text-red-500 font-semibold bg-red-500/10 px-2 py-1 rounded">Critical</span></td>
-                    <td className="px-4 py-3 text-right">
-                      <button onClick={() => setActiveStep("roadmap")} className="text-primary hover:text-primary/80 font-medium text-xs flex items-center justify-end gap-1 ml-auto">
-                        Add to Roadmap <ArrowRight className="w-3 h-3"/>
-                      </button>
-                    </td>
-                  </tr>
+                  {sortedGaps.map(gap => (
+                    <tr key={gap.id} className="hover:bg-muted/30">
+                      <td className="px-4 py-3 font-medium text-foreground">{gap.gap}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{gap.domain}</td>
+                      <td className="px-4 py-3"><span className="text-red-500 font-semibold bg-red-500/10 px-2 py-1 rounded">{gap.severity}</span></td>
+                      <td className="px-4 py-3 text-right">
+                        <button onClick={() => setActiveStep("roadmap")} className="text-primary hover:text-primary/80 font-medium text-xs flex items-center justify-end gap-1 ml-auto">
+                          Add to Roadmap <ArrowRight className="w-3 h-3"/>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

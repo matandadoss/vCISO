@@ -35,6 +35,8 @@ async def list_findings(
     org_id: str,
     severity: Optional[Severity] = None,
     status: Optional[str] = None,
+    sort_by: Optional[str] = "detected_at",
+    sort_dir: Optional[str] = "desc",
     limit: int = 50,
     offset: int = 0,
     db: AsyncSession = Depends(get_db)
@@ -60,8 +62,17 @@ async def list_findings(
     total_res = await db.execute(count_stmt)
     total = total_res.scalar() or 0
     
-    # Get items with limit and offset, ordered by most recent
-    stmt = stmt.order_by(Finding.detected_at.desc()).limit(limit).offset(offset)
+    # Determine sorting column
+    order_col = Finding.detected_at.desc() # Default
+    if sort_by and hasattr(Finding, sort_by):
+        col = getattr(Finding, sort_by)
+        if sort_dir == "asc":
+            order_col = col.asc()
+        else:
+            order_col = col.desc()
+            
+    # Get items with limit and offset, ordered securely
+    stmt = stmt.order_by(order_col).limit(limit).offset(offset)
     result = await db.execute(stmt)
     items = result.scalars().all()
     

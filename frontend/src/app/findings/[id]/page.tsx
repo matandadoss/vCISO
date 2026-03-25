@@ -57,19 +57,36 @@ interface FindingDetail {
   sla_breached?: boolean;
 }
 
+interface SystemUser {
+  id: string;
+  email: string;
+  full_name?: string;
+  role: string;
+}
+
 export default function FindingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = use(params);
   const [finding, setFinding] = useState<FindingDetail | null>(null);
+  const [users, setUsers] = useState<SystemUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assigneeEmail, setAssigneeEmail] = useState("");
 
   useEffect(() => {
-    async function fetchFinding() {
+    async function fetchData() {
       try {
-        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/findings/${unwrappedParams.id}?org_id=default`);
-        if (!res.ok) throw new Error("Failed to fetch finding details");
-        const data = await res.json();
-        setFinding(data);
+        const [findingRes, usersRes] = await Promise.all([
+          fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/findings/${unwrappedParams.id}?org_id=default`),
+          fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/users`)
+        ]);
+        
+        if (!findingRes.ok) throw new Error("Failed to fetch finding details");
+        setFinding(await findingRes.json());
+        
+        if (usersRes.ok) {
+           setUsers(await usersRes.json());
+        }
       } catch (error) {
         console.error(error);
       } finally {
@@ -77,19 +94,18 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
       }
     }
     
-    fetchFinding();
+    fetchData();
   }, [unwrappedParams.id]);
 
-  const handleAction = async (action: "assign" | "remediate" | "accept-risk" | "ticket") => {
+  const handleAction = async (action: "assign" | "remediate" | "accept-risk" | "ticket", customEmail?: string) => {
     if (!finding) return;
     
     setActionLoading(action);
     try {
       let body: any = {};
       if (action === "assign") {
-          const email = window.prompt("Enter Assignee Email Address:");
-          if (!email) { setActionLoading(null); return; }
-          body = { owner_id: email, notes: "Please investigate this priority item." };
+          if (!customEmail) { setActionLoading(null); return; }
+          body = { owner_id: customEmail, notes: "Please investigate this priority item." };
       }
       if (action === "accept-risk") body = { justification: "Mitigating controls in place via WAF.", expiration_date: "2024-12-31" };
       if (action === "ticket") body = { integration: "jira", priority: "High" };
@@ -213,7 +229,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
           
           <div className="flex flex-wrap gap-2 w-full xl:w-auto mt-2 xl:mt-0">
             <button 
-              onClick={() => handleAction('assign')}
+              onClick={() => setShowAssignModal(true)}
               disabled={actionLoading !== null}
               className="px-3 py-2 bg-card border border-border hover:bg-accent text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50"
             >
@@ -409,6 +425,56 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
       </div>
+
+      {/* Assign Owner Modal */}
+      {showAssignModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-card w-full max-w-sm rounded-lg shadow-xl border border-border p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div>
+              <h3 className="font-semibold text-lg text-foreground">Assign Finding</h3>
+              <p className="text-sm text-muted-foreground mt-1">Select a team member to take ownership of this finding.</p>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Assignee</label>
+              <select 
+                className="w-full bg-background border border-border rounded-md p-2.5 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                onChange={(e) => setAssigneeEmail(e.target.value)}
+                value={assigneeEmail}
+              >
+                <option value="" disabled>Select a user...</option>
+                {users.map(u => (
+                  <option key={u.id} value={u.email}>{u.full_name || u.email} ({u.role})</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="flex justify-end gap-3 pt-2">
+              <button 
+                onClick={() => {
+                  setShowAssignModal(false);
+                  setAssigneeEmail("");
+                }}
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                   if(assigneeEmail) {
+                      handleAction('assign', assigneeEmail);
+                      setShowAssignModal(false);
+                   }
+                }}
+                disabled={!assigneeEmail || actionLoading === 'assign'}
+                className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors shadow-sm disabled:opacity-50"
+              >
+                Assign User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
