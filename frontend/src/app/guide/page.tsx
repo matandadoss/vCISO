@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { 
   ChevronRight, LayoutDashboard, ShieldAlert, Activity, Building2, 
-  Target, Network, FlaskConical, Building, Settings, BookOpen, Bot
+  Target, Network, FlaskConical, Building, Settings, BookOpen, Bot, Plug
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +18,7 @@ const GUIDE_SECTIONS = [
   { id: "analyzer", label: "Cyber Threat Analyzer", icon: Network },
   { id: "testing", label: "Security Testing", icon: FlaskConical },
   { id: "company", label: "My Company", icon: Building },
+  { id: "integrations", label: "Integrations & Sync", icon: Plug },
   { id: "ai", label: "Control Tower AI", icon: Bot },
   { id: "settings", label: "Control Panel", icon: Settings },
 ];
@@ -257,6 +258,35 @@ export default function UserGuidePage() {
                  </p>
                  <p className="text-base leading-relaxed">
                    Because the settings here heavily control the entire platform, access is restricted exclusively to upper management to mathematically defend against accidental disruptions.
+                 </p>
+               </div>
+             </div>
+           )}
+
+           {activeTab === "integrations" && (
+             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+               <div className="flex items-center text-sm font-medium text-muted-foreground gap-1.5 mb-2">
+                 Guide <ChevronRight className="w-4 h-4" /> Integrations & Sync
+               </div>
+               <h2 className="text-3xl font-bold tracking-tight text-foreground">Integrations & Vendor Sync</h2>
+               <div className="prose prose-slate dark:prose-invert max-w-none space-y-4 text-foreground/90">
+                 <p className="text-base leading-relaxed">
+                   The <strong>Integrations Hub</strong> allows Virtual CISO to automatically discover the software your company uses without requiring any manual data entry.
+                 </p>
+                 <h3 className="text-xl font-bold mt-6 mb-2 text-foreground">How It Works</h3>
+                 <p className="text-base leading-relaxed">
+                   By clicking "Authenticate via OAuth" on providers like Google Workspace, Okta, or Microsoft Entra ID, you grant Virtual CISO a temporary software token. We use this token to digitally read your company directory and securely map out which third-party applications your employees are actively logging into.
+                 </p>
+                 <h3 className="text-xl font-bold mt-6 mb-2 text-foreground">Why It Is Safe</h3>
+                 <p className="text-base leading-relaxed">
+                   This network connection is explicitly <strong>read-only</strong>. Virtual CISO cannot change your passwords, read private emails, or modify your internal company files. The system strictly requests the absolute minimum permissions required to evaluate your software architecture mappings. 
+                 </p>
+                 <h3 className="text-xl font-bold mt-6 mb-2 text-foreground">The Benefit to Your Business</h3>
+                 <p className="text-base leading-relaxed">
+                   <strong>Eliminating Software Blindspots:</strong> In modern business, employees frequently adopt SaaS applications that the executive team is completely unaware of (known as "Shadow IT"). If one of these unknown vendors suffers a catastrophic data breach, your company's proprietary data is lost without you even knowing it was at risk. 
+                 </p>
+                 <p className="text-base leading-relaxed">
+                   By synchronizing your Identity Provider, we automatically illuminate these hidden applications, place them into your monitored risk register, and instantly trigger defensive alerts if they ever become compromised—ensuring your security posture is completely bulletproof.
                  </p>
                </div>
              </div>
