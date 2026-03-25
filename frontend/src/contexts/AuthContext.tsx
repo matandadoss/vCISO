@@ -7,6 +7,7 @@ import {
   GoogleAuthProvider,
   OAuthProvider,
   signInWithRedirect,
+  getRedirectResult,
   signOut as firebaseSignOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -68,6 +69,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         const { auth } = await import("@/lib/firebase");
+        
+        try {
+          const redirectResult = await getRedirectResult(auth);
+          if (redirectResult && redirectResult.user) {
+            console.log("Automatically resumed session via redirect:", redirectResult.user.email);
+          }
+        } catch (redirectError: any) {
+          console.error("Firebase Redirect Login Failed:", redirectError.code, redirectError.message);
+        }
+
         unsubscribe = onAuthStateChanged(auth, (currentUser) => {
           setUser(currentUser);
           clearTimeout(failsafeTimer);
