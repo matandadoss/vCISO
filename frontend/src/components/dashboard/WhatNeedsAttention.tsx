@@ -81,8 +81,8 @@ export function WhatNeedsAttention() {
       <div className="flex-1 space-y-4 overflow-y-auto pr-2 min-h-[300px]">
         {items.map((item) => {
           // Add custom styling checks for time sensitivity
-          const isOverdue = item.timeAgo.toLowerCase().includes('overdue');
-          const isExpiring = item.timeAgo.toLowerCase().includes('expire');
+          const isOverdue = item.timeAgo?.toLowerCase().includes('overdue');
+          const isExpiring = item.timeAgo?.toLowerCase().includes('expire');
           
           return (
             <div 
