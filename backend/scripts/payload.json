@@ -1,0 +1,16 @@
+{
+  "title": "Dark Web Alert: Corporate Credentials Found in Stealer Logs",
+  "description": "24 credentials associated with @example.com were identified in a recent RedLine stealer log dump.",
+  "severity": "critical",
+  "source": "Dark Web Monitoring",
+  "raw_data": {
+    "id": "e98e2118-24cc-4c12-9c16-cd34f40d7c71",
+    "alert_type": "Credential Exposure",
+    "title": "Corporate Credentials Found in Stealer Logs",
+    "description": "24 credentials associated with @example.com were identified in a recent RedLine stealer log dump.",
+    "severity": "critical",
+    "source": "Russian Market",
+    "detected_at": "2026-03-24T21:28:43.606277+00:00",
+    "is_resolved": false
+  }
+}

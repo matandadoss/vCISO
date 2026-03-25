@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, ShieldX, ShieldCheck, CheckCircle, XCircle, Loader2, Plus, Trash2 } from 'lucide-react';
+import { Search, ShieldX, ShieldCheck, CheckCircle, XCircle, Loader2, Plus, Trash2, Edit2 } from 'lucide-react';
 import { ApiService, Customer } from '../../services/api';
 import './CustomerManagement.css';
 
@@ -11,11 +11,13 @@ const CustomerManagement = () => {
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
   
-  // Organization Creation Modal State
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newOrgName, setNewOrgName] = useState('');
-  const [newOrgTier, setNewOrgTier] = useState('Professional');
-  const [isCreating, setIsCreating] = useState(false);
+  // Organization Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingOrgId, setEditingOrgId] = useState<string | null>(null);
+  const [orgName, setOrgName] = useState('');
+  const [orgTier, setOrgTier] = useState('Professional');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     loadCustomers();
@@ -59,19 +61,49 @@ const CustomerManagement = () => {
     setActingId(null);
   };
 
-  const handleCreateOrg = async (e: React.FormEvent) => {
+  const openCreateModal = () => {
+    setIsEditMode(false);
+    setEditingOrgId(null);
+    setOrgName('');
+    setOrgTier('Professional');
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (customer: Customer) => {
+    setIsEditMode(true);
+    setEditingOrgId(customer.id);
+    setOrgName(customer.name);
+    setOrgTier(customer.tier);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveOrg = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newOrgName.trim()) return;
+    if (!orgName.trim()) return;
     
-    setIsCreating(true);
-    const newCustomer = await ApiService.createCustomer(newOrgName, newOrgTier);
-    if (newCustomer) {
-      setCustomers(prev => [...prev, newCustomer]);
-      setIsCreateModalOpen(false);
-      setNewOrgName('');
-      setNewOrgTier('Professional');
+    setIsSaving(true);
+    if (isEditMode && editingOrgId) {
+      const success = await ApiService.updateCustomer(editingOrgId, orgName);
+      if (success) {
+        setCustomers(prev => prev.map(c => 
+          c.id === editingOrgId ? { ...c, name: orgName } : c
+        ));
+        
+        // Also update tier via the existing workflow, if changed
+        const currentOrg = customers.find(c => c.id === editingOrgId);
+        if (currentOrg && currentOrg.tier !== orgTier) {
+          await handleChangeTier(editingOrgId, orgTier);
+        }
+        setIsModalOpen(false);
+      }
+    } else {
+      const newCustomer = await ApiService.createCustomer(orgName, orgTier);
+      if (newCustomer) {
+        setCustomers(prev => [...prev, newCustomer]);
+        setIsModalOpen(false);
+      }
     }
-    setIsCreating(false);
+    setIsSaving(false);
   };
 
   const handleDeleteOrg = async (customerId: string) => {
@@ -101,7 +133,7 @@ const CustomerManagement = () => {
           <button className="btn btn-secondary" onClick={loadCustomers} style={{backgroundColor: 'var(--bg-glass)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)'}}>
             Refresh Data
           </button>
-          <button className="btn btn-primary" onClick={() => setIsCreateModalOpen(true)} style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+          <button className="btn btn-primary" onClick={openCreateModal} style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
             <Plus size={18} /> Add Organization
           </button>
         </div>
@@ -132,6 +164,7 @@ const CustomerManagement = () => {
                 <th>Organization Name</th>
                 <th>Tier</th>
                 <th>Active Users</th>
+                <th>MRR (Monthly)</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -154,6 +187,7 @@ const CustomerManagement = () => {
                     </select>
                   </td>
                   <td>{customer.users}</td>
+                  <td className="font-semibold text-accent-success">${customer.mrr.toLocaleString()} /mo</td>
                   <td>
                     <span className={`status-pill ${customer.status}`}>
                       {customer.status === 'active' ? <CheckCircle size={14} /> : <XCircle size={14} />}
@@ -162,6 +196,15 @@ const CustomerManagement = () => {
                   </td>
                   <td>
                     <div className="action-menu" style={{ justifyContent: 'flex-start', gap: '0.5rem' }}>
+                      <button 
+                        className="icon-btn hover:text-accent-primary"
+                        title="Edit Tenant"
+                        onClick={() => openEditModal(customer)}
+                        disabled={actingId === customer.id}
+                        style={{ border: '1px solid var(--border-subtle)', padding: '0.4rem', borderRadius: '6px' }}
+                      >
+                        <Edit2 size={16}/>
+                      </button>
                       <button 
                         className={`icon-btn ${customer.status === 'active' ? 'text-accent-danger' : 'text-accent-success'}`}
                         title={customer.status === 'active' ? "Suspend Tenant" : "Activate Tenant"}
@@ -200,40 +243,42 @@ const CustomerManagement = () => {
         )}
       </div>
       
-      {/* Create Organization Modal */}
-      {isCreateModalOpen && (
+      {/* Create / Edit Organization Modal */}
+      {isModalOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
           <div className="glass-card" style={{ width: '100%', maxWidth: '400px', padding: '2rem', border: '1px solid var(--border-subtle)' }}>
-             <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>New Organization</h2>
-             <form onSubmit={handleCreateOrg} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+             <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>
+                {isEditMode ? 'Edit Organization' : 'New Organization'}
+             </h2>
+             <form onSubmit={handleSaveOrg} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Organization Name</label>
                   <input 
                     type="text" 
                     className="modern-input" 
-                    value={newOrgName} 
-                    onChange={e => setNewOrgName(e.target.value)} 
+                    value={orgName} 
+                    onChange={e => setOrgName(e.target.value)} 
                     placeholder="e.g. Acme Corp"
                     required
                     style={{ width: '100%', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Initial Subscription Tier</label>
+                  <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{isEditMode ? 'Subscription Tier' : 'Initial Subscription Tier'}</label>
                   <select 
                     className="modern-input" 
-                    value={newOrgTier} 
-                    onChange={e => setNewOrgTier(e.target.value)}
+                    value={orgTier} 
+                    onChange={e => setOrgTier(e.target.value)}
                     style={{ width: '100%', boxSizing: 'border-box' }}
                   >
                     {AVAILABLE_TIERS.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                  <button type="button" onClick={() => setIsCreateModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>Cancel</button>
-                  <button type="submit" className="btn btn-primary" disabled={isCreating} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    {isCreating ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />} 
-                    Deploy Platform
+                  <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" disabled={isSaving} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    {isSaving ? <Loader2 size={16} className="animate-spin" /> : (isEditMode ? <Edit2 size={16} /> : <ShieldCheck size={16} />)} 
+                    {isEditMode ? 'Save Changes' : 'Deploy Platform'}
                   </button>
                 </div>
              </form>

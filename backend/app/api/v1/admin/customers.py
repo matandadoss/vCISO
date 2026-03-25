@@ -11,13 +11,7 @@ from app.core.auth import require_role
 
 router = APIRouter(tags=["Admin Customers"])
 
-# Mock prices for MRR calculation based on tier
-TIER_PRICING = {
-    ServiceTier.basic: 0,
-    ServiceTier.professional: 200,
-    ServiceTier.enterprise: 800,
-    ServiceTier.elite: 2500
-}
+# MRR calculation is now dynamic based on ServiceTierConfig.
 
 @router.get("/", response_model=List[Dict[str, Any]])
 async def get_all_customers(
@@ -46,22 +40,31 @@ async def get_all_customers(
             "active_count": row.active_users or 0
         }
 
+    # Fetch true dynamic tier pricing limits
+    tiers_result = await db.execute(select(ServiceTierConfig))
+    tier_configs_map = {tc.tier: tc for tc in tiers_result.scalars().all()}
+
     customers = []
     for org in orgs:
-        tier_price = TIER_PRICING.get(org.subscription_tier, 0)
+        tier_cfg = tier_configs_map.get(org.subscription_tier)
         stats = user_stats.get(str(org.id), {"total": 0, "active_count": 0})
         
         # Determine status: if it has users but NONE are active, it's suspended.
         # Otherwise, treat as active.
         status = "suspended" if (stats["total"] > 0 and stats["active_count"] == 0) else "active"
         
+        # Dynamic MRR Calculation = Base Price + (Users * Price Per User)
+        mrr = 0
+        if tier_cfg:
+            mrr = tier_cfg.monthly_price + (stats["total"] * tier_cfg.price_per_user)
+            
         customers.append({
             "id": str(org.id),
             "name": org.name,
             "tier": org.subscription_tier.value.title(),
             "users": stats["total"],
             "status": status,
-            "mrr": tier_price,
+            "mrr": mrr,
             "joinedAt": "2024-01-01" 
         })
         
@@ -82,7 +85,9 @@ async def create_customer(
         
         # Verify tier exists in configs
         tier_result = await db.execute(select(ServiceTierConfig).where(ServiceTierConfig.tier == tier_enum))
-        if not tier_result.scalar_one_or_none():
+        tier_cfg = tier_result.scalar_one_or_none()
+        
+        if not tier_cfg:
             raise HTTPException(status_code=400, detail="Invalid target subscription tier limits.")
             
         new_org = Organization(
@@ -99,7 +104,7 @@ async def create_customer(
             "tier": new_org.subscription_tier.value.title(),
             "users": 0,
             "status": "active",
-            "mrr": TIER_PRICING.get(new_org.subscription_tier, 0),
+            "mrr": tier_cfg.monthly_price,
             "joinedAt": "2024-03-23" 
         }
     except ValueError:
@@ -200,4 +205,32 @@ async def update_customer_tier(
         raise HTTPException(status_code=400, detail=str(e))
         
     return {"message": "Tier updated successfully", "org_id": org_id, "tier": new_tier.value}
+
+class UpdateCustomerRequest(BaseModel):
+    name: str
+
+@router.put("/{org_id}")
+async def update_customer(
+    org_id: str,
+    payload: UpdateCustomerRequest,
+    db: AsyncSession = Depends(get_db),
+    admin_user: dict = Depends(require_role("admin"))
+):
+    try:
+        org_uuid = uuid.UUID(org_id)
+        
+        result = await db.execute(
+            update(Organization).where(Organization.id == org_uuid).values(name=payload.name)
+        )
+        if result.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Organization not found")
+            
+        await db.commit()
+    except HTTPException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+        
+    return {"message": "Organization updated successfully", "org_id": org_id, "name": payload.name}
 

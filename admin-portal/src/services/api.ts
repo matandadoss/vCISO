@@ -139,5 +139,18 @@ export const ApiService = {
       console.error("Failed to delete customer.", e);
       return false;
     }
+  },
+
+  async updateCustomer(customerId: string, name: string): Promise<boolean> {
+    try {
+      await fetchWithAuth(`/admin/customers/${customerId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name })
+      });
+      return true;
+    } catch (e) {
+      console.error("Failed to update customer.", e);
+      return false;
+    }
   }
 };

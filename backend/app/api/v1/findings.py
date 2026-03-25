@@ -60,8 +60,8 @@ async def list_findings(
     total_res = await db.execute(count_stmt)
     total = total_res.scalar() or 0
     
-    # Get items with limit and offset
-    stmt = stmt.limit(limit).offset(offset)
+    # Get items with limit and offset, ordered by most recent
+    stmt = stmt.order_by(Finding.detected_at.desc()).limit(limit).offset(offset)
     result = await db.execute(stmt)
     items = result.scalars().all()
     
