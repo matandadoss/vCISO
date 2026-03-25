@@ -5,12 +5,13 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from secure import Secure
-from app.core.auth import get_current_user
+from app.core.auth import get_current_user, require_role
 from app.api.v1 import ai_settings, chat, findings, dashboard, ws, threat_intel, compliance, correlation_graph, playbooks, onboarding, integrations, simulator, organizations, vendors, pentest, workflows, bugs, users, risk_register, tiers, billing, reports
 from app.api.v1.admin import customers as admin_customers, tiers as admin_tiers
 from app.db.session import get_db
 import base64
 import json
+import os
 from app.core.context import org_id_ctx
 
 # Initialize Rate Limiter
@@ -41,8 +42,13 @@ async def tenant_isolation_middleware(request: Request, call_next):
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
         token = auth_header.split(" ")[1]
-        if token == "mock-token":
+        is_prod = os.environ.get("ENVIRONMENT") == "production"
+        
+        if token == "mock-token" and not is_prod:
             org_id_ctx.set("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        elif token == "mock-token" and is_prod:
+            # Drop mock tokens immediately in production to prevent BOLA bypass
+            pass
         else:
             try:
                 payload_b64 = token.split(".")[1]
@@ -51,11 +57,13 @@ async def tenant_isolation_middleware(request: Request, call_next):
                 if "org_id" in payload:
                     org_id_ctx.set(payload["org_id"])
                 else:
-                    # Fallback for now until robust custom claims are synced
-                    org_id_ctx.set("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+                    # Fallback for now until robust custom claims are synced in non-prod
+                    if not is_prod:
+                        org_id_ctx.set("3fa85f64-5717-4562-b3fc-2c963f66afa6")
             except Exception:
-                # If JWT parsing fails gracefully apply demo logic
-                org_id_ctx.set("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+                # If JWT parsing fails gracefully apply demo logic (only in non-prod)
+                if not is_prod:
+                    org_id_ctx.set("3fa85f64-5717-4562-b3fc-2c963f66afa6")
                 pass 
                 
     return await call_next(request)
@@ -112,8 +120,8 @@ app.include_router(bugs.router, prefix="/api/v1") # Open/loose auth for bug repo
 
 
 # Admin Routes
-app.include_router(admin_customers.router, prefix="/api/v1/admin/customers", dependencies=[Depends(get_current_user)])
-app.include_router(admin_tiers.router, prefix="/api/v1/admin/tiers", dependencies=[Depends(get_current_user)])
+app.include_router(admin_customers.router, prefix="/api/v1/admin/customers", dependencies=[Depends(require_role("admin"))])
+app.include_router(admin_tiers.router, prefix="/api/v1/admin/tiers", dependencies=[Depends(require_role("admin"))])
 
 @app.get("/")
 async def root():

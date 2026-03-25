@@ -6,6 +6,7 @@ import uuid
 from app.models.domain import ThreatSophistication, IndicatorType, Severity
 
 class ThreatFeedSubscriptionBase(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     name: str
     description: str
     provider: str
@@ -16,6 +17,7 @@ class ThreatFeedSubscriptionCreate(ThreatFeedSubscriptionBase):
     org_id: uuid.UUID
 
 class ThreatFeedSubscriptionUpdate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     is_active: Optional[bool] = None
     last_synced: Optional[datetime] = None
 

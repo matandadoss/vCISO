@@ -21,9 +21,15 @@ const AVAILABLE_FEATURES = [
   "Automated Vendor Risk Scoring",
   "Dark Web Threat Intelligence",
   "External Attack Surface Management",
-  "Custom Reporting \u0026 Exports",
+  "Custom Reporting & Exports",
   "Dedicated Customer Success Manager",
-  "SLA Guarantee (99.99%)"
+  "SLA Guarantee (99.99%)",
+  // Recently Released vCISO Features
+  "Context-Aware AI Control Tower",
+  "Executive Cyber Threat Analyzer",
+  "Dynamic Custom Threat Modeling",
+  "Automated Threat Intel Workflows",
+  "Universal Table Sorting & Analytics"
 ];
 
 const TierManagement = () => {

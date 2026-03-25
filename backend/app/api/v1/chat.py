@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 import uuid
 from datetime import datetime
@@ -16,10 +16,12 @@ from fastapi import Request
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 class NewSessionRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     org_id: str
     initial_message: Optional[str] = Field(None, max_length=1500)
 
 class MessageRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     content: str = Field(..., max_length=1500)
     org_id: str
     page_context: Optional[str] = Field(None, max_length=5000)
@@ -73,7 +75,7 @@ async def send_message_sync(session_id: str, request: MessageRequest, service: C
     }
 
 @router.post("/sessions/{session_id}/stream")
-@limiter.limit("10/minute")
+@limiter.limit("5/minute")
 async def send_message_stream(request: Request, session_id: str, payload: MessageRequest, service: ChatService = Depends(get_chat_service)):
     return StreamingResponse(
         service.handle_message(session_id, payload.content, payload.org_id, page_context=payload.page_context),

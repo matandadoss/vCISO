@@ -6,6 +6,7 @@ import uuid
 from app.models.domain import Severity, FindingStatus, FindingType, WorkflowName
 
 class FindingBase(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     title: str
     finding_type: FindingType
     description: Optional[str] = None
@@ -35,6 +36,7 @@ class FindingCreate(FindingBase):
     org_id: uuid.UUID
 
 class FindingUpdate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     title: Optional[str] = None
     description: Optional[str] = None
     severity: Optional[Severity] = None

@@ -39,8 +39,10 @@ async def verify_firebase_token(credentials: HTTPAuthorizationCredentials = Secu
         
     token = credentials.credentials
     
-    # Allow mock token for local development
-    if token == "mock-token" or os.environ.get("ENVIRONMENT") == "local":
+    # Block mock token completely if in production
+    is_prod = os.environ.get("ENVIRONMENT") == "production"
+    
+    if not is_prod and (token == "mock-token" or os.environ.get("ENVIRONMENT") == "local"):
         return {
             "uid": "mock-uid",
             "email": "demo@vciso.local",

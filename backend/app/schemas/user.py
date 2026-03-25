@@ -1,9 +1,10 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional
 from datetime import datetime
 import uuid
 
 class UserBase(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     email: EmailStr
     full_name: Optional[str] = None
     role: str = "Viewer"
@@ -13,10 +14,12 @@ class UserCreate(UserBase):
     pass
 
 class UserInvite(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     email: EmailStr
     role: str = "Viewer"
 
 class UserUpdate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     full_name: Optional[str] = None
     role: Optional[str] = None
     is_active: Optional[bool] = None

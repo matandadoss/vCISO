@@ -8,11 +8,13 @@ import { cn } from "@/lib/utils";
 const INFRA_SUGGESTIONS = ["AWS EC2", "AWS S3", "AWS RDS", "AWS Lambda", "Google Kubernetes Engine (GKE)", "Google Cloud Storage (GCS)", "Alibaba Cloud Container Service (ACK)", "DigitalOcean Droplets", "Azure Virtual Machines", "Azure Blob Storage", "On-Premises Servers", "VMware vSphere"];
 const TECH_SUGGESTIONS = ["Node.js", "Python", "React", "PostgreSQL", "MongoDB", "Redis", "Docker", "Kubernetes", "Terraform", "GitHub Actions", "GitLab CI", "Java", "Go", "Rust", "C#", "FastAPI", "Next.js", "Express.js", "Spring Boot", "MySQL", "Elasticsearch"];
 const TOOL_SUGGESTIONS = ["SentinelOne", "Datadog", "CrowdStrike Falcon", "Palo Alto Prisma Cloud", "Splunk Enterprise", "Tenable Nessus", "Wiz", "Snyk", "Checkmarx", "TruffleHog", "Rapid7", "Qualys", "Veracode", "SonarQube", "Aqua Security", "Lacework"];
+const FRAMEWORK_SUGGESTIONS = ["SOC 2 Type II", "ISO 27001", "HIPAA", "PCI-DSS", "GDPR", "NIST 800-53", "NIST CSF 2.0", "FedRAMP", "CMMC Level 2"];
+const THREAT_ACTOR_SUGGESTIONS = ["LAPSUS$", "Scattered Spider", "APT29 (Cozy Bear)", "APT28 (Fancy Bear)", "Lazarus Group", "Sandworm", "LockBit", "BlackBasta", "ALPHV (BlackCat)", "Clop"];
 
 export default function CompanyPage() {
   const [activeTab, setActiveTab] = useState<"stack" | "tools" | "app" | "threat-actors" | "frameworks">("stack");
   
-  const [activeInput, setActiveInput] = useState<"infra" | "tech" | "tools" | null>(null);
+  const [activeInput, setActiveInput] = useState<"infra" | "tech" | "tools" | "frameworks" | "threat-actors" | null>(null);
   const [inputText, setInputText] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   
@@ -125,18 +127,139 @@ export default function CompanyPage() {
      setShowSuggestions(false);
   };
   
-  const handleKeyDown = (e: React.KeyboardEvent, type: "infra" | "tech" | "tools") => {
-     if (e.key === "Enter") handleAddSubmit(type);
+  const handleAddFramework = async (fwName: string) => {
+    if (!fwName.trim()) {
+       setActiveInput(null);
+       return;
+    }
+    
+    if (frameworks.find(f => f.framework_name === fwName)) {
+       setInputText("");
+       setActiveInput(null);
+       setShowSuggestions(false);
+       return;
+    }
+
+    try {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/compliance/frameworks?org_id=default`, {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ org_id: "default", framework_name: fwName, version: "" })
+      });
+      if (res.ok) {
+         const newFw = await res.json();
+         setFrameworks([...frameworks, newFw]);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to add framework");
+    } finally {
+      setInputText("");
+      setActiveInput(null);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleAddThreatActor = async (taName: string) => {
+    if (!taName.trim()) {
+       setActiveInput(null);
+       return;
+    }
+    
+    if (threatActors.find(a => a.name === taName)) {
+       setInputText("");
+       setActiveInput(null);
+       setShowSuggestions(false);
+       return;
+    }
+
+    try {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/actors?org_id=default`, {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ org_id: "default", name: taName, description: "Dynamically pinned threat actor.", sophistication: "intermediate" })
+      });
+      if (res.ok) {
+         const newTa = await res.json();
+         setThreatActors([newTa, ...threatActors]);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to add threat actor");
+    } finally {
+      setInputText("");
+      setActiveInput(null);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, type: "infra" | "tech" | "tools" | "frameworks" | "threat-actors") => {
+     if (e.key === "Enter") {
+         if (type === "frameworks") handleAddFramework(inputText);
+         else if (type === "threat-actors") handleAddThreatActor(inputText);
+         else handleAddSubmit(type as "infra" | "tech" | "tools");
+     }
      if (e.key === "Escape") { setInputText(""); setActiveInput(null); setShowSuggestions(false); }
   };
   
-  const getFilteredSuggestions = (type: "infra" | "tech" | "tools") => {
+  const getFilteredSuggestions = (type: "infra" | "tech" | "tools" | "frameworks" | "threat-actors") => {
      if (!inputText) return [];
      const query = inputText.toLowerCase();
      if (type === "infra") return INFRA_SUGGESTIONS.filter(s => s.toLowerCase().includes(query) && !providers.find(p => p.name === s));
      if (type === "tech") return TECH_SUGGESTIONS.filter(s => s.toLowerCase().includes(query) && !techStack.find(p => p.name === s));
      if (type === "tools") return TOOL_SUGGESTIONS.filter(s => s.toLowerCase().includes(query) && !securityTools.find(t => t.name === s));
+     if (type === "frameworks") return FRAMEWORK_SUGGESTIONS.filter(s => s.toLowerCase().includes(query) && !frameworks.find((f:any) => f.framework_name === s));
+     if (type === "threat-actors") return THREAT_ACTOR_SUGGESTIONS.filter(s => s.toLowerCase().includes(query) && !threatActors.find((a:any) => a.name === s));
      return [];
+  };
+
+  const SuggestionsDropdown = ({ type }: { type: typeof activeInput }) => {
+     if (!showSuggestions || !inputText || !type) return null;
+     const suggestions = getFilteredSuggestions(type);
+     
+     let alreadyAdded = false;
+     if (type === "infra") alreadyAdded = !!providers.find(p => p.name.toLowerCase() === inputText.trim().toLowerCase());
+     if (type === "tech") alreadyAdded = !!techStack.find(p => p.name.toLowerCase() === inputText.trim().toLowerCase());
+     if (type === "tools") alreadyAdded = !!securityTools.find(p => p.name.toLowerCase() === inputText.trim().toLowerCase());
+     if (type === "frameworks") alreadyAdded = !!frameworks.find(f => f.framework_name.toLowerCase() === inputText.trim().toLowerCase());
+     if (type === "threat-actors") alreadyAdded = !!threatActors.find(a => a.name.toLowerCase() === inputText.trim().toLowerCase());
+
+     const exactMatch = suggestions.find(s => s.toLowerCase() === inputText.trim().toLowerCase());
+     
+     if (suggestions.length === 0 && (exactMatch || alreadyAdded)) return null;
+     
+     return (
+        <div className="absolute top-full left-0 mt-1 w-64 bg-card border border-border rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+          {suggestions.map(s => (
+             <button
+               key={s}
+               className="w-full text-left px-3 py-2 text-sm hover:bg-muted text-foreground transition-colors"
+               onMouseDown={(e) => {
+                   e.preventDefault();
+                   setInputText(s);
+                   if (type === "frameworks") handleAddFramework(s);
+                   else if (type === "threat-actors") handleAddThreatActor(s);
+                   else handleAddSubmit(type as "infra" | "tech" | "tools", s);
+               }}
+             >
+               {s}
+             </button>
+          ))}
+          {!exactMatch && !alreadyAdded && inputText.trim() && (
+             <button
+               className="w-full text-left px-3 py-2 text-sm font-medium text-primary hover:bg-muted transition-colors border-t border-border/50"
+               onMouseDown={(e) => {
+                   e.preventDefault();
+                   if (type === "frameworks") handleAddFramework(inputText.trim());
+                   else if (type === "threat-actors") handleAddThreatActor(inputText.trim());
+                   else handleAddSubmit(type as "infra" | "tech" | "tools", inputText.trim());
+               }}
+             >
+               Add "{inputText.trim()}"
+             </button>
+          )}
+        </div>
+     );
   };
 
   const handleDelete = async (type: string, idOrName: string) => {
@@ -344,8 +467,9 @@ export default function CompanyPage() {
                          <p className="text-sm text-muted-foreground mt-1">Select the environments hosting your datasets.</p>
                      </div>
                      {activeInput === "infra" ? (
-                        <div className="relative z-10 flex items-center gap-2">
+                        <div className="relative z-10 flex flex-col items-start gap-2">
                            <input type="text" autoFocus className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-primary w-64" placeholder="e.g. EC2, ACK, GKE, etc.." value={inputText} onChange={(e) => { setInputText(e.target.value); setShowSuggestions(true); }} onFocus={() => setShowSuggestions(true)} onKeyDown={(e) => handleKeyDown(e, "infra")} />
+                           <SuggestionsDropdown type="infra" />
                         </div>
                      ) : (
                         <button onClick={() => setActiveInput("infra")} className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1 hover:bg-primary/90 transition-colors">
@@ -390,8 +514,9 @@ export default function CompanyPage() {
                          <p className="text-sm text-muted-foreground mt-1">Programming languages, frameworks, and core databases.</p>
                      </div>
                      {activeInput === "tech" ? (
-                        <div className="relative z-10 flex items-center gap-2">
-                           <input type="text" autoFocus className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-primary w-64" placeholder="e.g. Terraform..." value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyDown={(e) => handleKeyDown(e, "tech")} />
+                        <div className="relative z-10 flex flex-col items-start gap-2">
+                           <input type="text" autoFocus className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-primary w-64" placeholder="e.g. Terraform..." value={inputText} onChange={(e) => { setInputText(e.target.value); setShowSuggestions(true); }} onFocus={() => setShowSuggestions(true)} onKeyDown={(e) => handleKeyDown(e, "tech")} />
+                           <SuggestionsDropdown type="tech" />
                         </div>
                      ) : (
                         <button onClick={() => setActiveInput("tech")} className="bg-muted hover:bg-muted-foreground/20 text-foreground px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1 transition-colors border border-border">
@@ -435,8 +560,9 @@ export default function CompanyPage() {
                          <p className="text-sm text-muted-foreground mt-1">Integrate telemetry from your existing EDR, SIEM, and vulnerability scanners.</p>
                      </div>
                      {activeInput === "tools" ? (
-                        <div className="relative z-10 flex items-center gap-2">
-                           <input type="text" autoFocus className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-primary w-64" placeholder="e.g. Datadog..." value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyDown={(e) => handleKeyDown(e, "tools")} />
+                        <div className="relative z-10 flex flex-col items-start gap-2">
+                           <input type="text" autoFocus className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-primary w-64" placeholder="e.g. Datadog..." value={inputText} onChange={(e) => { setInputText(e.target.value); setShowSuggestions(true); }} onFocus={() => setShowSuggestions(true)} onKeyDown={(e) => handleKeyDown(e, "tools")} />
+                           <SuggestionsDropdown type="tools" />
                         </div>
                      ) : (
                         <button onClick={() => setActiveInput("tools")} className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1 hover:bg-primary/90 transition-colors">
@@ -491,6 +617,16 @@ export default function CompanyPage() {
                          <h2 className="text-xl font-bold text-foreground">Monitored Threat Actors</h2>
                          <p className="text-sm text-muted-foreground mt-1">Advanced Persistent Threats (APTs) monitored dynamically based on your industry and stack.</p>
                      </div>
+                     {activeInput === "threat-actors" ? (
+                        <div className="relative z-10 flex flex-col items-start gap-2">
+                           <input type="text" autoFocus className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-primary w-64" placeholder="e.g. Lazarus Group, Scattered Spider..." value={inputText} onChange={(e) => { setInputText(e.target.value); setShowSuggestions(true); }} onFocus={() => setShowSuggestions(true)} onKeyDown={(e) => handleKeyDown(e, "threat-actors")} />
+                           <SuggestionsDropdown type="threat-actors" />
+                        </div>
+                     ) : (
+                        <button onClick={() => setActiveInput("threat-actors")} className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1 hover:bg-primary/90 transition-colors">
+                           <Plus className="w-4 h-4" /> Add Threat Actor
+                        </button>
+                     )}
                   </div>
                   
                   <div className="space-y-4">
@@ -541,6 +677,16 @@ export default function CompanyPage() {
                          <h2 className="text-xl font-bold text-foreground">Global Compliance Frameworks</h2>
                          <p className="text-sm text-muted-foreground mt-1">Security frameworks actively mapped and enforced across your telemetry.</p>
                      </div>
+                     {activeInput === "frameworks" ? (
+                        <div className="relative z-10 flex flex-col items-start gap-2">
+                           <input type="text" autoFocus className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-primary w-64" placeholder="e.g. SOC 2 Type II..." value={inputText} onChange={(e) => { setInputText(e.target.value); setShowSuggestions(true); }} onFocus={() => setShowSuggestions(true)} onKeyDown={(e) => handleKeyDown(e, "frameworks")} />
+                           <SuggestionsDropdown type="frameworks" />
+                        </div>
+                     ) : (
+                        <button onClick={() => setActiveInput("frameworks")} className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1 hover:bg-primary/90 transition-colors">
+                           <Plus className="w-4 h-4" /> Enable Framework
+                        </button>
+                     )}
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

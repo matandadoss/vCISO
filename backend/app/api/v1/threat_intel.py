@@ -3,6 +3,7 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
 from pydantic import BaseModel
+from app.core.auth import get_current_user
 from app.models.domain import Severity, ThreatSophistication, IndicatorType, ThreatActor, ThreatIntelIndicator
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -117,6 +118,58 @@ async def list_threat_actors(
         "total": total,
         "limit": limit,
         "offset": offset
+    }
+
+class ThreatActorCreate(BaseModel):
+    org_id: str
+    name: str
+    description: Optional[str] = None
+    sophistication: Optional[str] = None
+
+@router.post("/actors", response_model=dict)
+async def create_threat_actor(
+    request: ThreatActorCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    if request.org_id != "default" and str(request.org_id) != str(current_user.get("org_id")):
+        raise HTTPException(status_code=403, detail="Unauthorized to access this organization's data")
+        
+    try:
+        org_uuid = uuid.UUID(request.org_id)
+    except ValueError:
+        org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        
+    soph_enum = ThreatSophistication.intermediate
+    if request.sophistication:
+        try:
+            soph_enum = ThreatSophistication(request.sophistication.lower())
+        except ValueError:
+            pass
+            
+    actor = ThreatActor(
+        org_id=org_uuid,
+        name=request.name,
+        description=request.description or "Dynamically tracked threat actor profile.",
+        sophistication=soph_enum,
+        active=True,
+        first_seen=datetime.utcnow()
+    )
+    
+    db.add(actor)
+    await db.commit()
+    await db.refresh(actor)
+    
+    soph_val = actor.sophistication.value if hasattr(actor.sophistication, 'value') else actor.sophistication
+    return {
+        "id": str(actor.id),
+        "name": actor.name,
+        "description": actor.description,
+        "sophistication": soph_val,
+        "active": actor.active,
+        "relevance_score": "High" if soph_val in ("nation_state", "advanced") else "Medium",
+        "first_seen": actor.first_seen.isoformat() if actor.first_seen else None,
+        "last_updated": actor.last_updated.isoformat() if actor.last_updated else None
     }
 
 class ThreatActorUpdate(BaseModel):
