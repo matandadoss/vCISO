@@ -15,16 +15,16 @@ This document serves as the master tracking ledger for all features, capabilitie
 *   **Risk & Findings Management:** Dynamic vulnerability tracking system that ingests security logs and allows users to triage, resolve, or accept risks. Handles Jira/ServiceNow ticket creation.
 *   **Risk Register:** Formal operational ledger for documenting, approving, and tracking accepted business risks with expiration dates.
 *   **Compliance Automation:** Automated auditing against global frameworks (SOC2, ISO27001, HIPAA) by evaluating live security controls and cloud telemetry. Includes Gap Analysis reporting.
-*   **Vendor Risk Assessments:** AI-driven continuous background checks tracking the security posture of configured third-party suppliers. Includes guided UI for mapping vendor technology stacks (AWS, Database, CI/CD, etc.) to predict threat streams and intelligently Auto-Assign risk scores and threat statuses based on complexity.
+*   **Vendor Risk Assessments:** AI-driven continuous background checks tracking the security posture of third-party suppliers. Automatically synchronizes with the internal Company footprint via the `POST /sync` route to implicitly onboard internal technological software as formally tracked Vendor Risk entities, predicting threat streams and Auto-Assigning risk scores.
 *   **Audit Trail:** Immutable, cryptographic logging of all user and system administrative actions.
 *   **My Company & Asset Inventory:** Centralized modeling of the organization's technical footprint, cloud providers, and active infrastructure.
 *   **Global Error Tracking:** Centralized telemetry system that silently captures and routes all unhandled frontend crashes and backend 500 exceptions to a secured database ledger for engineering review.
 
 ### Threat Operations Features
-*   **Cyber Threat Analyzer:** Advanced correlation engine mapping global threat actor activity and zero-day vulnerabilities directly against the organization's specific technical footprint to surface customized attack paths.
+*   **Cyber Threat Analyzer:** Advanced correlation engine mapping global threat actor activity and zero-days against the organization's technical footprint. Contains highly optimized nested interactivity (e.g., targeted `(i)` hover tooltips) minimizing UI bloat while mapping complex data directly into the AI Control Tower.
 *   **Threat Intelligence:** Early-warning radar monitoring global cyber campaigns, dark web chatter, and emerging vulnerabilities. Includes STIX/TAXII ingestion capabilities.
 *   **Threat Modeler:** Explicit workflow interface for dynamically analyzing system architectures to predict and mitigate potential vulnerabilities before deployment.
-*   **Continuous Security Testing (Simulator & Pentest):** Automated ethical hacking simulations executed against the external attack surface to validate defensive controls.
+*   **Continuous Security Testing (Simulator & Pentest):** Automated ethical hacking simulations executed against the attack surface. Translates unstructured topological adversarial sequences into a high-density, strictly formatted **Native Attack Path Timeline** (DOM-based Tailwind React elements acting identically to Threat Findings layout) to avert chaotic Force Graph physics entirely.
 *   **Playbooks:** Interactive, step-by-step incident response and remediation guides.
 *   **Control Tower AI:** A context-aware LLM assistant (slide-out drawer) capable of generating specialized security queries and reasoning over the organization's unique data graph.
 *   **Dedicated Workflows:** Specialized operational pipelines for OSINT gathering, Dark Web credential scraping, Infrastructure Scanning, and Vulnerability Lifecycle Management.
@@ -92,7 +92,7 @@ The backend is built on **FastAPI** (v0.1.0) and uses standard async request han
 *   **`threat_intel.py`:** Ingestion webhooks for receiving STIX/TAXII feeds and managing subscriptions.
 *   **`workflows.py` & `playbooks.py`:** Orchestrates step-by-step UI processes and predefined remediation pipelines.
 *   **`integrations.py` & `ai_settings.py`:** Handles third-party system handshakes and LLM credential storage.
-*   **`organizations.py`, `users.py`, `tiers.py`, `billing.py`:** Administrative scaffolding for tenant management.
+*   **`organizations.py`, `users.py`, `tiers.py`, `billing.py`, `vendors.py`:** Administrative scaffolding, tenant management, and automated third-party technology synchronization (`/sync`).
 *   **`bugs.py`:** Provides the `/api/v1/bugs/report` ingestion endpoint to securely receive crash payloads.
 
 ---

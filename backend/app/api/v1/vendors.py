@@ -192,14 +192,25 @@ async def inspect_vendor(vendor_id: str, org_id: str, db: AsyncSession = Depends
     if not threat_intel:
         threat_intel.append(f"No active, critical CVEs found trending for {db_vendor.name}'s primary tech stack.")
 
+    new_calculated_score = db_vendor.risk_score
+    if db_vendor.risk_score is None:
+        new_calculated_score = 50
+    
+    # Simulate an AI reassessment shift based on findings
+    if threat_intel and "No active, critical CVEs" not in threat_intel[0]:
+        new_calculated_score = min(new_calculated_score + secrets.SystemRandom().randint(10, 25), 100)
+    else:
+        new_calculated_score = max(new_calculated_score - secrets.SystemRandom().randint(5, 15), 0)
+
     return {
         "status": "success",
         "vendor_id": vendor_id,
         "report": {
             "summary": f"AI Executive Summary for {db_vendor.name}",
             "confidence_score": secrets.SystemRandom().randint(70, 99),
+            "new_risk_score": new_calculated_score,
             "threat_insights": threat_intel,
-            "recommended_action": "Monitor closely" if db_vendor.status != "Critical" else "URGENT: Initiate incident response protocols and isolate connection.",
+            "recommended_action": "Monitor closely" if new_calculated_score < 80 else "URGENT: Initiate incident response protocols and isolate connection.",
             "generated_at": datetime.datetime.utcnow().isoformat()
         }
     }

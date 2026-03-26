@@ -22,6 +22,7 @@ type Vendor = {
 type InspectionReport = {
   summary: string;
   confidence_score: number;
+  new_risk_score?: number;
   threat_insights: string[];
   recommended_action: string;
   generated_at: string;
@@ -97,6 +98,23 @@ export default function VendorRiskPage() {
       console.error(err);
     } finally {
       setReportLoading(false);
+    }
+  };
+
+  const handleAcceptNewScore = async (newScore: number) => {
+    if (!orgId || !inspectingVendor) return;
+    try {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/vendors/${inspectingVendor.id}?org_id=${orgId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ risk_score: newScore })
+      });
+      if (res.ok) {
+        fetchVendors();
+        setInspectingVendor(prev => prev ? { ...prev, risk_score: newScore } : prev);
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -444,6 +462,25 @@ export default function VendorRiskPage() {
                         {report.recommended_action}
                      </div>
                   </div>
+
+                  {report.new_risk_score !== undefined && report.new_risk_score !== inspectingVendor?.risk_score && (
+                     <div className="mt-8 pt-6 border-t border-border flex flex-col gap-4">
+                        <div className="flex justify-between items-center bg-card border border-border rounded-lg p-4 shadow-sm">
+                           <span className="text-sm text-foreground font-bold">Suggested Risk Score Modification</span>
+                           <div className="flex items-center gap-3">
+                              <span className="line-through text-muted-foreground text-sm font-mono">{inspectingVendor?.risk_score}</span>
+                              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                              <span className={cn("text-xs font-bold px-2 py-1 rounded-full border shadow-sm font-mono", report.new_risk_score >= 80 ? "bg-red-500/10 text-red-500 border-red-500/20" : report.new_risk_score >= 50 ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20")}>{report.new_risk_score}</span>
+                           </div>
+                        </div>
+                        <button 
+                           onClick={() => handleAcceptNewScore(report.new_risk_score!)}
+                           className="w-full py-3 bg-primary text-primary-foreground text-sm font-bold rounded-md hover:bg-primary/90 transition-colors shadow-md flex items-center justify-center gap-2"
+                        >
+                           <CheckCircle2 className="w-4 h-4" /> Accept & Update Vendor Score
+                        </button>
+                     </div>
+                  )}
                   
                   <div className="text-[10px] text-muted-foreground font-mono text-center pt-8 border-t border-border">
                      Report generated: {formatDate(report.generated_at)}

@@ -4,11 +4,8 @@ import { fetchWithAuth } from "@/lib/api";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { FlaskConical, Send, Bot, AlertTriangle, ShieldCheck, ShieldAlert, Zap, ArrowRight, Activity, TrendingDown, TrendingUp, Network, BookOpen, Layers, Database, Terminal, Loader2, Upload, Cpu } from "lucide-react";
-import dynamic from "next/dynamic";
+import { FlaskConical, Send, Bot, AlertTriangle, ShieldCheck, ShieldAlert, Zap, ArrowRight, ArrowDown, Activity, TrendingDown, TrendingUp, Network, BookOpen, Layers, Database, Terminal, Loader2, Upload, Cpu, Server } from "lucide-react";
 import { toast } from "sonner";
-
-const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
 export default function SimulatorPage() {
   const [query, setQuery] = useState("");
@@ -117,93 +114,6 @@ export default function SimulatorPage() {
       setSimulating(false);
     }
   };
-
-
-
-  const getNodeColor = (node: any) => {
-    switch (node.status) {
-      case "critical": return "#ef4444"; 
-      case "vulnerable": return "#f97316";
-      case "warning": return "#eab308";
-      case "secure": return "#22c55e";
-      default: return "#94a3b8";
-    }
-  };
-
-  const drawNode = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-    const label = node.label || "";
-    const fontSize = Math.max(10 / globalScale, 2);
-    ctx.font = `600 ${fontSize}px Inter, sans-serif`;
-    const textWidth = ctx.measureText(label).width;
-    
-    // Node dimensions based on text length
-    const paddingX = 8 / globalScale;
-    const paddingY = 6 / globalScale;
-    const rectWidth = textWidth + (paddingX * 2);
-    const rectHeight = fontSize + (paddingY * 2);
-    const radius = 4 / globalScale; // border radius
-    
-    // Draw rounded rect
-    ctx.beginPath();
-    ctx.moveTo(node.x - rectWidth/2 + radius, node.y - rectHeight/2);
-    ctx.lineTo(node.x + rectWidth/2 - radius, node.y - rectHeight/2);
-    ctx.quadraticCurveTo(node.x + rectWidth/2, node.y - rectHeight/2, node.x + rectWidth/2, node.y - rectHeight/2 + radius);
-    ctx.lineTo(node.x + rectWidth/2, node.y + rectHeight/2 - radius);
-    ctx.quadraticCurveTo(node.x + rectWidth/2, node.y + rectHeight/2, node.x + rectWidth/2 - radius, node.y + rectHeight/2);
-    ctx.lineTo(node.x - rectWidth/2 + radius, node.y + rectHeight/2);
-    ctx.quadraticCurveTo(node.x - rectWidth/2, node.y + rectHeight/2, node.x - rectWidth/2, node.y + rectHeight/2 - radius);
-    ctx.lineTo(node.x - rectWidth/2, node.y - rectHeight/2 + radius);
-    ctx.quadraticCurveTo(node.x - rectWidth/2, node.y - rectHeight/2, node.x - rectWidth/2 + radius, node.y - rectHeight/2);
-    ctx.closePath();
-    
-    ctx.fillStyle = getNodeColor(node);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.8)";
-    ctx.lineWidth = 1.5 / globalScale;
-    ctx.stroke();
-
-    // Draw text inside
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-    ctx.fillText(label, node.x, node.y);
-  }, []);
-
-  const drawLink = useCallback((link: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-     const start = link.source;
-     const end = link.target;
-     if (typeof start !== 'object' || typeof end !== 'object') return;
-
-     ctx.beginPath();
-     ctx.moveTo(start.x, start.y);
-     ctx.lineTo(end.x, end.y);
-     ctx.strokeStyle = link.isAttackPath ? "rgba(239, 68, 68, 0.9)" : "rgba(148, 163, 184, 0.6)";
-     ctx.lineWidth = link.isAttackPath ? 2.5 / globalScale : 1.2 / globalScale;
-     if (link.isAttackPath) {
-         ctx.setLineDash([4 / globalScale, 4 / globalScale]);
-     } else {
-         ctx.setLineDash([]);
-     }
-     ctx.stroke();
-     ctx.setLineDash([]); 
-
-     if (link.label) {
-        const midX = start.x + (end.x - start.x) / 2;
-        const midY = start.y + (end.y - start.y) / 2;
-        const fontSize = Math.max(9 / globalScale, 2);
-        
-        ctx.font = `${fontSize}px Inter, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        const textWidth = ctx.measureText(link.label).width;
-        ctx.fillStyle = 'rgba(11, 17, 32, 0.9)';
-        ctx.fillRect(midX - textWidth / 2 - 2, midY - fontSize / 2 - 2, textWidth + 4, fontSize + 4);
-        
-        ctx.fillStyle = link.isAttackPath ? "rgba(239, 68, 68, 1)" : "rgba(180, 195, 210, 1)";
-        ctx.fillText(link.label, midX, midY);
-     }
-  }, []);
 
   return (
     <div className="flex-1 overflow-hidden bg-background flex flex-col md:flex-row">
@@ -395,32 +305,66 @@ export default function SimulatorPage() {
                  </div>
                </div>
 
-               {/* Knowledge Graph Viewer */}
-               <div className="bg-[#0B1120] border border-border rounded-xl shadow-inner h-[400px] flex flex-col overflow-hidden relative" ref={containerRef}>
-                 <div className="absolute top-4 left-4 z-10 bg-background/80 backdrop-blur px-3 py-1.5 rounded-md border border-border text-sm font-medium flex items-center gap-2">
-                    <Network className="w-4 h-4 text-emerald-400" /> Knowledge Graph (Asset Relationships)
+               {/* Native Attack Path Timeline View */}
+               <div className="bg-[#0B1120] border border-border rounded-xl shadow-inner h-[400px] flex flex-col overflow-y-auto relative p-6">
+                 <div className="sticky top-0 z-10 w-fit bg-[#0B1120]/90 backdrop-blur px-3 py-1.5 rounded-md border border-border text-sm font-medium flex items-center gap-2 mb-6 shadow-sm">
+                    <Network className="w-4 h-4 text-emerald-400" /> Attack Path Timeline
                  </div>
-                 <ForceGraph2D
-                    ref={graphRef}
-                    width={dimensions.width}
-                    height={dimensions.height}
-                    graphData={{ nodes: result.graph.nodes, links: result.graph.edges }}
-                    nodeCanvasObject={drawNode}
-                    nodeRelSize={6}
-                    linkCanvasObject={drawLink}
-                    linkDirectionalArrowLength={3.5}
-                    linkDirectionalArrowRelPos={1}
-                    d3VelocityDecay={0.3}
-                    cooldownTicks={100}
-                    backgroundColor="#0B1120"
-                 />
-                 {/* Legend */}
-                 <div className="absolute bottom-4 right-4 bg-background/80 backdrop-blur p-3 rounded-md border border-border text-xs space-y-2 pointer-events-none">
-                     <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#ef4444]"></span> Critical Threat / Attacker</div>
-                     <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#f97316]"></span> Active IOC / Vulnerable</div>
-                     <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#eab308]"></span> Suspicious</div>
-                     <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#22c55e]"></span> Secure Asset</div>
-                     <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border"><span className="w-4 border-t-2 border-dashed border-[#ef4444]"></span> Attacker Progression</div>
+                 
+                 <div className="max-w-xl mx-auto w-full flex flex-col">
+                   {result.graph.edges.map((edge: any, idx: number) => {
+                       const sourceNode = result.graph.nodes.find((n:any) => n.id === (typeof edge.source === 'object' ? edge.source.id : edge.source));
+                       const targetNode = result.graph.nodes.find((n:any) => n.id === (typeof edge.target === 'object' ? edge.target.id : edge.target));
+                       
+                       if (!sourceNode || !targetNode) return null;
+                       
+                       return (
+                           <div key={idx} className="flex flex-col">
+                               {/* Source Card (rendered only once at top of path) */}
+                               {idx === 0 && (
+                                   <div className="bg-card border border-border rounded-md px-4 py-3 flex items-center justify-between shadow-sm relative z-0">
+                                       <div className="flex items-center gap-3">
+                                            <div className={cn("p-1.5 rounded-md", sourceNode.status === 'critical' ? 'bg-red-500/10' : 'bg-muted')}>
+                                                <Server className={cn("w-4 h-4", sourceNode.status === 'critical' ? 'text-red-500' : 'text-foreground')} />
+                                            </div>
+                                            <div>
+                                               <h3 className="font-semibold text-sm text-foreground">{sourceNode.label}</h3>
+                                            </div>
+                                       </div>
+                                       <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border", sourceNode.status === 'critical' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-muted text-muted-foreground border-border')}>
+                                           {sourceNode.status}
+                                       </span>
+                                   </div>
+                               )}
+                               
+                               {/* Connecting Edge Traversal */}
+                               <div className="flex flex-col items-center my-1 relative">
+                                   <div className="w-[1px] h-6 bg-border"></div>
+                                   <div className={cn("absolute top-1/2 -translate-y-1/2 bg-background border px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide flex items-center gap-1.5 shadow-sm whitespace-nowrap z-10", edge.isAttackPath ? 'border-red-500/30 text-red-500' : 'border-border text-muted-foreground')}>
+                                       <Activity className="w-3 h-3" />
+                                       {edge.label || "Traverses To"}
+                                   </div>
+                                   <div className="w-[1px] h-6 bg-border"></div>
+                                   <ArrowDown className="text-border w-4 h-4 -mt-2.5 mb-0.5" />
+                               </div>
+                               
+                               {/* Target Node Card */}
+                               <div className="bg-card border border-border rounded-md px-4 py-3 flex items-center justify-between shadow-sm relative z-0">
+                                   <div className="flex items-center gap-3">
+                                        <div className={cn("p-1.5 rounded-md", targetNode.status === 'critical' ? 'bg-red-500/10' : targetNode.status === 'vulnerable' ? 'bg-orange-500/10' : targetNode.status === 'warning' ? 'bg-yellow-500/10' : 'bg-emerald-500/10')}>
+                                            <Server className={cn("w-4 h-4", targetNode.status === 'critical' ? 'text-red-500' : targetNode.status === 'vulnerable' ? 'text-orange-500' : targetNode.status === 'warning' ? 'text-yellow-500' : 'text-emerald-500')} />
+                                        </div>
+                                        <div>
+                                           <h3 className="font-semibold text-sm text-foreground">{targetNode.label}</h3>
+                                        </div>
+                                   </div>
+                                   <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border", targetNode.status === 'critical' ? 'bg-red-500/10 text-red-500 border-red-500/20' : targetNode.status === 'vulnerable' ? 'bg-orange-500/10 text-orange-500 border-orange-500/20' : targetNode.status === 'warning' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20')}>
+                                       {targetNode.status}
+                                   </span>
+                               </div>
+                           </div>
+                       );
+                   })}
                  </div>
                </div>
 
@@ -429,6 +373,27 @@ export default function SimulatorPage() {
                  <div className="prose prose-invert max-w-none text-sm md:text-base leading-relaxed">
                    {/* Poor man's markdown renderer for the narrative */}
                    {result.assessment_narrative.split('\n\n').map((paragraph: string, i: number) => {
+                      // Special handling for the very first introductory section
+                      if (i === 0) {
+                          // Strip out all raw markdown bold asterisks and headers to make it clean UI text
+                          const cleanText = paragraph.replace(/\*\*(.*?)\*\*/g, '$1').replace('### ', '');
+                          return (
+                              <div key={i} className="bg-primary/5 border border-primary/20 p-6 rounded-lg mb-8 shadow-sm">
+                                 <div className="flex items-start gap-4">
+                                     <div className="bg-primary/10 p-3 rounded-full shrink-0">
+                                         <Bot className="w-6 h-6 text-primary" />
+                                     </div>
+                                     <div>
+                                         <h3 className="text-lg font-bold text-foreground mb-2">Simulation Summary</h3>
+                                         <p className="text-muted-foreground text-sm leading-relaxed">
+                                             {cleanText}
+                                         </p>
+                                     </div>
+                                 </div>
+                              </div>
+                          );
+                      }
+
                       if (paragraph.startsWith('### ')) {
                          return <h3 key={i} className="text-primary font-bold text-xl mb-4 mt-8 first:mt-0 flex items-center gap-2"><Bot className="w-6 h-6"/> {paragraph.replace('### ', '')}</h3>;
                       }
@@ -439,7 +404,7 @@ export default function SimulatorPage() {
                                <h4 className="font-bold text-lg text-foreground mb-3">{lines[0].replace(/\*\*/g, '')}</h4>
                                <ul className="space-y-2 border-l-2 border-primary/50 pl-4 ml-2">
                                  {lines.slice(1).map((li, j) => (
-                                   <li key={j} className="text-muted-foreground">{li.replace(/^\d+\.\s/, '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</li>
+                                   <li key={j} className="text-muted-foreground"><span dangerouslySetInnerHTML={{ __html: li.replace(/^\d+\.\s/, '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} /></li>
                                  ))}
                                </ul>
                             </div>
@@ -449,11 +414,11 @@ export default function SimulatorPage() {
                          return (
                             <div key={i} className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg mt-6">
                                <h4 className="font-bold text-destructive mb-2">{paragraph.split('\n')[0].replace(/\*\*/g, '')}</h4>
-                               <p className="text-destructive/90">{paragraph.split('\n').slice(1).join('\n').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>
+                               <p className="text-destructive/90"><span dangerouslySetInnerHTML={{ __html: paragraph.split('\n').slice(1).join('\n').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} /></p>
                             </div>
                          );
                       }
-                      return <p key={i} className="mb-4 text-muted-foreground">{paragraph.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>;
+                      return <p key={i} className="mb-4 text-muted-foreground"><span dangerouslySetInnerHTML={{ __html: paragraph.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} /></p>;
                    })}
                  </div>
                </div>

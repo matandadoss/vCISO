@@ -141,7 +141,7 @@ The engine provides several complex measurements to quantify operational risk:
 
 ## Security Testing
 
-The **Security Testing** module launches safe, simulated, continuous ethical hacking engagements against your external attack surface to discover logical flaws before criminals do.
+The **Security Testing** module launches safe, simulated, continuous ethical hacking engagements against your external attack surface to discover logical flaws before criminals do. Results are explicitly visualized in a high-density **Attack Path Timeline**, stripping away chaotic graph visualizations to provide a structured, chronological report of the threat traversal.
 
 ### Metrics & Measurements Explained
 
@@ -156,7 +156,7 @@ The **Security Testing** module launches safe, simulated, continuous ethical hac
 
 The **My Company** page defines the global context for the AI engine. Here, you establish your organizational footprint, including your specific industry, cloud providers, and operational zones.
 
-Accurately maintaining this profile prevents the AI engine from generating false positives. If your profile incorrectly states you use `Azure` instead of `AWS`, the system may suppress critical AWS specific vulnerability alerts.
+Accurately maintaining this profile prevents the AI engine from generating false positives. If your profile incorrectly states you use `Azure` instead of `AWS`, the system may suppress critical AWS specific vulnerability alerts. Furthermore, the explicit technologies and tools you define in this section are automatically actively synchronized (`/sync`) into your **Vendor Risk** module, ensuring that internal supply-chain software is proactively tracked as a primary threat vector without manual data entry.
 
 ---
 
