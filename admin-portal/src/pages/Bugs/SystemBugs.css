@@ -1,0 +1,50 @@
+.bugs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: 100%;
+}
+
+.truncate-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.expanded-row-active {
+  background-color: var(--bg-glass);
+}
+
+.expanded-details-row {
+  background-color: var(--bg-surface);
+  border-bottom: 2px solid var(--border-subtle);
+}
+
+.expanded-content {
+  padding: 1.5rem;
+  border-top: 1px dashed var(--border-subtle);
+}
+
+.metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+
+.metadata-grid strong {
+  color: var(--text-secondary);
+  margin-right: 0.5rem;
+}
+
+.col-span-full {
+  grid-column: 1 / -1;
+}
+
+.bg-darkness {
+  background-color: #0f172a;
+}
+
+.mb-bottom-gap {
+  margin-bottom: 2rem;
+}

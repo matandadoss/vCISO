@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, LogOut, ShieldAlert, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, LogOut, ShieldAlert, BarChart3, Bug } from 'lucide-react';
 import './AdminLayout.css';
 
 const AdminLayout = () => {
@@ -40,6 +40,11 @@ const AdminLayout = () => {
           <NavLink to="/reports" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
             <BarChart3 size={20} />
             <span>Revenue Report</span>
+          </NavLink>
+
+          <NavLink to="/bugs" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+            <Bug size={20} />
+            <span>System Errors</span>
           </NavLink>
         </nav>
 

@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, desc
 from app.db.session import get_db
 from app.models.domain import InternalBugLog
+from app.core.auth import require_role
 import uuid
 import logging
 
@@ -66,3 +68,18 @@ async def report_bug(
         # If the bug logger itself fails, log to container stdout
         logger.critical(f"Failed to save bug report to DB: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal logging failure")
+
+@router.get("", dependencies=[Depends(require_role("admin"))])
+async def list_bugs(db: AsyncSession = Depends(get_db)):
+    """
+    Retrieve all system bug logs, ordered by most recent first.
+    Strictly restricted to Admin users.
+    """
+    try:
+        stmt = select(InternalBugLog).order_by(desc(InternalBugLog.created_at)).limit(500)
+        result = await db.execute(stmt)
+        bugs = result.scalars().all()
+        return bugs
+    except Exception as e:
+        logger.error(f"Error fetching bug logs: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve bug logs")

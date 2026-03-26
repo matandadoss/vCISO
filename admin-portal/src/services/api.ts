@@ -13,6 +13,21 @@ export interface Customer {
   joinedAt: string;
 }
 
+export interface BugLog {
+  id: string;
+  timestamp: string;
+  created_at: string;
+  error_code: string;
+  error_message: string;
+  stack_trace: string;
+  url: string;
+  route: string;
+  frontend_version: string;
+  user_id: string;
+  org_id: string;
+  status: string;
+}
+
 export interface Tier {
   id: string;
   name: string;
@@ -61,6 +76,15 @@ export const ApiService = {
       return [
         { id: '1', name: 'Acme Corp', tier: 'Enterprise', users: 120, status: 'active', mrr: 2500, joinedAt: '2025-01-15' }
       ];
+    }
+  },
+
+  async getBugs(): Promise<BugLog[]> {
+    try {
+      return await fetchWithAuth('/bugs');
+    } catch (e) {
+      console.error("Failed to fetch bug logs", e);
+      return [];
     }
   },
 

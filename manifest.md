@@ -15,9 +15,10 @@ This document serves as the master tracking ledger for all features, capabilitie
 *   **Risk & Findings Management:** Dynamic vulnerability tracking system that ingests security logs and allows users to triage, resolve, or accept risks. Handles Jira/ServiceNow ticket creation.
 *   **Risk Register:** Formal operational ledger for documenting, approving, and tracking accepted business risks with expiration dates.
 *   **Compliance Automation:** Automated auditing against global frameworks (SOC2, ISO27001, HIPAA) by evaluating live security controls and cloud telemetry. Includes Gap Analysis reporting.
-*   **Vendor Risk Assessments:** AI-driven continuous background checks tracking the security posture of configured third-party suppliers.
+*   **Vendor Risk Assessments:** AI-driven continuous background checks tracking the security posture of configured third-party suppliers. Includes guided UI for mapping vendor technology stacks (AWS, Database, CI/CD, etc.) to predict threat streams and intelligently Auto-Assign risk scores and threat statuses based on complexity.
 *   **Audit Trail:** Immutable, cryptographic logging of all user and system administrative actions.
 *   **My Company & Asset Inventory:** Centralized modeling of the organization's technical footprint, cloud providers, and active infrastructure.
+*   **Global Error Tracking:** Centralized telemetry system that silently captures and routes all unhandled frontend crashes and backend 500 exceptions to a secured database ledger for engineering review.
 
 ### Threat Operations Features
 *   **Cyber Threat Analyzer:** Advanced correlation engine mapping global threat actor activity and zero-day vulnerabilities directly against the organization's specific technical footprint to surface customized attack paths.
@@ -65,6 +66,7 @@ The backend utilizes `SQLAlchemy` ORM. All models inherit from a common `BaseMod
 *   **ComplianceFramework:** `framework_name`, `overall_compliance_pct`.
 *   **SecurityControl:** `effectiveness_score`, `mitre_techniques_covered`, `status`.
 *   **AuditLog:** Immutable ledger logging `actor`, `action`, `entity_type`, `changes` (JSON).
+*   **InternalBugLog:** Centralized repository for tracking unhandled backend 500s and frontend crashes (`error_message`, `stack_trace`, `url`, `status`).
 *   **AIQueryLog & ChatMessage:** Tracking LLM interactions (`cost_usd`, `input_tokens`, `prompt_tier`, `routing_reason`).
 
 ---
@@ -91,6 +93,7 @@ The backend is built on **FastAPI** (v0.1.0) and uses standard async request han
 *   **`workflows.py` & `playbooks.py`:** Orchestrates step-by-step UI processes and predefined remediation pipelines.
 *   **`integrations.py` & `ai_settings.py`:** Handles third-party system handshakes and LLM credential storage.
 *   **`organizations.py`, `users.py`, `tiers.py`, `billing.py`:** Administrative scaffolding for tenant management.
+*   **`bugs.py`:** Provides the `/api/v1/bugs/report` ingestion endpoint to securely receive crash payloads.
 
 ---
 
@@ -102,6 +105,7 @@ Built on **Next.js (App Router)** utilizing a heavily modular Tailwind CSS compo
 *   `AuthProvider`: Centralizes Firebase initialization and state. Exports `signInWithGoogle()`, `signInWithMicrosoft()`, `getToken()`. It natively implements a **hybrid authentication flow** (`signInWithPopup` gracefully falling back to `signInWithRedirect`) to bypass Safari/Incognito third-party cookie restrictions. Handles simulated mode fallback for local development.
 *   `RoleContext`: Interprets the active user's role (admin, viewer) and selectively mounts or disables sensitive UI components.
 *   `ControlTowerContext`: Manages the state of the right-hand AI slide-out drawer across all routes. Contains context-aware query generation based on the current page (`window.location.pathname`).
+*   `GlobalErrorTracker` (`lib/errorTracking.ts`): Injected directly into the `RootLayout` to silently monitor `window.onerror` and unhandled promise rejections, streaming raw crash data to the backend.
 
 ### Layout & Routing
 *   **Root Layout (`/layout.tsx`):** Wraps all routes in `AuthGuard` (redirects unauthenticated users to `/login`) and `OnboardingGuard` (redirects authenticated but unconfigured users to `/setup`).
@@ -111,6 +115,9 @@ Built on **Next.js (App Router)** utilizing a heavily modular Tailwind CSS compo
     *   `/compliance`, `/vendor-risk`, `/threat-intel`, `/playbooks`, `/simulator`, `/correlation`, `/risk-register`, `/audit-trail`, `/company`.
     *   `/workflows/*`: Contains dedicated interfaces for `threat`, `darkweb`, `osint`, `infrastructure`, and `vulnerability` processes.
     *   `/settings/*`: Granular management pages for Integrations, AI configurations, SLAs, and Users.
+
+### Separate Repositories
+*   **Admin Portal (`/admin-portal`):** Dedicated Vite/React application (deployed to `gen-lang-client-0873796692.web.app`) for internal vCISO staff. It contains dashboards for Customer Management, Tier Assignments, Revenue Reports, and real-time **System Error Logs** (`/bugs` route) tied into the global database telemetry.
 
 ### UI & Core Dependencies
 *   **Styling & Theming:** Uses Tailwind CSS v4, globally configured via `app/globals.css`. It strictly defines all app colors via CSS variables (`--background`, `--popover`, `--card`, etc.) in standard `:root` and `.dark` blocks, and maps them to utility colors inside the `@theme inline` directive to maintain uniform styling across custom components (like contextual tooltips).

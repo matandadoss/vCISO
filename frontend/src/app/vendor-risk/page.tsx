@@ -111,16 +111,16 @@ export default function VendorRiskPage() {
     setEditingVendor(v);
     setFormData({
       name: v.name,
-      risk_score: v.risk_score.toString(),
-      status: v.status,
-      tech_stack: v.tech_stack.join(", ")
+      risk_score: v.risk_score ? v.risk_score.toString() : "",
+      status: v.status || "",
+      tech_stack: v.tech_stack ? v.tech_stack.join(", ") : ""
     });
     setShowFormModal(true);
   };
 
   const openAdd = () => {
     setEditingVendor(null);
-    setFormData({ name: "", risk_score: "50", status: "Warning", tech_stack: "" });
+    setFormData({ name: "", risk_score: "", status: "", tech_stack: "" });
     setShowFormModal(true);
   };
 
@@ -130,8 +130,8 @@ export default function VendorRiskPage() {
     const stack = formData.tech_stack.split(",").map(s => s.trim()).filter(Boolean);
     const payload = {
       name: formData.name,
-      risk_score: parseInt(formData.risk_score),
-      status: formData.status,
+      risk_score: formData.risk_score ? parseInt(formData.risk_score) : null,
+      status: formData.status || null,
       tech_stack: stack
     };
 
@@ -243,13 +243,13 @@ export default function VendorRiskPage() {
               </p>
             </div>
             
-            <div className="flex flex-col sm:flex-row items-center gap-4 relative w-full xl:w-auto">
-              <div className="flex gap-2 w-full sm:w-auto">
-                 <button onClick={openAdd} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium text-sm hover:bg-primary/90 transition">
+            <div className="flex flex-col md:flex-row flex-wrap items-start md:items-center justify-end gap-4 relative w-full xl:w-auto">
+              <div className="flex flex-wrap gap-2 w-full md:w-auto shrink-0">
+                 <button onClick={openAdd} className="flex-1 shrink-0 md:flex-none flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium text-sm hover:bg-primary/90 transition shadow-sm">
                     <Plus className="w-4 h-4" /> Add Vendor
                  </button>
-                 <button onClick={() => setShowUploadModal(true)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 border border-border text-foreground px-4 py-2 rounded-md font-medium text-sm hover:bg-muted transition">
-                    <Upload className="w-4 h-4" /> Bulk Upload Modes
+                 <button onClick={() => setShowUploadModal(true)} className="flex-1 shrink-0 md:flex-none flex items-center justify-center gap-2 border border-border text-foreground px-4 py-2 rounded-md font-medium text-sm hover:bg-muted transition shadow-sm bg-card">
+                    <Upload className="w-4 h-4" /> Bulk Upload Matrix
                  </button>
               </div>
               <div className="relative w-full sm:w-64">
@@ -463,21 +463,66 @@ export default function VendorRiskPage() {
                   <div className="grid grid-cols-2 gap-4">
                      <div>
                         <label className="block text-sm font-medium text-foreground mb-1">Risk Score (0-100)</label>
-                        <input required type="number" min="0" max="100" value={formData.risk_score} onChange={e => setFormData({...formData, risk_score: e.target.value})} className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+                        <input type="number" min="0" max="100" value={formData.risk_score} onChange={e => setFormData({...formData, risk_score: e.target.value})} className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Auto-assign" />
+                        <p className="text-[11px] text-muted-foreground mt-1">Leave blank to let AI calculate score.</p>
                      </div>
                      <div>
                         <label className="block text-sm font-medium text-foreground mb-1">Assessment Status</label>
-                        <select required value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+                        <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+                           <option value="">Auto-resolve</option>
                            <option value="Safe">Safe</option>
                            <option value="Warning">Warning</option>
                            <option value="Critical">Critical</option>
                         </select>
+                        <p className="text-[11px] text-muted-foreground mt-1">System resolves from score if blank.</p>
                      </div>
                   </div>
                   <div>
-                     <label className="block text-sm font-medium text-foreground mb-1">Tech Stack Integrations</label>
-                     <p className="text-xs text-muted-foreground mb-2">Comma separated. Extracted features map to threat intelligence streams natively. Available: aws, database, networking, monitoring, communication, ci_cd, mobile.</p>
-                     <input type="text" value={formData.tech_stack} onChange={e => setFormData({...formData, tech_stack: e.target.value})} className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" placeholder="aws, networking, database" />
+                     <label className="block text-sm font-medium text-foreground mb-2">Tech Stack Integrations</label>
+                     <div className="flex flex-wrap gap-2 mb-3">
+                        {["aws", "database", "networking", "monitoring", "communication", "ci_cd", "mobile", "active_directory", "version_control"].map(tech => {
+                           const currentStack = formData.tech_stack.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+                           const isSelected = currentStack.includes(tech);
+                           return (
+                              <button
+                                 key={tech}
+                                 type="button"
+                                 onClick={() => {
+                                    let current = formData.tech_stack.split(",").map(s => s.trim()).filter(Boolean);
+                                    if (isSelected) {
+                                       current = current.filter(t => t.toLowerCase() !== tech);
+                                    } else {
+                                       current.push(tech);
+                                    }
+                                    setFormData({...formData, tech_stack: current.join(", ")});
+                                 }}
+                                 className={cn(
+                                    "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors flex items-center gap-1.5",
+                                    isSelected 
+                                       ? "bg-primary/10 border-primary text-primary" 
+                                       : "bg-background border-border text-muted-foreground hover:border-muted-foreground hover:bg-muted/50"
+                                 )}
+                              >
+                                {tech.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                              </button>
+                           );
+                        })}
+                        <button
+                           type="button"
+                           onClick={() => document.getElementById('custom-tech-input')?.focus()}
+                           className="px-3 py-1.5 rounded-full text-xs font-medium border border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary transition-colors flex items-center gap-1.5"
+                        >
+                           + Custom / Other
+                        </button>
+                     </div>
+                     <input 
+                        id="custom-tech-input"
+                        type="text" 
+                        value={formData.tech_stack} 
+                        onChange={e => setFormData({...formData, tech_stack: e.target.value})} 
+                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" 
+                        placeholder="Type custom integrations (comma separated)..." 
+                     />
                   </div>
 
                   <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-border">

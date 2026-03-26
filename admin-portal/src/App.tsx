@@ -5,6 +5,7 @@ import Login from '@/pages/Auth/Login';
 import CustomerManagement from '@/pages/Customers/CustomerManagement';
 import TierManagement from '@/pages/Tiers/TierManagement';
 import RevenueReport from '@/pages/Reports/RevenueReport';
+import SystemBugs from '@/pages/Bugs/SystemBugs';
 
 // Mock authentication state for now
 const isAuthenticated = true;
@@ -21,6 +22,7 @@ function App() {
           <Route path="customers" element={<CustomerManagement />} />
           <Route path="tiers" element={<TierManagement />} />
           <Route path="reports" element={<RevenueReport />} />
+          <Route path="bugs" element={<SystemBugs />} />
         </Route>
       </Routes>
     </Router>

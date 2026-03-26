@@ -27,8 +27,8 @@ class VendorResponse(BaseModel):
 
 class VendorCreate(BaseModel):
     name: str
-    risk_score: int = 50
-    status: str = "Warning"
+    risk_score: Optional[int] = None
+    status: Optional[str] = None
     tech_stack: List[str] = []
 
 class VendorUpdate(BaseModel):
@@ -66,16 +66,26 @@ async def create_vendor(vendor: VendorCreate, org_id: str, db: AsyncSession = De
     except:
         org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
         
+    ts_len = len(vendor.tech_stack or [])
+    final_score = vendor.risk_score if vendor.risk_score is not None else min(50 + ts_len * 10, 100)
+    
+    if vendor.status is not None:
+        final_status = vendor.status
+    else:
+        if final_score >= 80: final_status = "Critical"
+        elif final_score >= 50: final_status = "Warning"
+        else: final_status = "Safe"
+
     new_vendor = VendorModel(
         org_id=org_uuid,
         name=vendor.name,
-        risk_score=vendor.risk_score,
-        status=vendor.status,
+        risk_score=final_score,
+        status=final_status,
         tech_stack=vendor.tech_stack,
         vendor_type="software",
         tier="basic",
         data_access_level="low",
-        assessment_status=vendor.status,
+        assessment_status=final_status,
         last_assessment_date=datetime.datetime.utcnow()
     )
     db.add(new_vendor)
@@ -105,12 +115,28 @@ async def update_vendor(vendor_id: str, vendor_in: VendorUpdate, org_id: str, db
         
     if vendor_in.name is not None:
         db_vendor.name = vendor_in.name
-    if vendor_in.risk_score is not None:
-        db_vendor.risk_score = vendor_in.risk_score
-    if vendor_in.status is not None:
-        db_vendor.status = vendor_in.status
     if vendor_in.tech_stack is not None:
         db_vendor.tech_stack = vendor_in.tech_stack
+        
+    req_dict = vendor_in.model_dump(exclude_unset=True)
+    
+    if 'risk_score' in req_dict:
+        if req_dict['risk_score'] is None:
+            ts_len = len(db_vendor.tech_stack or [])
+            db_vendor.risk_score = min(50 + ts_len * 10, 100)
+        else:
+            db_vendor.risk_score = req_dict['risk_score']
+            
+    if 'status' in req_dict:
+        if req_dict['status'] is None:
+            if db_vendor.risk_score is not None:
+                if db_vendor.risk_score >= 80: db_vendor.status = "Critical"
+                elif db_vendor.risk_score >= 50: db_vendor.status = "Warning"
+                else: db_vendor.status = "Safe"
+            else:
+                db_vendor.status = "Warning"
+        else:
+            db_vendor.status = req_dict['status']
         
     await db.commit()
     return {
