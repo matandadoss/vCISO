@@ -222,9 +222,9 @@ export default function OSINTCorrelationPage() {
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div 
                      onClick={() => handleMetricClick("threats", metrics?.active_patterns)} 
-                     className="group/tooltip bg-card border border-border rounded-lg p-6 relative cursor-pointer hover:border-primary/50 hover:bg-accent/10 transition-colors shadow-sm hover:shadow-md"
+                     className="bg-card border border-border rounded-lg p-6 relative cursor-pointer hover:border-primary/50 hover:bg-accent/10 transition-colors shadow-sm hover:shadow-md"
                   >
-                     <div className="absolute top-3 right-3 z-10">
+                     <div className="absolute top-3 right-3 z-10 group/tooltip">
                         <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
                         <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 bg-popover border border-border text-foreground text-xs rounded-md shadow-xl p-3 hidden group-hover/tooltip:block text-center z-50">
                            The total number of threats across the internet actively targeting tools you use.
@@ -240,9 +240,9 @@ export default function OSINTCorrelationPage() {
                   </div>
                   <div 
                      onClick={() => handleMetricClick("critical", metrics?.critical_risk_paths)} 
-                     className="group/tooltip bg-card border border-border rounded-lg p-6 relative cursor-pointer hover:border-red-500/50 hover:bg-red-500/5 transition-colors shadow-sm hover:shadow-md"
+                     className="bg-card border border-border rounded-lg p-6 relative cursor-pointer hover:border-red-500/50 hover:bg-red-500/5 transition-colors shadow-sm hover:shadow-md"
                   >
-                     <div className="absolute top-3 right-3 z-10">
+                     <div className="absolute top-3 right-3 z-10 group/tooltip">
                         <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
                         <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 bg-popover border border-border text-foreground text-xs rounded-md shadow-xl p-3 hidden group-hover/tooltip:block text-center z-50">
                            Critical issues where an attacker could immediately harm your business today. Needs urgent attention!
@@ -255,9 +255,9 @@ export default function OSINTCorrelationPage() {
                   </div>
                   <div 
                      onClick={() => handleMetricClick("mitigation", metrics?.avg_control_effectiveness)} 
-                     className="group/tooltip bg-card border border-border rounded-lg p-6 relative cursor-pointer hover:border-yellow-500/50 hover:bg-yellow-500/5 transition-colors shadow-sm hover:shadow-md"
+                     className="bg-card border border-border rounded-lg p-6 relative cursor-pointer hover:border-yellow-500/50 hover:bg-yellow-500/5 transition-colors shadow-sm hover:shadow-md"
                   >
-                     <div className="absolute top-3 right-3 z-10">
+                     <div className="absolute top-3 right-3 z-10 group/tooltip">
                         <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
                         <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 bg-popover border border-border text-foreground text-xs rounded-md shadow-xl p-3 hidden group-hover/tooltip:block text-center z-50">
                            A grade on how well your current security setup is defending against these threats.
@@ -270,9 +270,9 @@ export default function OSINTCorrelationPage() {
                   </div>
                   <div 
                      onClick={() => handleMetricClick("sources", metrics?.evaluated_workflows)} 
-                     className="group/tooltip bg-card border border-border rounded-lg p-6 relative cursor-pointer hover:border-primary/50 hover:bg-accent/10 transition-colors shadow-sm hover:shadow-md"
+                     className="bg-card border border-border rounded-lg p-6 relative cursor-pointer hover:border-primary/50 hover:bg-accent/10 transition-colors shadow-sm hover:shadow-md"
                   >
-                     <div className="absolute top-3 right-3 z-10">
+                     <div className="absolute top-3 right-3 z-10 group/tooltip">
                         <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
                         <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 bg-popover border border-border text-foreground text-xs rounded-md shadow-xl p-3 hidden group-hover/tooltip:block text-center z-50">
                            The amount of external data sources (like the Dark Web, hacker forums, and threat intelligence) we scan.

@@ -56,7 +56,17 @@ export default function VendorRiskPage() {
     if (!orgId) return;
     setLoading(true);
     try {
-      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/vendors?org_id=${orgId}`);
+      const savedInfra = JSON.parse(localStorage.getItem("vciso_company_infra") || '[]');
+      const savedTech = JSON.parse(localStorage.getItem("vciso_company_tech") || '[]');
+      const savedTools = JSON.parse(localStorage.getItem("vciso_company_tools") || '[]');
+      const extractName = (arr: any[]) => arr.map((item: any) => typeof item === 'string' ? item : item?.name || 'Unknown');
+      const allTargets = [...extractName(savedInfra), ...extractName(savedTech), ...extractName(savedTools)].filter(Boolean);
+
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/vendors/sync?org_id=${orgId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stack_items: allTargets })
+      });
       if (res.ok) {
         const data = await res.json();
         setVendors(data || []);

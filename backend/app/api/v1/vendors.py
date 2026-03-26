@@ -37,6 +37,9 @@ class VendorUpdate(BaseModel):
     status: Optional[str] = None
     tech_stack: Optional[List[str]] = None
 
+class VendorSyncRequest(BaseModel):
+    stack_items: List[str]
+
 @router.get("/", response_model=List[VendorResponse])
 async def list_vendors(org_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -289,3 +292,50 @@ Determine their 'name', predict their associated 'tech_stack' (array of strings 
         "message": f"Successfully parsed and ingested {inserted_count} vendors seamlessly via Google Gemini Multimodal APIs.",
         "vendors_extracted": inserted_count
     }
+
+@router.post("/sync", response_model=List[VendorResponse])
+async def sync_vendors(req: VendorSyncRequest, org_id: str, db: AsyncSession = Depends(get_db)):
+    try:
+        org_uuid = uuid.UUID(org_id)
+    except:
+        org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        
+    result = await db.execute(select(VendorModel).where(VendorModel.org_id == org_uuid))
+    db_vendors = result.scalars().all()
+    existing_names = {v.name.lower() for v in db_vendors}
+    
+    new_db_vendors = []
+    for item in req.stack_items:
+        if item.lower() not in existing_names:
+            new_v = VendorModel(
+                org_id=org_uuid,
+                name=item,
+                risk_score=50,
+                status="Safe",
+                tech_stack=["Core Stack"],
+                vendor_type="software",
+                tier="basic",
+                data_access_level="low",
+                assessment_status="Safe",
+                last_assessment_date=datetime.datetime.utcnow()
+            )
+            db.add(new_v)
+            new_db_vendors.append(new_v)
+            existing_names.add(item.lower())
+            
+    if new_db_vendors:
+        await db.commit()
+        result = await db.execute(select(VendorModel).where(VendorModel.org_id == org_uuid))
+        db_vendors = result.scalars().all()
+    
+    out = []
+    for v in db_vendors:
+        out.append({
+            "id": str(v.id),
+            "name": v.name,
+            "risk_score": v.risk_score,
+            "status": v.status or "Warning",
+            "tech_stack": v.tech_stack if v.tech_stack is not None else [],
+            "last_assessment": v.last_assessment_date.isoformat() if v.last_assessment_date else datetime.datetime.utcnow().isoformat()
+        })
+    return out

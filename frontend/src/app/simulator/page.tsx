@@ -131,25 +131,42 @@ export default function SimulatorPage() {
   };
 
   const drawNode = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-    const label = node.label;
-    const fontSize = 12 / globalScale;
-    const radius = 6;
+    const label = node.label || "";
+    const fontSize = Math.max(10 / globalScale, 2);
+    ctx.font = `600 ${fontSize}px Inter, sans-serif`;
+    const textWidth = ctx.measureText(label).width;
     
+    // Node dimensions based on text length
+    const paddingX = 8 / globalScale;
+    const paddingY = 6 / globalScale;
+    const rectWidth = textWidth + (paddingX * 2);
+    const rectHeight = fontSize + (paddingY * 2);
+    const radius = 4 / globalScale; // border radius
+    
+    // Draw rounded rect
     ctx.beginPath();
-    ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
+    ctx.moveTo(node.x - rectWidth/2 + radius, node.y - rectHeight/2);
+    ctx.lineTo(node.x + rectWidth/2 - radius, node.y - rectHeight/2);
+    ctx.quadraticCurveTo(node.x + rectWidth/2, node.y - rectHeight/2, node.x + rectWidth/2, node.y - rectHeight/2 + radius);
+    ctx.lineTo(node.x + rectWidth/2, node.y + rectHeight/2 - radius);
+    ctx.quadraticCurveTo(node.x + rectWidth/2, node.y + rectHeight/2, node.x + rectWidth/2 - radius, node.y + rectHeight/2);
+    ctx.lineTo(node.x - rectWidth/2 + radius, node.y + rectHeight/2);
+    ctx.quadraticCurveTo(node.x - rectWidth/2, node.y + rectHeight/2, node.x - rectWidth/2, node.y + rectHeight/2 - radius);
+    ctx.lineTo(node.x - rectWidth/2, node.y - rectHeight/2 + radius);
+    ctx.quadraticCurveTo(node.x - rectWidth/2, node.y - rectHeight/2, node.x - rectWidth/2 + radius, node.y - rectHeight/2);
+    ctx.closePath();
+    
     ctx.fillStyle = getNodeColor(node);
     ctx.fill();
     ctx.strokeStyle = "rgba(255,255,255,0.8)";
     ctx.lineWidth = 1.5 / globalScale;
     ctx.stroke();
 
-    if (globalScale > 1.5) {
-      ctx.font = `${fontSize}px Inter, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.fillText(label, node.x, node.y + radius + 4 + fontSize);
-    }
+    // Draw text inside
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+    ctx.fillText(label, node.x, node.y);
   }, []);
 
   const drawLink = useCallback((link: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
@@ -160,8 +177,8 @@ export default function SimulatorPage() {
      ctx.beginPath();
      ctx.moveTo(start.x, start.y);
      ctx.lineTo(end.x, end.y);
-     ctx.strokeStyle = link.isAttackPath ? "rgba(239, 68, 68, 0.9)" : "rgba(148, 163, 184, 0.5)";
-     ctx.lineWidth = link.isAttackPath ? 2.5 / globalScale : 1 / globalScale;
+     ctx.strokeStyle = link.isAttackPath ? "rgba(239, 68, 68, 0.9)" : "rgba(148, 163, 184, 0.6)";
+     ctx.lineWidth = link.isAttackPath ? 2.5 / globalScale : 1.2 / globalScale;
      if (link.isAttackPath) {
          ctx.setLineDash([4 / globalScale, 4 / globalScale]);
      } else {
@@ -170,20 +187,20 @@ export default function SimulatorPage() {
      ctx.stroke();
      ctx.setLineDash([]); 
 
-     if (globalScale > 1.5 && link.label) {
+     if (link.label) {
         const midX = start.x + (end.x - start.x) / 2;
         const midY = start.y + (end.y - start.y) / 2;
-        const fontSize = 8 / globalScale;
+        const fontSize = Math.max(9 / globalScale, 2);
         
         ctx.font = `${fontSize}px Inter, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
         const textWidth = ctx.measureText(link.label).width;
-        ctx.fillStyle = 'rgba(11, 17, 32, 0.8)';
+        ctx.fillStyle = 'rgba(11, 17, 32, 0.9)';
         ctx.fillRect(midX - textWidth / 2 - 2, midY - fontSize / 2 - 2, textWidth + 4, fontSize + 4);
         
-        ctx.fillStyle = link.isAttackPath ? "rgba(239, 68, 68, 1)" : "rgba(148, 163, 184, 0.9)";
+        ctx.fillStyle = link.isAttackPath ? "rgba(239, 68, 68, 1)" : "rgba(180, 195, 210, 1)";
         ctx.fillText(link.label, midX, midY);
      }
   }, []);
@@ -378,10 +395,10 @@ export default function SimulatorPage() {
                  </div>
                </div>
 
-               {/* Graph Viewer */}
+               {/* Knowledge Graph Viewer */}
                <div className="bg-[#0B1120] border border-border rounded-xl shadow-inner h-[400px] flex flex-col overflow-hidden relative" ref={containerRef}>
                  <div className="absolute top-4 left-4 z-10 bg-background/80 backdrop-blur px-3 py-1.5 rounded-md border border-border text-sm font-medium flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-rose-500" /> Threat Graph (IOC & Progression)
+                    <Network className="w-4 h-4 text-emerald-400" /> Knowledge Graph (Asset Relationships)
                  </div>
                  <ForceGraph2D
                     ref={graphRef}
