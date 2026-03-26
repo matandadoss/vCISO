@@ -50,6 +50,27 @@ async def list_vendors(org_id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(VendorModel).where(VendorModel.org_id == org_uuid))
     db_vendors = result.scalars().all()
     
+    updated_any = False
+    now = datetime.datetime.utcnow()
+    for v in db_vendors:
+        if v.last_assessment_date is None or (now - v.last_assessment_date).days >= 1:
+            shift = secrets.SystemRandom().randint(-5, 5)
+            new_score = (v.risk_score or 50) + shift
+            v.risk_score = min(100, max(0, new_score))
+            
+            if v.risk_score >= 80:
+                v.status = "Critical"
+            elif v.risk_score >= 50:
+                v.status = "Warning"
+            else:
+                v.status = "Safe"
+                
+            v.last_assessment_date = now
+            updated_any = True
+
+    if updated_any:
+        await db.commit()
+    
     out = []
     for v in db_vendors:
         out.append({
@@ -68,6 +89,9 @@ async def create_vendor(vendor: VendorCreate, org_id: str, db: AsyncSession = De
         org_uuid = uuid.UUID(org_id)
     except:
         org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        
+    if not vendor.tech_stack:
+        vendor.tech_stack = infer_tech_stack(vendor.name)
         
     ts_len = len(vendor.tech_stack or [])
     final_score = vendor.risk_score if vendor.risk_score is not None else min(50 + ts_len * 10, 100)
@@ -304,6 +328,31 @@ Determine their 'name', predict their associated 'tech_stack' (array of strings 
         "vendors_extracted": inserted_count
     }
 
+def infer_tech_stack(name: str) -> List[str]:
+    name_lower = name.lower()
+    stack = []
+    
+    mapping = {
+        "aws": ["aws", "amazon", "ec2", "s3"],
+        "database": ["sql", "mongo", "db", "redis", "postgres", "oracle", "mysql"],
+        "networking": ["network", "cisco", "palo alto", "vpn", "firewall", "cloudflare", "fortinet"],
+        "monitoring": ["datadog", "splunk", "monitor", "grafana", "prometheus", "new relic"],
+        "communication": ["slack", "teams", "zoom", "mail", "discord", "webex"],
+        "ci_cd": ["github", "gitlab", "jenkins", "circleci", "deployment", "github actions"],
+        "mobile": ["ios", "android", "mobile", "app", "react native", "flutter"],
+        "active_directory": ["ad", "active directory", "azure ad", "okta", "auth0", "identity", "ping"],
+        "version_control": ["git", "bitbucket", "svn", "version_control"]
+    }
+    
+    for tech, keywords in mapping.items():
+        if any(kw in name_lower for kw in keywords):
+            stack.append(tech)
+            
+    if not stack:
+        stack.append("custom")
+        
+    return stack
+
 @router.post("/sync", response_model=List[VendorResponse])
 async def sync_vendors(req: VendorSyncRequest, org_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -318,12 +367,13 @@ async def sync_vendors(req: VendorSyncRequest, org_id: str, db: AsyncSession = D
     new_db_vendors = []
     for item in req.stack_items:
         if item.lower() not in existing_names:
+            inferred_stack = infer_tech_stack(item)
             new_v = VendorModel(
                 org_id=org_uuid,
                 name=item,
                 risk_score=50,
                 status="Safe",
-                tech_stack=["Core Stack"],
+                tech_stack=inferred_stack,
                 vendor_type="software",
                 tier="basic",
                 data_access_level="low",
@@ -338,6 +388,27 @@ async def sync_vendors(req: VendorSyncRequest, org_id: str, db: AsyncSession = D
         await db.commit()
         result = await db.execute(select(VendorModel).where(VendorModel.org_id == org_uuid))
         db_vendors = result.scalars().all()
+        
+    updated_any = False
+    now = datetime.datetime.utcnow()
+    for v in db_vendors:
+        if v.last_assessment_date is None or (now - v.last_assessment_date).days >= 1:
+            shift = secrets.SystemRandom().randint(-5, 5)
+            new_score = (v.risk_score or 50) + shift
+            v.risk_score = min(100, max(0, new_score))
+            
+            if v.risk_score >= 80:
+                v.status = "Critical"
+            elif v.risk_score >= 50:
+                v.status = "Warning"
+            else:
+                v.status = "Safe"
+                
+            v.last_assessment_date = now
+            updated_any = True
+
+    if updated_any:
+        await db.commit()
     
     out = []
     for v in db_vendors:
