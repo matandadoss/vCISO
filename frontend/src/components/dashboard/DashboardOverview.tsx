@@ -18,8 +18,8 @@ export function DashboardOverview() {
         if (!token) {
           // Keep mock data if user isn't logged in yet for demonstration
           setData({
-            overallRiskScore: 78,
-            industryAverage: 62,
+            overallRiskScore: 22,
+            industryAverage: 68,
             riskBand: "needs_improvement",
             complianceScore: 65,
             openCriticalFindings: 12,

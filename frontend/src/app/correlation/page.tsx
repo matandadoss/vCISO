@@ -309,11 +309,13 @@ export default function OSINTCorrelationPage() {
             {/* Simplified Threat List */}
             <div>
                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-4 mt-8">
-                  <div className="group/tooltip relative flex items-center gap-2">
+                  <div className="relative flex items-center gap-2">
                      <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Threats Affecting Your Company</div>
-                     <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-                     <div className="absolute left-0 top-full mt-2 w-72 bg-popover border border-border text-foreground text-xs font-normal rounded-md shadow-xl p-3 hidden group-hover/tooltip:block pointer-events-none text-left z-50 normal-case tracking-normal">
-                        This list merges external news and hacker chatter with your company's actual layout inside Virtual CISO, proving exactly which external dangers could strike your business right now.
+                     <div className="group/tooltip relative flex items-center">
+                        <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 bg-popover border border-border text-foreground text-xs font-normal rounded-md shadow-xl p-3 hidden group-hover/tooltip:block pointer-events-none text-left z-50 normal-case tracking-normal">
+                           This list merges external news and hacker chatter with your company's actual layout inside Virtual CISO, proving exactly which external dangers could strike your business right now.
+                        </div>
                      </div>
                   </div>
                   <div className="text-xs text-muted-foreground font-medium flex items-center gap-1.5"><ShieldAlert className="w-3.5 h-3.5" /> Ordered by Priority</div>

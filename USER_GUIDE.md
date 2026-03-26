@@ -10,8 +10,8 @@ The **Dashboard** is your organization's central command center, providing a rea
 
 ### Metrics & Measurements Explained
 
-* **Overall Security Score (0-100):** This is a composite metric calculated dynamically. It acts like a corporate credit rating. It is weighted by the number and severity of open Findings, your Compliance Readiness percentage, and active Vendor Risks. A score above 85 generally indicates strong resilience; a score dropping below 70 indicates immediate systemic vulnerabilities requiring executive attention.
-* **Risk Trend Indicator:** Displays the weekly historical delta of your Security Score (+/-). Consistent negative trends indicate increasing technical debt.
+* **Overall Security Score (0-100):** This is a composite metric calculated dynamically. It acts like a corporate credit rating representing your overall cyber health (100 is perfect security). It is a weighted formula combining your Average Internal Findings Risk (70% weight) and your Average Vendor Supply Chain Risk (30% weight). A score above 70 indicates good resilience; a score dropping below 40 indicates systemic vulnerabilities requiring executive attention.
+* **Risk Trend Indicator:** Displays the weekly historical delta of your Security Score (+/-). Consistent negative trends indicate increasing technical debt and degrading security posture.
 
 From a business perspective, a high, stable score demonstrates strong resilience against threats that could impact revenue, brand trust, or regulatory compliance. Operationally, it surfaces critical system outages or disconnected data pipelines directly to the top of your feed, ensuring that your team is never flying blind.
 
@@ -92,7 +92,7 @@ The **Compliance** tracker functions as an automated internal auditor, continuou
 
 ## Vendor Risk
 
-The **Vendor Risk** module executes AI-driven, continuous background checks and security posture evaluations on third-party suppliers actively integrated into your corporate workflows.
+The **Vendor Risk** module executes AI-driven, continuous background checks and security posture evaluations on third-party suppliers actively integrated into your corporate workflows. It intelligently infers vendor technology stacks and calculates daily risk drift to provide automated, real-time threat predictability without manual reassessment.
 
 ### Metrics & Measurements Explained
 

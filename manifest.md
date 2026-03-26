@@ -15,14 +15,14 @@ This document serves as the master tracking ledger for all features, capabilitie
 *   **Risk & Findings Management:** Dynamic vulnerability tracking system that ingests security logs and allows users to triage, resolve, or accept risks. Handles Jira/ServiceNow ticket creation.
 *   **Risk Register:** Formal operational ledger for documenting, approving, and tracking accepted business risks with expiration dates.
 *   **Compliance Automation:** Automated auditing against global frameworks (SOC2, ISO27001, HIPAA) by evaluating live security controls and cloud telemetry. Includes Gap Analysis reporting.
-*   **Vendor Risk Assessments:** AI-driven continuous background checks tracking the security posture of third-party suppliers. Automatically synchronizes with the internal Company footprint via the `POST /sync` route to implicitly onboard internal technological software as formally tracked Vendor Risk entities, predicting threat streams and Auto-Assigning risk scores.
+*   **Vendor Risk Assessments:** AI-driven continuous background checks tracking the security posture of third-party suppliers. Automatically synchronizes with the internal Company footprint via the `POST /sync` route to implicitly onboard internal technological software as formally tracked Vendor Risk entities. It utilizes an intelligent `infer_tech_stack` function to dynamically map vendors to tech categories, and applies a lazy automated daily risk drift calculation to predict threat streams and auto-assign risk scores.
 *   **Audit Trail:** Immutable, cryptographic logging of all user and system administrative actions.
 *   **My Company & Asset Inventory:** Centralized modeling of the organization's technical footprint, cloud providers, and active infrastructure.
 *   **Global Error Tracking:** Centralized telemetry system that silently captures and routes all unhandled frontend crashes and backend 500 exceptions to a secured database ledger for engineering review.
 
 ### Threat Operations Features
 *   **Cyber Threat Analyzer:** Advanced correlation engine mapping global threat actor activity and zero-days against the organization's technical footprint. Contains highly optimized nested interactivity (e.g., targeted `(i)` hover tooltips) minimizing UI bloat while mapping complex data directly into the AI Control Tower.
-*   **Threat Intelligence:** Early-warning radar monitoring global cyber campaigns, dark web chatter, and emerging vulnerabilities. Includes STIX/TAXII ingestion capabilities.
+*   **Threat Intelligence:** Early-warning radar monitoring global cyber campaigns, dark web chatter, and emerging vulnerabilities. Includes STIX/TAXII ingestion capabilities and supports the interactive promotion of threat indicators directly into formally tracked Findings within the Risk Engine.
 *   **Threat Modeler:** Explicit workflow interface for dynamically analyzing system architectures to predict and mitigate potential vulnerabilities before deployment.
 *   **Continuous Security Testing (Simulator & Pentest):** Automated ethical hacking simulations executed against the attack surface. Translates unstructured topological adversarial sequences into a high-density, strictly formatted **Native Attack Path Timeline** (DOM-based Tailwind React elements acting identically to Threat Findings layout) to avert chaotic Force Graph physics entirely.
 *   **Playbooks:** Interactive, step-by-step incident response and remediation guides.
@@ -82,7 +82,7 @@ The backend is built on **FastAPI** (v0.1.0) and uses standard async request han
 4.  **CORS:** Explicitly allows `localhost` and specific Firebase/Cloud Run front-end domains.
 
 ### Core API Routers (`/api/v1/*`)
-*   **`dashboard.py` & `reports.py`:** Aggregates macro-level metrics and orchestrates PDF/CSV report generation.
+*   **`dashboard.py` & `reports.py`:** Aggregates macro-level metrics and orchestrates PDF/CSV report generation. The dashboard explicitly calculates the Overall Cyber Health Score on an inverted scale (0-100, where 100 represents perfect security).
 *   **`findings.py`:** Paginated GET requests `?limit=50&offset=0&severity=high`. Includes specialized POST actions like `/{id}/assign`, `/{id}/accept-risk` (which runs AI categorization heuristics to promote a finding), and `/{id}/ticket` (ServiceNow/Jira).
 *   **`risk_register.py`:** Manages the formalized business risk ledger. Includes extend expiration actions and `/{id}/revert` to transition risks back into findings.
 *   **`simulator.py` & `pentest.py`:** Endpoints triggering ethical hacking workflows and fetching payload results.
@@ -92,7 +92,7 @@ The backend is built on **FastAPI** (v0.1.0) and uses standard async request han
 *   **`threat_intel.py`:** Ingestion webhooks for receiving STIX/TAXII feeds and managing subscriptions.
 *   **`workflows.py` & `playbooks.py`:** Orchestrates step-by-step UI processes and predefined remediation pipelines.
 *   **`integrations.py` & `ai_settings.py`:** Handles third-party system handshakes and LLM credential storage.
-*   **`organizations.py`, `users.py`, `tiers.py`, `billing.py`, `vendors.py`:** Administrative scaffolding, tenant management, and automated third-party technology synchronization (`/sync`).
+*   **`organizations.py`, `users.py`, `tiers.py`, `billing.py`, `vendors.py`:** Administrative scaffolding, tenant management, and automated third-party technology synchronization (`/sync`). `vendors.py` includes AI-driven tech stack inference (`infer_tech_stack`) and daily lazy risk drift assessments.
 *   **`bugs.py`:** Provides the `/api/v1/bugs/report` ingestion endpoint to securely receive crash payloads.
 
 ---
