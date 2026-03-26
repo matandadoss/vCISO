@@ -272,6 +272,81 @@ async def list_threat_indicators(
     except ValueError:
         org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
         
+    # Auto-seed mock indicators if empty
+    existing_res = await db.execute(select(ThreatIntelIndicator.id).where(ThreatIntelIndicator.org_id == org_uuid).limit(1))
+    if not existing_res.scalar_one_or_none():
+        # find actors to associate
+        scat_stmt = select(ThreatActor.id).where(ThreatActor.name == "Scattered Spider", ThreatActor.org_id == org_uuid)
+        scat_id = (await db.execute(scat_stmt)).scalar_one_or_none()
+        
+        lazarus_stmt = select(ThreatActor.id).where(ThreatActor.name == "Lazarus Group", ThreatActor.org_id == org_uuid)
+        lazarus_id = (await db.execute(lazarus_stmt)).scalar_one_or_none()
+
+        default_indicators = [
+            ThreatIntelIndicator(
+                id=uuid.uuid4(),
+                org_id=org_uuid,
+                indicator_type=IndicatorType.ip,
+                value="192.168.1.100",
+                threat_actor_id=scat_id,
+                confidence=98,
+                severity=Severity.high,
+                tlp_marking="AMBER",
+                valid_from=datetime.utcnow(),
+                source="Premium Intel Feed",
+                raw_data={
+                    "relevance_score": "High",
+                    "relevance_reasons": ["Matches your external footprint", "Actor currently active in your sector"],
+                    "associated_actor_name": "Scattered Spider",
+                    "attack_stages": ["Initial Access", "Credential Access"],
+                    "affected_assets": [{"name": "Auth Gateway", "type": "Network", "status": "Exposed"}],
+                    "recommended_actions": ["Block IP at firewall", "Rotate VPN credentials"]
+                }
+            ),
+            ThreatIntelIndicator(
+                id=uuid.uuid4(),
+                org_id=org_uuid,
+                indicator_type=IndicatorType.domain,
+                value="malicious-auth-update.com",
+                threat_actor_id=lazarus_id,
+                confidence=85,
+                severity=Severity.critical,
+                tlp_marking="RED",
+                valid_from=datetime.utcnow(),
+                source="OSINT / News",
+                raw_data={
+                    "relevance_score": "High",
+                    "relevance_reasons": ["Domain maps to a known Lazarus C2 server"],
+                    "associated_actor_name": "Lazarus Group",
+                    "attack_stages": ["Command and Control"],
+                    "affected_assets": [{"name": "Developer Workstations", "type": "Endpoint", "status": "At Risk"}],
+                    "recommended_actions": ["Sinkhole domain via DNS", "Scan endpoints for recent connections"]
+                }
+            ),
+            ThreatIntelIndicator(
+                id=uuid.uuid4(),
+                org_id=org_uuid,
+                indicator_type=IndicatorType.cve,
+                value="CVE-2026-0992",
+                threat_actor_id=None,
+                confidence=100,
+                severity=Severity.critical,
+                tlp_marking="WHITE",
+                valid_from=datetime.utcnow(),
+                source="Global NVD",
+                raw_data={
+                    "relevance_score": "Medium",
+                    "relevance_reasons": ["Identified in external perimeter scan"],
+                    "associated_actor_name": "Unknown",
+                    "attack_stages": ["Exploitation"],
+                    "affected_assets": [{"name": "API Gateway", "type": "Infrastructure", "status": "Vulnerable"}],
+                    "recommended_actions": ["Apply emergency patch", "Enable WAF virtual patching"]
+                }
+            )
+        ]
+        db.add_all(default_indicators)
+        await db.commit()
+
     stmt = select(ThreatIntelIndicator).where(ThreatIntelIndicator.org_id == org_uuid)
     
     if threat_actor_id:
@@ -286,8 +361,26 @@ async def list_threat_indicators(
     result = await db.execute(stmt)
     indicators = result.scalars().all()
     
+    items = []
+    for i in indicators:
+        raw = i.raw_data or {}
+        items.append({
+            "id": str(i.id),
+            "indicator_type": i.indicator_type.value if hasattr(i.indicator_type, 'value') else i.indicator_type,
+            "value": i.value,
+            "confidence": i.confidence,
+            "severity": i.severity.value if hasattr(i.severity, 'value') else i.severity,
+            "valid_from": i.valid_from.isoformat() if i.valid_from else None,
+            "relevance_score": raw.get("relevance_score", "Medium"),
+            "relevance_reasons": raw.get("relevance_reasons", []),
+            "associated_actor_name": raw.get("associated_actor_name", "Unknown"),
+            "attack_stages": raw.get("attack_stages", []),
+            "affected_assets": raw.get("affected_assets", []),
+            "recommended_actions": raw.get("recommended_actions", [])
+        })
+
     return {
-        "items": indicators,
+        "items": items,
         "total": total,
         "limit": limit,
         "offset": offset
@@ -347,6 +440,42 @@ async def list_breach_reports(
     offset: int = 0
 ):
     all_reports = [
+        {
+            "id": "br-2026-3",
+            "title": "Databricks Workspace Hijacking (2026)",
+            "date": "2026-03-05",
+            "summary": "Attackers bypassed Workspace IP access lists using stolen OAuth tokens, spinning up maximum-capacity clusters for targeted cryptomining and data extortion.",
+            "threat_actor": "Scattered Spider",
+            "industry": "Data Analytics",
+            "simulation_query": "Simulate OAuth token theft leading to cloud compute hijacking."
+        },
+        {
+            "id": "br-2026-1",
+            "title": "Anthropic Prompt Exfiltration Engine (2026)",
+            "date": "2026-02-14",
+            "summary": "Threat actors exploited an exposed API Gateway to execute unauthorized model fine-tuning jobs, secretly extracting customer IP through prompt inversion.",
+            "threat_actor": "Unknown LLM Syndicate",
+            "industry": "Artificial Intelligence",
+            "simulation_query": "Simulate API gateway unauthorized model tuning and prompt inversion."
+        },
+        {
+            "id": "br-2026-2",
+            "title": "Vercel / Next.js Registry Poisoning (2025)",
+            "date": "2025-11-20",
+            "summary": "Sophisticated actors compromised numerous high-profile Next.js plugins, pushing malicious updates that stole frontend environment variables across thousands of Vercel deployments.",
+            "threat_actor": "Lazarus Group",
+            "industry": "Web Hosting & Infrastructure",
+            "simulation_query": "Simulate Node module registry poisoning and edge environment variable extraction."
+        },
+        {
+            "id": "br-2026-4",
+            "title": "Cloudflare Deepfake Social Engineering (2025)",
+            "date": "2025-08-12",
+            "summary": "Attackers utilized real-time audio deepfakes to impersonate an IT executive, successfully convincing a helpdesk analyst to reset MFA hardware tokens for highly privileged cloud accounts.",
+            "threat_actor": "Scattered Spider",
+            "industry": "Cloud Security",
+            "simulation_query": "Simulate deepfake social engineering of IT helpdesk staff."
+        },
         {
             "id": "br-1",
             "title": "Change Healthcare Ransomware Incident (2024)",

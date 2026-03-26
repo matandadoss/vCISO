@@ -26,7 +26,7 @@ interface OSINTCorrelation {
    tier?: string;
    progress_color?: string;
    progress_percent?: number;
-   footer_stats?: string[];
+   footer_stats?: { label: string; tooltip: string }[];
    timeframe_label?: string;
 }
 
@@ -43,8 +43,50 @@ export default function OSINTCorrelationPage() {
    const [loading, setLoading] = useState(true);
    const [expandedRow, setExpandedRow] = useState<string | null>(null);
    const [executionSuccess, setExecutionSuccess] = useState<Record<string, boolean>>({});
-   const { setPageContext } = useControlTower();
+   const { setPageContext, setIsOpen } = useControlTower();
    const [userStack, setUserStack] = useState<string[]>([]);
+
+   const handleMetricClick = (type: string, value: any) => {
+      let title = "";
+      let suggestions: string[] = [];
+      
+      if (type === "threats") {
+         title = "Targeted Threats Analysis";
+         suggestions = [
+            "List the most critical targeted threats establishing a presence.",
+            "Explain how these threats are specifically targeting our tech stack.",
+            "What MITRE techniques are common among these active threats?"
+         ];
+      } else if (type === "critical") {
+         title = "Immediate Action Paths";
+         suggestions = [
+            "What are the immediate critical risk paths I need to address?",
+            "Generate a remediation plan for the most critical risk.",
+            "Who should I assign these critical risks to?"
+         ];
+      } else if (type === "mitigation") {
+         title = "Mitigation Effectiveness";
+         suggestions = [
+            "Why is our current mitigation score at this level?",
+            "What controls can we implement to immediately improve our score?",
+            "Where are our biggest security control gaps?"
+         ];
+      } else if (type === "sources") {
+         title = "Data Sources Scanned";
+         suggestions = [
+            "Which global feeds and dark web sources are we scanning?",
+            "Are there any recommended data sources we should add?",
+            "How often do these sources report new intelligence?"
+         ];
+      }
+      
+      setPageContext({
+         title,
+         data: { metric_type: type, metric_value: value },
+         suggestions
+      });
+      setIsOpen(true);
+   };
 
    const handlePromoteToFinding = async (corr: OSINTCorrelation, e: React.MouseEvent) => {
       e.stopPropagation();
@@ -178,7 +220,10 @@ export default function OSINTCorrelationPage() {
             <div>
                <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4 mt-8">Key Health Metrics</div>
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="group/tooltip bg-card border border-border rounded-lg p-6 relative">
+                  <div 
+                     onClick={() => handleMetricClick("threats", metrics?.active_patterns)} 
+                     className="group/tooltip bg-card border border-border rounded-lg p-6 relative cursor-pointer hover:border-primary/50 hover:bg-accent/10 transition-colors shadow-sm hover:shadow-md"
+                  >
                      <div className="absolute top-3 right-3 z-10">
                         <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
                         <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 bg-popover border border-border text-foreground text-xs rounded-md shadow-xl p-3 hidden group-hover/tooltip:block text-center z-50">
@@ -193,7 +238,10 @@ export default function OSINTCorrelationPage() {
                      </div>
                      <div className="text-xs text-muted-foreground">Known threats affecting your tools</div>
                   </div>
-                  <div className="group/tooltip bg-card border border-border rounded-lg p-6 relative">
+                  <div 
+                     onClick={() => handleMetricClick("critical", metrics?.critical_risk_paths)} 
+                     className="group/tooltip bg-card border border-border rounded-lg p-6 relative cursor-pointer hover:border-red-500/50 hover:bg-red-500/5 transition-colors shadow-sm hover:shadow-md"
+                  >
                      <div className="absolute top-3 right-3 z-10">
                         <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
                         <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 bg-popover border border-border text-foreground text-xs rounded-md shadow-xl p-3 hidden group-hover/tooltip:block text-center z-50">
@@ -205,7 +253,10 @@ export default function OSINTCorrelationPage() {
                      <div className="text-3xl font-light text-red-500 mb-2 tracking-tight">{metrics?.critical_risk_paths || "--"}</div>
                      <div className="text-xs text-muted-foreground">Major risks requiring fixing today</div>
                   </div>
-                  <div className="group/tooltip bg-card border border-border rounded-lg p-6 relative">
+                  <div 
+                     onClick={() => handleMetricClick("mitigation", metrics?.avg_control_effectiveness)} 
+                     className="group/tooltip bg-card border border-border rounded-lg p-6 relative cursor-pointer hover:border-yellow-500/50 hover:bg-yellow-500/5 transition-colors shadow-sm hover:shadow-md"
+                  >
                      <div className="absolute top-3 right-3 z-10">
                         <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
                         <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 bg-popover border border-border text-foreground text-xs rounded-md shadow-xl p-3 hidden group-hover/tooltip:block text-center z-50">
@@ -217,7 +268,10 @@ export default function OSINTCorrelationPage() {
                      <div className="text-3xl font-light text-yellow-500 mb-2 tracking-tight">{metrics?.avg_control_effectiveness || "--"}</div>
                      <div className="text-xs text-muted-foreground">Overall defensive strength</div>
                   </div>
-                  <div className="group/tooltip bg-card border border-border rounded-lg p-6 relative">
+                  <div 
+                     onClick={() => handleMetricClick("sources", metrics?.evaluated_workflows)} 
+                     className="group/tooltip bg-card border border-border rounded-lg p-6 relative cursor-pointer hover:border-primary/50 hover:bg-accent/10 transition-colors shadow-sm hover:shadow-md"
+                  >
                      <div className="absolute top-3 right-3 z-10">
                         <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
                         <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 bg-popover border border-border text-foreground text-xs rounded-md shadow-xl p-3 hidden group-hover/tooltip:block text-center z-50">
@@ -338,10 +392,10 @@ export default function OSINTCorrelationPage() {
                               <div className="flex flex-col md:flex-row justify-between gap-4 mt-5 pt-4 border-t border-border text-xs text-muted-foreground w-full">
                                  <div className="flex flex-wrap items-center gap-4 flex-1">
                                     {corr.footer_stats?.map((stat, idx) => (
-                                       <div key={idx} className="flex items-center gap-1.5">
-                                          {idx === 0 && <AlertCircle className="w-3.5 h-3.5" />}
+                                       <div key={idx} className="flex items-center gap-1.5 cursor-help group transition-colors" title={stat.tooltip}>
+                                          {idx === 0 && <AlertCircle className="w-3.5 h-3.5 group-hover:text-primary transition-colors" />}
                                           {idx > 0 && <span className="w-1 h-1 rounded-full bg-muted-foreground"></span>}
-                                          {stat}
+                                          <span className="group-hover:text-foreground transition-colors">{stat.label}</span>
                                        </div>
                                     ))}
                                  </div>

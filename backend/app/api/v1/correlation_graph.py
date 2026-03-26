@@ -158,7 +158,11 @@ async def get_correlation_engine_insights(
             "timeframe_label": "Active Exploit",
             "progress_color": "#ef4444",
             "progress_percent": 95,
-            "footer_stats": ["3 distinct data sources", "98% AI Confidence", "Risk Score: 92/100"]
+            "footer_stats": [
+                {"label": "3 distinct data sources", "tooltip": "Sources: OSINT Feeds, Dark Web Scanners, Internal Telemetry"},
+                {"label": "98% AI Confidence", "tooltip": "Confidence derived from Multi-LLM consensus"},
+                {"label": "Risk Score: 92/100", "tooltip": "Aggregate risk calculation"}
+            ]
          },
          {
             "id": "corr-2",
@@ -178,7 +182,11 @@ async def get_correlation_engine_insights(
             "timeframe_label": "Remediate < 24h",
             "progress_color": "#eab308",
             "progress_percent": 75,
-            "footer_stats": ["CVE-2026-0992", "WAF evasion path", "Risk Score: 81/100"]
+            "footer_stats": [
+                {"label": "CVE-2026-0992", "tooltip": "Critical CVSS severity"},
+                {"label": "WAF evasion path", "tooltip": "Exploit circumvents current Cloudflare boundaries"},
+                {"label": "Risk Score: 81/100", "tooltip": "Aggregate risk calculation"}
+            ]
          },
          {
             "id": "corr-3",
@@ -198,7 +206,11 @@ async def get_correlation_engine_insights(
             "timeframe_label": "Immediate",
             "progress_color": "#f97316",
             "progress_percent": 88,
-            "footer_stats": ["Admin privileges", "MFA bypass config", "Risk Score: 85/100"]
+            "footer_stats": [
+                {"label": "Admin privileges", "tooltip": "Identity grants AdministratorAccess"},
+                {"label": "MFA bypass config", "tooltip": "No MFA requirements detected for API usage"},
+                {"label": "Risk Score: 85/100", "tooltip": "Aggregate risk calculation"}
+            ]
          }
     ]
     
