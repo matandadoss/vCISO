@@ -113,7 +113,7 @@ Built on **Next.js (App Router)** utilizing a heavily modular Tailwind CSS compo
 *   **Main Modules:**
     *   `/dashboard`: Aggregates `/api/v1/dashboard` metrics.
     *   `/findings/[id]`: Interactive investigation view displaying Root Cause Analysis and Remediation steps.
-    *   `/compliance`, `/vendor-risk`, `/threat-intel`, `/playbooks`, `/simulator`, `/correlation`, `/risk-register`, `/audit-trail`, `/company`.
+    *   `/compliance`, `/vendor-risk`, `/threat-intel` (with dedicated criminal dossier sub-routes at `/threat-intel/actors/[id]`), `/playbooks`, `/simulator`, `/correlation`, `/risk-register`, `/audit-trail`, `/company`.
     *   `/workflows/*`: Contains dedicated interfaces for `threat`, `darkweb`, `osint`, `infrastructure`, and `vulnerability` processes.
     *   `/settings/*`: Granular management pages for Integrations, AI configurations, SLAs, and Users.
 
@@ -145,6 +145,9 @@ The CI/CD pipeline is strictly enforced via `cloudbuild.yaml` running on Google 
 
 *Track significant feature additions, architectural changes, and bug fixes below, tagged with the date of the change.*
 
+*   **[2026-03-27]** Implemented a dedicated "Threat Actor Dossier" (Criminal Rap Sheet) page at `/threat-intel/actors/[id]` for deep-dive analysis of threat actor vitals, warrants, and evidence logs.
+*   **[2026-03-27]** Deployed an "Intel Summary" aggregation dashboard tab to the Threat Intel page to display a high-level grid of active actors, critical signals, and real-time intelligence priority metrics.
+*   **[2026-03-27]** Remounted the global `NewsTicker` to fixedly span the absolute full width of the bottom viewport, stretching underneath both the primary content area and the application navigation sidebar to ensure uninhibited visibility.
 *   **[2026-03-27]** Added "Intel Briefing" Report Tab to the Cyber Threat Analyzer, allowing executives to view an aggregated summary of active external threats correlated directly to their current tech stack.
 *   **[2026-03-27]** Refactored the Security Testing dashboard layout into a modular Tab component (Assessment Overview, Attack Path Topology, Discoveries) for cleaner threat path analysis.
 *   **[2026-03-27]** Rebranded "Vendor Risk" to "Ecosystem Risk" throughout the platform UI, navigating schema, and table nomenclatures to reflect broader supplier supply chain tracking.

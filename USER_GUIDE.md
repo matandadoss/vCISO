@@ -108,7 +108,7 @@ The **Ecosystem Risk** module executes AI-driven, continuous background checks a
 
 ## Threat Intel
 
-The **Threat Intel** dashboard acts as your proactive early-warning radar. It continuously monitors global cyber activity. The view is cleanly partitioned into specific intelligence tabs (**Threat Actors**, **Threat Signals**, **Hindsight**, and **Dark Web**) to organize active threat streams.
+The **Threat Intel** dashboard acts as your proactive early-warning radar. It continuously monitors global cyber activity. The view is cleanly partitioned into specific intelligence tabs (**Intel Summary**, **Threat Actors**, **Threat Signals**, **Hindsight**, and **Dark Web**) to organize active threat streams. Clicking on any specific threat actor transitions the module into a dedicated **Criminal Dossier / Rap Sheet** detailing their specific Modus Operandi and explicit evidence logs.
 
 ### Metrics & Measurements Explained
 

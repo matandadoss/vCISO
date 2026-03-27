@@ -5,12 +5,14 @@ import React, { useEffect, useState } from "react";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { Search, ShieldAlert, Activity, Users, BookOpen, FlaskConical, Target } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useControlTower } from "@/contexts/ControlTowerContext";
 import { useSortableTable } from "@/hooks/useSortableTable";
 import { SortableHeader } from "@/components/ui/SortableHeader";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function ThreatIntelPage() {
+  const router = useRouter();
   const [actors, setActors] = useState([]);
   const [indicators, setIndicators] = useState([]);
   const [darkWebAlerts, setDarkWebAlerts] = useState([]);
@@ -31,16 +33,7 @@ export default function ThreatIntelPage() {
   const { items: sortedIndicators, requestSort, sortConfig } = useSortableTable(indicators);
 
   const handleActorClick = (actor: any) => {
-    setPageContext({
-      title: `Threat Actor: ${actor.name}`,
-      data: actor,
-      suggestions: [
-        `What is the current risk rating for ${actor.name} against our architecture?`,
-        `How can we defend against ${actor.name}'s known attack methods?`,
-        `Are there any active indicators suggesting ${actor.name} is targeting us?`
-      ]
-    });
-    setIsOpen(true);
+    router.push(`/threat-intel/actors/${actor.id}`);
   };
 
   const toggleIoc = (id: string) => {

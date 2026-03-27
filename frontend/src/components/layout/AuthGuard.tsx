@@ -38,15 +38,21 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   // Authenticated Layout
   return (
     <SessionTimeoutProvider>
-      <AppSidebar mobileOpen={isMobileMenuOpen} setMobileOpen={setIsMobileMenuOpen} />
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
-         <AppHeader onMenuClick={() => setIsMobileMenuOpen(true)} />
-         {/* Scrollable Content Wrapper */}
-         <div className="flex-1 overflow-y-auto">
-            {children}
-         </div>
-         <NewsTicker />
-      </main>
+      <div className="flex flex-col h-screen w-full overflow-hidden">
+        <div className="flex flex-1 overflow-hidden relative">
+          <AppSidebar mobileOpen={isMobileMenuOpen} setMobileOpen={setIsMobileMenuOpen} />
+          <main className="flex-1 flex flex-col overflow-hidden relative">
+             <AppHeader onMenuClick={() => setIsMobileMenuOpen(true)} />
+             {/* Scrollable Content Wrapper */}
+             <div className="flex-1 overflow-y-auto">
+                {children}
+             </div>
+          </main>
+        </div>
+        <div className="w-full shrink-0">
+          <NewsTicker />
+        </div>
+      </div>
     </SessionTimeoutProvider>
   );
 }
