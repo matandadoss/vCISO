@@ -93,7 +93,52 @@ export const ApiService = {
       return await fetchWithAuth('/admin/tiers/');
     } catch (e) {
       console.error("Failed to fetch tiers, returning fallback mock data.", e);
-      return [];
+      return [
+        { 
+          id: 'basic', 
+          name: 'Basic', 
+          description: 'Essential manual risk assessment.',
+          monthlyPrice: 0, 
+          pricePerUser: 0,
+          maxUsers: 5, 
+          features: ["Manual infrastructure diagramming", "Manual compliance tracking", "Weekly threat digests"],
+          popular: false,
+          color: '#9ca3af'
+        },
+        { 
+          id: 'professional', 
+          name: 'Professional', 
+          description: 'Basic real-time visibility.',
+          monthlyPrice: 200, 
+          pricePerUser: 10,
+          maxUsers: 25, 
+          features: ["Basic real-time cloud sync", "Standard What-If simulations", "Daily threat alerts"],
+          popular: false,
+          color: '#fbbf24'
+        },
+        { 
+          id: 'enterprise', 
+          name: 'Enterprise', 
+          description: 'Advanced contextual analytics.',
+          monthlyPrice: 800, 
+          pricePerUser: 25,
+          maxUsers: 100, 
+          features: ["Advanced real-time correlation", "Complex Hindsight simulations", "Automated compliance evidence"],
+          popular: true,
+          color: '#34d399'
+        },
+        { 
+          id: 'elite', 
+          name: 'Elite', 
+          description: 'Full automated platform capabilities.',
+          monthlyPrice: 2500, 
+          pricePerUser: 50,
+          maxUsers: 'Unlimited', 
+          features: ["Full real-time correlation graphs", "Automated AI remediation", "Continuous Red Team"],
+          popular: false,
+          color: '#60a5fa'
+        }
+      ];
     }
   },
 

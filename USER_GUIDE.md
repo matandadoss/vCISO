@@ -11,7 +11,8 @@ The **Dashboard** is your organization's central command center, providing a rea
 ### Metrics & Measurements Explained
 
 * **Overall Security Score (0-100):** This is a composite metric calculated dynamically. It acts like a corporate credit rating representing your overall cyber health (100 is perfect security). It is a weighted formula combining your Average Internal Findings Risk (70% weight) and your Average Vendor Supply Chain Risk (30% weight). A score above 70 indicates good resilience; a score dropping below 40 indicates systemic vulnerabilities requiring executive attention.
-* **Risk Trend Indicator:** Displays the weekly historical delta of your Security Score (+/-). Consistent negative trends indicate increasing technical debt and degrading security posture.
+* **Risk Trend Indicator:** Displays the weekly historical delta of your Security Score (+/-). Consistent negative trends indicate increasing technical debt and degrading security posture. *The Risk Over Time timeline guarantees the right-most chronological node explicitly matches the current dynamic Overall Security Score.*
+* **Action Needed (Widget):** A prioritized queue of urgent tasks. It aggregates exclusively from active findings natively across your environment (`new`, `triaged`, `in_progress`, and `reviewed` states) to ensure it perfectly mirrors the urgent metrics stated across your executive summaries without artificial inflation.
 
 From a business perspective, a high, stable score demonstrates strong resilience against threats that could impact revenue, brand trust, or regulatory compliance. Operationally, it surfaces critical system outages or disconnected data pipelines directly to the top of your feed, ensuring that your team is never flying blind.
 

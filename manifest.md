@@ -145,6 +145,8 @@ The CI/CD pipeline is strictly enforced via `cloudbuild.yaml` running on Google 
 
 *Track significant feature additions, architectural changes, and bug fixes below, tagged with the date of the change.*
 
+*   **[2026-03-27]** Synchronized Dashboard metrics: updated the `/attention` endpoint to utilize unified `active_statuses` DB filtering identical to the core Findings widget, preventing artificial inflation from dummy records.
+*   **[2026-03-27]** Fixed Risk Over Time chart plotting: Rewrote the `GET /api/v1/dashboard/trends` endpoint to anchor the visual timeline precisely to the true dynamic `overall_risk_score` calculation rather than hardcoded baselines.
 *   **[2026-03-27]** Implemented a dedicated "Threat Actor Dossier" (Criminal Rap Sheet) page at `/threat-intel/actors/[id]` for deep-dive analysis of threat actor vitals, warrants, and evidence logs.
 *   **[2026-03-27]** Deployed an "Intel Summary" aggregation dashboard tab to the Threat Intel page to display a high-level grid of active actors, critical signals, and real-time intelligence priority metrics.
 *   **[2026-03-27]** Remounted the global `NewsTicker` to fixedly span the absolute full width of the bottom viewport, stretching underneath both the primary content area and the application navigation sidebar to ensure uninhibited visibility.

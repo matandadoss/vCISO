@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { 
   Building2, Search, AlertCircle, CheckCircle2, AlertTriangle, 
   ChevronRight, Server, Shield, Activity, Users, Database, Globe, 
-  Smartphone, Cloud, Key, FileCode2, Edit2, Trash2, Upload, Plus
+  Smartphone, Cloud, Key, FileCode2, Edit2, Trash2, Upload, Plus, Minus
 } from "lucide-react";
 import { cn, formatDate } from "@/lib/utils";
 import { useSortableTable } from "@/hooks/useSortableTable";
@@ -42,6 +42,7 @@ export default function VendorRiskPage() {
   
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [expandedVendors, setExpandedVendors] = useState<Record<string, boolean>>({});
 
   // CRUD State
   const [showFormModal, setShowFormModal] = useState(false);
@@ -64,7 +65,9 @@ export default function VendorRiskPage() {
   parentVendors.forEach(parent => {
     displayVendors.push(parent);
     const children = childVendors.filter(c => c.parent_vendor_id === parent.id);
-    children.forEach(c => displayVendors.push({ ...c, _isChild: true }));
+    if (expandedVendors[parent.id]) {
+      children.forEach(c => displayVendors.push({ ...c, _isChild: true }));
+    }
   });
   
   const orphaned = childVendors.filter(c => !parentVendors.some(p => p.id === c.parent_vendor_id));
@@ -350,6 +353,23 @@ export default function VendorRiskPage() {
                                  {vendor.name.substring(0,2).toUpperCase()}
                               </div>
                            )}
+                           
+                           {!vendor._isChild && childVendors.some(c => c.parent_vendor_id === vendor.id) && (
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedVendors(prev => ({
+                                    ...prev,
+                                    [vendor.id]: !prev[vendor.id]
+                                  }));
+                                }}
+                                className="flex items-center justify-center w-5 h-5 rounded hover:bg-muted text-muted-foreground transition-colors border border-transparent hover:border-border shrink-0"
+                                title={expandedVendors[vendor.id] ? "Collapse Products" : "Expand Products"}
+                              >
+                                {expandedVendors[vendor.id] ? <Minus className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                              </button>
+                           )}
+                           
                            <span className={cn("truncate", vendor._isChild && "text-sm text-muted-foreground")}>{vendor.name}</span>
                         </td>
                         <td className="py-4 px-6">
