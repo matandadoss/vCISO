@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
+import { NewsTicker } from "./NewsTicker";
 import { SessionTimeoutProvider } from "@/contexts/SessionTimeoutProvider";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -44,6 +45,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
          <div className="flex-1 overflow-y-auto">
             {children}
          </div>
+         <NewsTicker />
       </main>
     </SessionTimeoutProvider>
   );

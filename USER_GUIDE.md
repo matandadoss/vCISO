@@ -108,7 +108,7 @@ The **Vendor Risk** module executes AI-driven, continuous background checks and 
 
 ## Threat Intel
 
-The **Threat Intel** dashboard acts as your proactive early-warning radar. It continuously monitors global cyber activity.
+The **Threat Intel** dashboard acts as your proactive early-warning radar. It continuously monitors global cyber activity. The view is cleanly partitioned into specific intelligence tabs (**Threat Actors**, **Threat Signals**, **Hindsight**, and **Dark Web**) to organize active threat streams.
 
 ### Metrics & Measurements Explained
 
@@ -122,7 +122,7 @@ The **Threat Intel** dashboard acts as your proactive early-warning radar. It co
 
 ## Cyber Threat Analyzer
 
-Powered by an advanced correlation engine processing over 24 million events daily, the **Cyber Threat Analyzer** maps global threat actor activity directly against your specific infrastructure footprint to surface highly actionable attack paths.
+Powered by an advanced correlation engine processing over 24 million events daily, the **Cyber Threat Analyzer** maps global threat actor activity directly against your specific infrastructure footprint to surface highly actionable attack paths. The interface is optimized into two primary tabs: **Overview** (telemetry and scopes) and **Active Threats** (the correlated hazard list).
 
 ### Metrics & Measurements Explained
 
@@ -142,7 +142,7 @@ The engine provides several complex measurements to quantify operational risk:
 
 ## Security Testing
 
-The **Security Testing** module launches safe, simulated, continuous ethical hacking engagements against your external attack surface to discover logical flaws before criminals do. Results are explicitly visualized in a high-density **Attack Path Timeline**, stripping away chaotic graph visualizations to provide a structured, chronological report of the threat traversal.
+The **Security Testing** module launches safe, simulated, continuous ethical hacking engagements against your external attack surface to discover logical flaws before criminals do. Results are explicitly visualized in a high-density **Attack Path Timeline**, stripping away chaotic graph visualizations to provide a structured, chronological report of the threat traversal. Users can easily pivot simulation strategies by toggling between the **Architecture**, **Hindsight**, and **Pen Test** operation tabs.
 
 ### Metrics & Measurements Explained
 
@@ -157,7 +157,7 @@ The **Security Testing** module launches safe, simulated, continuous ethical hac
 
 The **My Company** page defines the global context for the AI engine. Here, you establish your organizational footprint, including your specific industry, cloud providers, and operational zones.
 
-Accurately maintaining this profile prevents the AI engine from generating false positives. If your profile incorrectly states you use `Azure` instead of `AWS`, the system may suppress critical AWS specific vulnerability alerts. Furthermore, the explicit technologies and tools you define in this section are automatically actively synchronized (`/sync`) into your **Vendor Risk** module, ensuring that internal supply-chain software is proactively tracked as a primary threat vector without manual data entry.
+Accurately maintaining this profile prevents the AI engine from generating false positives. If your profile incorrectly states you use `Azure` instead of `AWS`, the system may suppress critical AWS specific vulnerability alerts. Furthermore, the explicit technologies and tools you define in this section are automatically actively synchronized (`/sync`) into your **Vendor Risk** module, ensuring that internal supply-chain software is proactively tracked as a primary threat vector without manual data entry. The footprint is categorized across dedicated layout tabs (**Cloud Infra**, **App Stack**, **Security Tools**, **Threat Actors**, and **Frameworks**) for precise modeling.
 
 ---
 

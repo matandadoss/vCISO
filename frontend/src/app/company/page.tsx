@@ -4,6 +4,7 @@ import { fetchWithAuth } from "@/lib/api";
 import { Building, Layers, ShieldCheck, Plus, CheckCircle2, Database, Users, FileCheck, Trash2, Edit2, Save, Upload, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const INFRA_SUGGESTIONS = ["AWS EC2", "AWS S3", "AWS RDS", "AWS Lambda", "Google Kubernetes Engine (GKE)", "Google Cloud Storage (GCS)", "Alibaba Cloud Container Service (ACK)", "DigitalOcean Droplets", "Azure Virtual Machines", "Azure Blob Storage", "On-Premises Servers", "VMware vSphere"];
 const TECH_SUGGESTIONS = ["Node.js", "Python", "React", "PostgreSQL", "MongoDB", "Redis", "Docker", "Kubernetes", "Terraform", "GitHub Actions", "GitLab CI", "Java", "Go", "Rust", "C#", "FastAPI", "Next.js", "Express.js", "Spring Boot", "MySQL", "Elasticsearch"];
@@ -12,8 +13,6 @@ const FRAMEWORK_SUGGESTIONS = ["SOC 2 Type II", "ISO 27001", "HIPAA", "PCI-DSS",
 const THREAT_ACTOR_SUGGESTIONS = ["LAPSUS$", "Scattered Spider", "APT29 (Cozy Bear)", "APT28 (Fancy Bear)", "Lazarus Group", "Sandworm", "LockBit", "BlackBasta", "ALPHV (BlackCat)", "Clop"];
 
 export default function CompanyPage() {
-  const [activeTab, setActiveTab] = useState<"stack" | "tools" | "app" | "threat-actors" | "frameworks">("stack");
-  
   const [activeInput, setActiveInput] = useState<"infra" | "tech" | "tools" | "frameworks" | "threat-actors" | null>(null);
   const [inputText, setInputText] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -387,10 +386,9 @@ export default function CompanyPage() {
       <div className="max-w-5xl mx-auto space-y-8">
         <div>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-              <Building className="w-8 h-8 text-primary" />
-              My Company
-            </h1>
+            <p className="text-muted-foreground max-w-2xl">
+              Define your organizational infrastructure and active security stack. Upload a diagram or SBOM for automatic AI population.
+            </p>
             <div>
               <label 
                 className={cn(
@@ -410,9 +408,6 @@ export default function CompanyPage() {
               </label>
             </div>
           </div>
-          <p className="text-muted-foreground mt-2">
-            Define your organizational infrastructure and active security stack. Upload a diagram or SBOM for automatic AI population.
-          </p>
         </div>
 
         {/* Status Indicator */}
@@ -424,42 +419,20 @@ export default function CompanyPage() {
             Continuous Correlation Engine Active.
         </div>
 
-        <div className="flex flex-wrap bg-muted p-1 rounded-lg w-fit mb-6 gap-1">
-           <button 
-             className={cn("text-sm font-medium px-4 py-2 rounded-md flex items-center gap-2 transition-all", activeTab === "stack" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
-             onClick={() => setActiveTab("stack")}
-           >
-              <Layers className="w-4 h-4" /> Cloud Infra
-           </button>
-           <button 
-             className={cn("text-sm font-medium px-4 py-2 rounded-md flex items-center gap-2 transition-all", activeTab === "app" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
-             onClick={() => setActiveTab("app")}
-           >
-              <Database className="w-4 h-4" /> App Stack
-           </button>
-           <button 
-             className={cn("text-sm font-medium px-4 py-2 rounded-md flex items-center gap-2 transition-all", activeTab === "tools" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
-             onClick={() => setActiveTab("tools")}
-           >
-              <ShieldCheck className="w-4 h-4" /> Security Tools
-           </button>
-           <button 
-             className={cn("text-sm font-medium px-4 py-2 rounded-md flex items-center gap-2 transition-all", activeTab === "threat-actors" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
-             onClick={() => setActiveTab("threat-actors")}
-           >
-              <Users className="w-4 h-4" /> Threat Actors
-           </button>
-           <button 
-             className={cn("text-sm font-medium px-4 py-2 rounded-md flex items-center gap-2 transition-all", activeTab === "frameworks" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
-             onClick={() => setActiveTab("frameworks")}
-           >
-              <FileCheck className="w-4 h-4" /> Frameworks
-           </button>
-        </div>
+        <Tabs defaultValue="stack" className="space-y-6 w-full">
+          <div className="overflow-x-auto pb-2 -mb-2">
+            <TabsList className="w-full sm:w-auto flex justify-start h-auto flex-wrap">
+              <TabsTrigger value="stack" className="flex items-center gap-2"><Layers className="w-4 h-4" /> Cloud Infra</TabsTrigger>
+              <TabsTrigger value="app" className="flex items-center gap-2"><Database className="w-4 h-4" /> App Stack</TabsTrigger>
+              <TabsTrigger value="tools" className="flex items-center gap-2"><ShieldCheck className="w-4 h-4" /> Security Tools</TabsTrigger>
+              <TabsTrigger value="threat-actors" className="flex items-center gap-2"><Users className="w-4 h-4" /> Threat Actors</TabsTrigger>
+              <TabsTrigger value="frameworks" className="flex items-center gap-2"><FileCheck className="w-4 h-4" /> Frameworks</TabsTrigger>
+            </TabsList>
+          </div>
 
         {/* CLOUD INFRA */}
-        {activeTab === "stack" && (
-           <div className="grid gap-6 animate-in fade-in duration-300">
+        <TabsContent value="stack">
+           <div className="grid gap-6 animate-in fade-in duration-300 mt-2">
                <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 sm:gap-0 mb-6">
                      <div>
@@ -502,11 +475,11 @@ export default function CompanyPage() {
                   </div>
                </div>
            </div>
-        )}
+        </TabsContent>
 
         {/* APP STACK */}
-        {activeTab === "app" && (
-           <div className="grid gap-6 animate-in fade-in duration-300">
+        <TabsContent value="app">
+           <div className="grid gap-6 animate-in fade-in duration-300 mt-2">
                <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 sm:gap-0 mb-6">
                      <div>
@@ -548,11 +521,11 @@ export default function CompanyPage() {
                   </div>
                </div>
            </div>
-        )}
+        </TabsContent>
 
         {/* SECURITY TOOLS */}
-        {activeTab === "tools" && (
-           <div className="grid gap-6 animate-in fade-in duration-300">
+        <TabsContent value="tools">
+           <div className="grid gap-6 animate-in fade-in duration-300 mt-2">
                <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 sm:gap-0 mb-6">
                      <div>
@@ -606,11 +579,11 @@ export default function CompanyPage() {
                   </div>
                </div>
            </div>
-        )}
+        </TabsContent>
 
         {/* THREAT ACTORS */}
-        {activeTab === "threat-actors" && (
-           <div className="grid gap-6 animate-in fade-in duration-300">
+        <TabsContent value="threat-actors">
+           <div className="grid gap-6 animate-in fade-in duration-300 mt-2">
                <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 sm:gap-0 mb-6">
                      <div>
@@ -666,11 +639,11 @@ export default function CompanyPage() {
                   </div>
                </div>
            </div>
-        )}
+        </TabsContent>
 
         {/* FRAMEWORKS */}
-        {activeTab === "frameworks" && (
-           <div className="grid gap-6 animate-in fade-in duration-300">
+        <TabsContent value="frameworks">
+           <div className="grid gap-6 animate-in fade-in duration-300 mt-2">
                <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 sm:gap-0 mb-6">
                      <div>
@@ -725,7 +698,8 @@ export default function CompanyPage() {
                   </div>
                </div>
            </div>
-        )}
+        </TabsContent>
+        </Tabs>
 
       </div>
     </div>

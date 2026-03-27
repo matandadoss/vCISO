@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useControlTower } from "@/contexts/ControlTowerContext";
 import { useSortableTable } from "@/hooks/useSortableTable";
 import { SortableHeader } from "@/components/ui/SortableHeader";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function ThreatIntelPage() {
   const [actors, setActors] = useState([]);
@@ -152,30 +153,28 @@ export default function ThreatIntelPage() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-background p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-              <ShieldAlert className="h-8 w-8 text-primary" />
-              Threat Intelligence
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Monitor active threat actors and known threat signals.
-            </p>
+      <div className="max-w-7xl mx-auto">
+        <Tabs defaultValue="actors" className="space-y-6">
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+            <TabsList>
+              <TabsTrigger value="actors">Threat Actors</TabsTrigger>
+              <TabsTrigger value="indicators">Threat Signals</TabsTrigger>
+              <TabsTrigger value="breaches">Hindsight</TabsTrigger>
+              <TabsTrigger value="darkweb">Dark Web</TabsTrigger>
+            </TabsList>
+            <div className="flex w-full xl:w-auto relative">
+               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+               <input 
+                 type="text" 
+                 placeholder="Search intelligence..." 
+                 className="pl-9 pr-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-2 ring-primary w-full md:w-64"
+               />
+            </div>
           </div>
-          <div className="flex w-full xl:w-auto relative">
-             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-             <input 
-               type="text" 
-               placeholder="Search intelligence..." 
-               className="pl-9 pr-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-2 ring-primary w-full md:w-64"
-             />
-          </div>
-        </div>
 
-        {/* Threat Actors Cards */}
-        <div>
-          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+          {/* Threat Actors Cards */}
+          <TabsContent value="actors">
+            <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
             <Users className="h-5 w-5 text-purple-500" /> 
             Tracked Threat Actors
           </h2>
@@ -259,10 +258,10 @@ export default function ThreatIntelPage() {
                </div>
             )}
           </div>
-        </div>
+        </TabsContent>
 
         {/* Indicators Table */}
-        <div className="pt-4">
+        <TabsContent value="indicators" className="pt-2">
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
             <Activity className="h-5 w-5 text-blue-500" /> 
             Recent Threat Signals
@@ -479,10 +478,10 @@ export default function ThreatIntelPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </TabsContent>
 
         {/* Breach Reports Section */}
-        <div className="pt-4">
+        <TabsContent value="breaches" className="pt-2">
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-emerald-500" /> 
             Hindsight
@@ -530,10 +529,10 @@ export default function ThreatIntelPage() {
               </button>
             </div>
           )}
-        </div>
+        </TabsContent>
 
         {/* Dark Web Monitoring Section */}
-        <div className="pt-4">
+        <TabsContent value="darkweb" className="pt-2">
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-4.05 3.01-7.4 6.95-7.93v2.03C8.1 6.55 6 9.04 6 12c0 3.31 2.69 6 6 6s6-2.69 6-6c0-2.96-2.1-5.45-4.95-5.9v-2.03C16.99 4.6 20 7.95 20 12c0 4.41-3.59 8-8 8zm-1-6h2v2h-2v-2zm0-8h2v6h-2V6z"/>
@@ -585,7 +584,8 @@ export default function ThreatIntelPage() {
                </div>
             )}
           </div>
-        </div>
+        </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

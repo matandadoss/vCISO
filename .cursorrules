@@ -12,3 +12,5 @@ Whenever you perform a task that involves:
 6. Installing significant new third-party dependencies or altering the global styling definitions.
 
 You **MUST** proactively update `manifest.md` to reflect these changes before concluding your task. If you added a new feature, you must add it to the 'Features & Active Modules' tracking section so the user and other agents know it exists. The user expects this file to remain a perfectly accurate, 1-to-1 reflection of the current codebase capabilities at all times.
+
+**MANDATORY WORKFLOW EXECUTION**: Before notifying the user that ANY feature, API, UI, or database architecture task is complete, you MUST execute the protocol defined in `.agents/workflows/update-manifest.md`. This includes simultaneously updating the `manifest.md` AND the `USER_GUIDE.md` before sending your final completion message.

@@ -109,6 +109,7 @@ Built on **Next.js (App Router)** utilizing a heavily modular Tailwind CSS compo
 
 ### Layout & Routing
 *   **Root Layout (`/layout.tsx`):** Wraps all routes in `AuthGuard` (redirects unauthenticated users to `/login`) and `OnboardingGuard` (redirects authenticated but unconfigured users to `/setup`).
+*   **Global AppHeader:** Dynamically resolves and mounts unified page titles directly into the global header using `lib/route-titles.ts`, officially deprecating localized, hardcoded page headers to optimize vertical layout density across the platform.
 *   **Main Modules:**
     *   `/dashboard`: Aggregates `/api/v1/dashboard` metrics.
     *   `/findings/[id]`: Interactive investigation view displaying Root Cause Analysis and Remediation steps.
@@ -121,7 +122,7 @@ Built on **Next.js (App Router)** utilizing a heavily modular Tailwind CSS compo
 
 ### UI & Core Dependencies
 *   **Styling & Theming:** Uses Tailwind CSS v4, globally configured via `app/globals.css`. It strictly defines all app colors via CSS variables (`--background`, `--popover`, `--card`, etc.) in standard `:root` and `.dark` blocks, and maps them to utility colors inside the `@theme inline` directive to maintain uniform styling across custom components (like contextual tooltips).
-*   **Interactivity:** Heavy utilization of `lucide-react` for dynamic, context-aware icons, and built-in Tailwind `group/tooltip` utility classes for conveying nested logic metadata.
+*   **Interactivity:** Heavy utilization of `lucide-react` for dynamic, context-aware icons, and built-in Tailwind `group/tooltip` utility classes for conveying nested logic metadata. Heavily integrates a unified accessible **Pill Tabs** component (`src/components/ui/tabs.tsx`) across Threat Operations (`/threat-intel`, `/correlation`, `/simulator`) and Console modules (`/company`) to partition high-density data flows and minimize vertical scrolling.
 
 ---
 

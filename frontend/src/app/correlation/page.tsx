@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Activity, AlertCircle, Cpu, Network, ShieldAlert, ChevronDown, ChevronUp, Info } from "lucide-react";
 import { fetchWithAuth } from "@/lib/api";
 import Link from "next/link";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useControlTower } from "@/contexts/ControlTowerContext";
 
 type TargetType = "Supplier" | "Internal Tooling" | "Infrastructure" | "Payment processing" | "Infrastructure (IaaS)" | "Identity (AWS IAM)" | "Infrastructure (AWS)";
@@ -189,15 +190,18 @@ export default function OSINTCorrelationPage() {
          <div className="max-w-7xl mx-auto space-y-8">
 
             <div>
-               <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-                  <Network className="w-8 h-8 text-primary" />
-                  Cyber Threat Analyzer
-               </h1>
                <p className="text-muted-foreground mt-2 max-w-3xl leading-relaxed">
                   Real-time scanning of the global threat landscape to find active dangers specifically targeting your business.
                </p>
             </div>
 
+            <Tabs defaultValue="overview" className="space-y-6 w-full">
+               <TabsList className="h-auto flex-wrap justify-start">
+                  <TabsTrigger value="overview" className="flex items-center gap-2"><Activity className="w-4 h-4" /> Overview</TabsTrigger>
+                  <TabsTrigger value="threats" className="flex items-center gap-2"><ShieldAlert className="w-4 h-4" /> Active Threats</TabsTrigger>
+               </TabsList>
+
+               <TabsContent value="overview" className="space-y-8 mt-2">
             {/* Simplified Status Banner */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 gap-2 sm:gap-0 rounded-lg bg-card border border-border">
                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-foreground text-sm font-medium w-full">
@@ -305,7 +309,9 @@ export default function OSINTCorrelationPage() {
                   </div>
                </div>
             )}
+               </TabsContent>
 
+               <TabsContent value="threats" className="mt-2 text-foreground">
             {/* Simplified Threat List */}
             <div>
                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-4 mt-8">
@@ -417,6 +423,8 @@ export default function OSINTCorrelationPage() {
                   ))}
                </div>
             </div>
+               </TabsContent>
+            </Tabs>
 
          </div>
       </div>

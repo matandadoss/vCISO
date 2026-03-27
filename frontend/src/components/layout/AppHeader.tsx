@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, LogIn, Menu, ShieldAlert, MessageSquare } from "lucide-react";
 import { useControlTower } from "@/contexts/ControlTowerContext";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { getPageTitle } from "@/lib/route-titles";
 
 interface AppHeaderProps {
   onMenuClick: () => void;
@@ -12,18 +14,20 @@ interface AppHeaderProps {
 export function AppHeader({ onMenuClick }: AppHeaderProps) {
   const { user, signInWithGoogle, signOut } = useAuth();
   const { setIsOpen } = useControlTower();
+  const pathname = usePathname();
+  const pageTitle = getPageTitle(pathname);
 
   return (
     <div className="h-16 border-b border-border bg-card flex items-center justify-between px-4 z-30 shrink-0">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
         {/* Mobile menu button */}
         <button onClick={onMenuClick} className="md:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground outline-none">
           <Menu className="w-6 h-6" />
         </button>
-        {/* Mobile title */}
-        <div className="md:hidden flex items-center gap-2 ml-2">
-           <ShieldAlert className="w-5 h-5 text-primary" />
-           <span className="font-bold tracking-tight text-sm sm:text-base">Virtual CISO</span>
+        {/* Page Title */}
+        <div className="flex items-center gap-2">
+           <ShieldAlert className="w-5 h-5 text-primary md:hidden" />
+           <span className="font-bold tracking-tight text-lg text-foreground">{pageTitle}</span>
         </div>
       </div>
 

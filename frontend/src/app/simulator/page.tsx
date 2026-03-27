@@ -4,6 +4,7 @@ import { fetchWithAuth } from "@/lib/api";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlaskConical, Send, Bot, AlertTriangle, ShieldCheck, ShieldAlert, Zap, ArrowRight, ArrowDown, Activity, TrendingDown, TrendingUp, Network, BookOpen, Layers, Database, Terminal, Loader2, Upload, Cpu, Server } from "lucide-react";
 import { toast } from "sonner";
 
@@ -119,37 +120,20 @@ export default function SimulatorPage() {
     <div className="flex-1 overflow-hidden bg-background flex flex-col md:flex-row">
       <div className="w-full md:w-96 border-r border-border bg-card flex flex-col z-10 shadow-lg">
         <div className="p-6 border-b border-border bg-primary/5">
-          <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2 mb-2">
-            <FlaskConical className="h-6 w-6 text-primary" />
-            Red Team Operations
-          </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             Proactively test your security posture. Simulate architecture changes, run Hindsight scenarios on historical breaches, or launch AI-driven adversarial pentests against active endpoints.
           </p>
         </div>
         
         <div className="flex-1 p-6 flex flex-col">
            {/* Simulation Type Selector */}
-           <div className="flex bg-muted p-1 rounded-lg mb-6">
-              <button 
-                className={cn("flex-1 text-xs font-medium py-1.5 rounded-md flex items-center justify-center gap-2 transition-all", simType === "architecture" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
-                onClick={() => { setSimType("architecture"); setQuery(""); setResult(null); }}
-              >
-                 <Layers className="w-3.5 h-3.5" /> Architecture
-              </button>
-              <button 
-                className={cn("flex-1 text-xs font-medium py-1.5 rounded-md flex items-center justify-center gap-2 transition-all", simType === "breach" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
-                onClick={() => { setSimType("breach"); setQuery(""); setResult(null); }}
-              >
-                 <BookOpen className="w-3.5 h-3.5" /> Hindsight
-              </button>
-              <button 
-                className={cn("flex-1 text-xs font-medium py-1.5 rounded-md flex items-center justify-center gap-2 transition-all", simType === "pentest" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
-                onClick={() => { setSimType("pentest"); setQuery(""); setResult(null); }}
-              >
-                 <Terminal className="w-3.5 h-3.5" /> Pen Test
-              </button>
-           </div>
+           <Tabs value={simType} onValueChange={(val: any) => { setSimType(val); setQuery(""); setResult(null); }} className="w-full mb-6">
+             <TabsList className="w-full flex h-auto p-1">
+                <TabsTrigger value="architecture" className="flex-1 flex items-center justify-center gap-2 text-xs py-1.5"><Layers className="w-3.5 h-3.5" /> Architecture</TabsTrigger>
+                <TabsTrigger value="breach" className="flex-1 flex items-center justify-center gap-2 text-xs py-1.5"><BookOpen className="w-3.5 h-3.5" /> Hindsight</TabsTrigger>
+                <TabsTrigger value="pentest" className="flex-1 flex items-center justify-center gap-2 text-xs py-1.5"><Terminal className="w-3.5 h-3.5" /> Pen Test</TabsTrigger>
+             </TabsList>
+           </Tabs>
 
            {tier === "basic" ? (
              <div className="flex flex-col items-center justify-center flex-1 bg-background border border-border rounded-lg p-6 text-center">
