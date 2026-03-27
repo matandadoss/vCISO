@@ -52,7 +52,7 @@ export default function VendorRiskPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredVendors = vendors.filter(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()));
-  const { items: sortedVendors, requestSort, sortConfig } = useSortableTable(filteredVendors, { key: "risk_score", direction: "desc" });
+  const { items: sortedVendors, requestSort, sortConfig } = useSortableTable(filteredVendors, { key: "risk_score", direction: "asc" });
   const fetchVendors = async () => {
     if (!orgId) return;
     setLoading(true);
@@ -222,19 +222,24 @@ export default function VendorRiskPage() {
     }
   };
 
-  const getStackIcon = (tech: string) => {
-    switch (tech.toLowerCase()) {
-      case "aws": return <Cloud className="w-4 h-4 text-orange-500" />;
-      case "database": return <Database className="w-4 h-4 text-blue-500" />;
-      case "communication": return <Users className="w-4 h-4 text-purple-500" />;
-      case "monitoring": return <Activity className="w-4 h-4 text-green-500" />;
-      case "mobile": return <Smartphone className="w-4 h-4 text-gray-500" />;
-      case "networking": return <Globe className="w-4 h-4 text-cyan-500" />;
-      case "active_directory": return <Key className="w-4 h-4 text-blue-700" />;
-      case "version_control": return <FileCode2 className="w-4 h-4 text-gray-800 dark:text-gray-200" />;
-      case "ci_cd": return <Server className="w-4 h-4 text-pink-500" />;
-      default: return <Server className="w-4 h-4 text-muted-foreground" />;
+  const getStackIcons = (techStr: string) => {
+    const techLower = techStr.toLowerCase();
+    const icons = [];
+    
+    if (techLower.includes("aws") || techLower.includes("cloud") || techLower.includes("gcp") || techLower.includes("azure")) icons.push({ icon: <Cloud className="w-4 h-4 text-orange-500" />, name: "Cloud / Infra" });
+    if (techLower.includes("database") || techLower.includes("sql") || techLower.includes("mongo") || techLower.includes("db")) icons.push({ icon: <Database className="w-4 h-4 text-blue-500" />, name: "Database" });
+    if (techLower.includes("communication") || techLower.includes("slack") || techLower.includes("teams")) icons.push({ icon: <Users className="w-4 h-4 text-purple-500" />, name: "Communication" });
+    if (techLower.includes("monitoring") || techLower.includes("datadog") || techLower.includes("splunk")) icons.push({ icon: <Activity className="w-4 h-4 text-green-500" />, name: "Monitoring" });
+    if (techLower.includes("mobile") || techLower.includes("ios") || techLower.includes("android")) icons.push({ icon: <Smartphone className="w-4 h-4 text-gray-500" />, name: "Mobile" });
+    if (techLower.includes("networking") || techLower.includes("network") || techLower.includes("dns") || techLower.includes("cisco")) icons.push({ icon: <Globe className="w-4 h-4 text-cyan-500" />, name: "Networking" });
+    if (techLower.includes("active_directory") || techLower.includes("auth") || techLower.includes("ad") || techLower.includes("iam") || techLower.includes("identity")) icons.push({ icon: <Key className="w-4 h-4 text-blue-700" />, name: "Identity & Access" });
+    if (techLower.includes("version_control") || techLower.includes("git")) icons.push({ icon: <FileCode2 className="w-4 h-4 text-gray-800 dark:text-gray-200" />, name: "Version Control" });
+    if (techLower.includes("ci_cd") || techLower.includes("deployment") || techLower.includes("jenkins") || techLower.includes("gitlab")) icons.push({ icon: <Server className="w-4 h-4 text-pink-500" />, name: "CI/CD" });
+    
+    if (icons.length === 0) {
+      icons.push({ icon: <Server className="w-4 h-4 text-muted-foreground" />, name: techStr });
     }
+    return icons;
   };
 
   const getStatusColor = (status: string) => {
@@ -353,9 +358,14 @@ export default function VendorRiskPage() {
                         </td>
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-1.5 flex-wrap w-48">
-                             {vendor.tech_stack?.length > 0 ? vendor.tech_stack.map(tech => (
-                                <div key={tech} className="p-1.5 bg-muted rounded-md border border-border/50 hover:bg-background transition-colors" title={tech}>
-                                   {getStackIcon(tech)}
+                             {vendor.tech_stack?.length > 0 ? 
+                               Array.from(new Map(vendor.tech_stack.flatMap(tech => getStackIcons(tech)).map(item => [item.name, item])).values())
+                               .map((item, idx) => (
+                                <div key={idx} className="group/tooltip relative p-1.5 bg-muted rounded-md border border-border/50 hover:bg-background transition-colors cursor-help">
+                                   {item.icon}
+                                   <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-max max-w-xs bg-popover border border-border text-foreground text-xs font-medium rounded-md shadow-xl p-2 hidden group-hover/tooltip:block pointer-events-none text-center z-50 capitalize">
+                                      {item.name.replace(/_/g, ' ')}
+                                   </div>
                                 </div>
                              )) : <span className="text-xs text-muted-foreground italic">Unmapped</span>}
                           </div>
@@ -470,7 +480,7 @@ export default function VendorRiskPage() {
                            <div className="flex items-center gap-3">
                               <span className="line-through text-muted-foreground text-sm font-mono">{inspectingVendor?.risk_score}</span>
                               <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                              <span className={cn("text-xs font-bold px-2 py-1 rounded-full border shadow-sm font-mono", report.new_risk_score >= 80 ? "bg-red-500/10 text-red-500 border-red-500/20" : report.new_risk_score >= 50 ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20")}>{report.new_risk_score}</span>
+                              <span className={cn("text-xs font-bold px-2 py-1 rounded-full border shadow-sm font-mono", report.new_risk_score >= 80 ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : report.new_risk_score >= 50 ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" : "bg-red-500/10 text-red-500 border-red-500/20")}>{report.new_risk_score}</span>
                            </div>
                         </div>
                         <button 

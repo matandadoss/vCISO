@@ -96,7 +96,8 @@ The **Vendor Risk** module executes AI-driven, continuous background checks and 
 
 ### Metrics & Measurements Explained
 
-* **Risk Rating (Critical, High, Medium, Low):** Evaluates the security posture of the vendor. A 'High' rating indicates the vendor has experienced recent data breaches or maintains poor infrastructure security configurations.
+* **Risk Score & Status (100 = Safe, 0 = Critical):** A dynamic health score tracking the baseline security of the vendor. The score begins at 100 and degrades downward inherently based on the size of the vendor's technology footprint, shifted daily by simulated background threat drift. 
+* **Predictive AI Inspections:** When an inspection is run, the score is further degraded if current global intelligence identifies active campaigns matching the vendor's tech stack (dropping status ratings into `Warning` or `Critical`). If no current threats exist, the score improves upwards toward 100.
 * **Status (Operational vs. Disrupted):** Real-time monitoring of the vendor's service availability. If a crucial payroll vendor shows "Disrupted", your internal SLA metrics might be severely impacted.
 
 **Note:** Before your organization procures or connects a new SaaS tool, add the vendor's domain to this module. Procurement teams should enforce strict policies rejecting software that receives a **High Risk** rating.

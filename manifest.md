@@ -48,7 +48,7 @@ The backend utilizes `SQLAlchemy` ORM. All models inherit from a common `BaseMod
 
 ### Risk & Asset Inventory
 *   **Asset:** `asset_type`, `environment`, `business_criticality`, `data_classification`, `metadata_data` (JSON).
-*   **Vendor:** `tier`, `data_access_level`, `risk_score` (0-100), `tech_stack` (JSON).
+*   **Vendor:** `tier`, `data_access_level`, `risk_score` (0-100, where 100 is safe and 0 is critical), `tech_stack` (JSON).
 *   **Finding:** 
     *   *Core:* `finding_type`, `severity`.
     *   *Context:* `risk_score`, `source_workflow`.

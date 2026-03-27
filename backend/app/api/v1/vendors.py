@@ -50,26 +50,7 @@ async def list_vendors(org_id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(VendorModel).where(VendorModel.org_id == org_uuid))
     db_vendors = result.scalars().all()
     
-    updated_any = False
-    now = datetime.datetime.utcnow()
-    for v in db_vendors:
-        if v.last_assessment_date is None or (now - v.last_assessment_date).days >= 1:
-            shift = secrets.SystemRandom().randint(-5, 5)
-            new_score = (v.risk_score or 50) + shift
-            v.risk_score = min(100, max(0, new_score))
-            
-            if v.risk_score >= 80:
-                v.status = "Critical"
-            elif v.risk_score >= 50:
-                v.status = "Warning"
-            else:
-                v.status = "Safe"
-                
-            v.last_assessment_date = now
-            updated_any = True
 
-    if updated_any:
-        await db.commit()
     
     out = []
     for v in db_vendors:
@@ -94,14 +75,14 @@ async def create_vendor(vendor: VendorCreate, org_id: str, db: AsyncSession = De
         vendor.tech_stack = infer_tech_stack(vendor.name)
         
     ts_len = len(vendor.tech_stack or [])
-    final_score = vendor.risk_score if vendor.risk_score is not None else min(50 + ts_len * 10, 100)
+    final_score = vendor.risk_score if vendor.risk_score is not None else min(95, max(100 - (ts_len * 10), 0))
     
     if vendor.status is not None:
         final_status = vendor.status
     else:
-        if final_score >= 80: final_status = "Critical"
+        if final_score >= 80: final_status = "Safe"
         elif final_score >= 50: final_status = "Warning"
-        else: final_status = "Safe"
+        else: final_status = "Critical"
 
     new_vendor = VendorModel(
         org_id=org_uuid,
@@ -150,16 +131,16 @@ async def update_vendor(vendor_id: str, vendor_in: VendorUpdate, org_id: str, db
     if 'risk_score' in req_dict:
         if req_dict['risk_score'] is None:
             ts_len = len(db_vendor.tech_stack or [])
-            db_vendor.risk_score = min(50 + ts_len * 10, 100)
+            db_vendor.risk_score = min(95, max(100 - (ts_len * 10), 0))
         else:
             db_vendor.risk_score = req_dict['risk_score']
             
     if 'status' in req_dict:
         if req_dict['status'] is None:
             if db_vendor.risk_score is not None:
-                if db_vendor.risk_score >= 80: db_vendor.status = "Critical"
+                if db_vendor.risk_score >= 80: db_vendor.status = "Safe"
                 elif db_vendor.risk_score >= 50: db_vendor.status = "Warning"
-                else: db_vendor.status = "Safe"
+                else: db_vendor.status = "Critical"
             else:
                 db_vendor.status = "Warning"
         else:
@@ -222,9 +203,9 @@ async def inspect_vendor(vendor_id: str, org_id: str, db: AsyncSession = Depends
     
     # Simulate an AI reassessment shift based on findings
     if threat_intel and "No active, critical CVEs" not in threat_intel[0]:
-        new_calculated_score = min(new_calculated_score + secrets.SystemRandom().randint(10, 25), 100)
+        new_calculated_score = max(new_calculated_score - secrets.SystemRandom().randint(10, 25), 0)
     else:
-        new_calculated_score = max(new_calculated_score - secrets.SystemRandom().randint(5, 15), 0)
+        new_calculated_score = min(new_calculated_score + secrets.SystemRandom().randint(5, 15), 95)
 
     return {
         "status": "success",
@@ -234,7 +215,7 @@ async def inspect_vendor(vendor_id: str, org_id: str, db: AsyncSession = Depends
             "confidence_score": secrets.SystemRandom().randint(70, 99),
             "new_risk_score": new_calculated_score,
             "threat_insights": threat_intel,
-            "recommended_action": "Monitor closely" if new_calculated_score < 80 else "URGENT: Initiate incident response protocols and isolate connection.",
+            "recommended_action": "Monitor closely" if new_calculated_score >= 50 else "URGENT: Initiate incident response protocols and isolate connection.",
             "generated_at": datetime.datetime.utcnow().isoformat()
         }
     }
@@ -268,7 +249,7 @@ async def upload_vendors_bulk(
     req = AIRequest(
         system_prompt="You are an incredibly robust IT Vendor Data Extractor bridging unstructured human payloads to a backend database.",
         user_prompt="""Extract every single vendor entity mentioned or detailed in this attached document. 
-Determine their 'name', predict their associated 'tech_stack' (array of strings from: aws, database, communication, monitoring, mobile, networking, active_directory, version_control, ci_cd), predict their 'risk_score' (int 0-100), and derive their 'status' (string: Safe, Warning, Critical).""",
+Determine their 'name', predict their associated 'tech_stack' (array of strings from: aws, database, communication, monitoring, mobile, networking, active_directory, version_control, ci_cd), predict their cyber health 'risk_score' (int 0-100, but capped at 95 practically since no vendor is perfectly safe), and derive their 'status' (string: Safe, Warning, Critical based on that score).""",
         tier=ModelTier.DEEP,
         file_parts=[{"data": file_bytes, "mime_type": mime_map[ext]}],
         structured_output_schema={
@@ -371,7 +352,7 @@ async def sync_vendors(req: VendorSyncRequest, org_id: str, db: AsyncSession = D
             new_v = VendorModel(
                 org_id=org_uuid,
                 name=item,
-                risk_score=50,
+                risk_score=95,
                 status="Safe",
                 tech_stack=inferred_stack,
                 vendor_type="software",
@@ -389,26 +370,7 @@ async def sync_vendors(req: VendorSyncRequest, org_id: str, db: AsyncSession = D
         result = await db.execute(select(VendorModel).where(VendorModel.org_id == org_uuid))
         db_vendors = result.scalars().all()
         
-    updated_any = False
-    now = datetime.datetime.utcnow()
-    for v in db_vendors:
-        if v.last_assessment_date is None or (now - v.last_assessment_date).days >= 1:
-            shift = secrets.SystemRandom().randint(-5, 5)
-            new_score = (v.risk_score or 50) + shift
-            v.risk_score = min(100, max(0, new_score))
-            
-            if v.risk_score >= 80:
-                v.status = "Critical"
-            elif v.risk_score >= 50:
-                v.status = "Warning"
-            else:
-                v.status = "Safe"
-                
-            v.last_assessment_date = now
-            updated_any = True
 
-    if updated_any:
-        await db.commit()
     
     out = []
     for v in db_vendors:

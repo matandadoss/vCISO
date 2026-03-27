@@ -23,16 +23,23 @@ try {
 }
 
 # -----------------------------------------------------
-# TASK 2: Google Telemetry Upgrade Poller (PLACEHOLDER)
+# TASK 2: Nightly Global Vendor Risk Analytics
 # -----------------------------------------------------
-# if ($CurrentHour -eq 2) { # Execute only at 2:00 AM
-#     Write-Output "[$Timestamp] [TASK 2] Initiating Vendor Upgrades Poller..." | Out-File -FilePath $LogFile -Append
-#     try {
-#         # .\poll_google_upgrades.ps1
-#     } catch {
-#         Write-Output "[$Timestamp] [ERROR] Failed to execute Google Upgrade Synchronizations." | Out-File -FilePath $LogFile -Append
-#     }
-# } 
+if ($CurrentHour -eq 2) { # Execute only at 2:00 AM
+    Write-Output "[$Timestamp] [TASK 2] Initiating Global Vendor Risk Batch Drift Processing..." | Out-File -FilePath $LogFile -Append
+    try {
+        Set-Location "c:\Users\matan\iCloudDrive\vCISO\backend"
+        $PythonPath = ".\venv\Scripts\python.exe"
+        if (-Not (Test-Path $PythonPath)) {
+            $PythonPath = "python"
+        }
+        & $PythonPath scripts\batch_vendor_drift.py >> $LogFile 2>&1
+        Set-Location "c:\Users\matan\iCloudDrive\vCISO"
+    } catch {
+        Write-Output "[$Timestamp] [ERROR] Failed to execute Global Vendor Drift." | Out-File -FilePath $LogFile -Append
+        Set-Location "c:\Users\matan\iCloudDrive\vCISO"
+    }
+} 
 
 Write-Output "[$Timestamp] MASTER SCHEDULE CYCLE COMPLETED" | Out-File -FilePath $LogFile -Append
 Write-Output "=================================================" | Out-File -FilePath $LogFile -Append
