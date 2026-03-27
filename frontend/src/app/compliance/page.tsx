@@ -86,14 +86,8 @@ export default function CompliancePage() {
     <div className="flex-1 overflow-y-auto bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-              <FileCheck className="h-8 w-8 text-primary" />
-              Compliance Management
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Track frameworks, view compliance posture, and manage evidence collection.
-            </p>
+          <div className="hidden">
+            {/* Title moved to global AppHeader */}
           </div>
           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto mt-4 md:mt-0">
             <div className="relative w-full sm:w-auto">

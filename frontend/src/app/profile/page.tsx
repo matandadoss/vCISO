@@ -10,12 +10,8 @@ export default function ProfilePage() {
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
       <div className="max-w-4xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-            <User className="w-8 h-8 text-primary" />
-            Personal Account Settings
-          </h1>
-          <p className="text-muted-foreground mt-2">Manage your active sessions, security preferences, and alert delivery methods.</p>
+        <div className="hidden">
+           {/* Title moved to global AppHeader */}
         </div>
 
         <div className="grid gap-6">

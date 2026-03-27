@@ -243,6 +243,7 @@ class ThreatIntelIndicator(BaseModel):
 class Vendor(BaseModel):
     __tablename__ = "vendors"
     org_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("organizations.id"))
+    parent_vendor_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("vendors.id"), nullable=True)
     name: Mapped[str] = mapped_column(String(255))
     vendor_type: Mapped[str] = mapped_column(String(100))
     tier: Mapped[str] = mapped_column(String(50))

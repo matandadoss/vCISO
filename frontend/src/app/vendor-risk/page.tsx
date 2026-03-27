@@ -13,10 +13,13 @@ import { SortableHeader } from "@/components/ui/SortableHeader";
 type Vendor = {
   id: string;
   name: string;
+  vendor_type: string;
+  parent_vendor_id?: string | null;
   risk_score: number;
   status: "Safe" | "Warning" | "Critical";
   tech_stack: string[];
   last_assessment: string;
+  _isChild?: boolean;
 };
 
 type InspectionReport = {
@@ -53,6 +56,19 @@ export default function VendorRiskPage() {
 
   const filteredVendors = vendors.filter(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()));
   const { items: sortedVendors, requestSort, sortConfig } = useSortableTable(filteredVendors, { key: "risk_score", direction: "asc" });
+  
+  const displayVendors: Vendor[] = [];
+  const parentVendors = sortedVendors.filter(v => !v.parent_vendor_id);
+  const childVendors = sortedVendors.filter(v => v.parent_vendor_id);
+  
+  parentVendors.forEach(parent => {
+    displayVendors.push(parent);
+    const children = childVendors.filter(c => c.parent_vendor_id === parent.id);
+    children.forEach(c => displayVendors.push({ ...c, _isChild: true }));
+  });
+  
+  const orphaned = childVendors.filter(c => !parentVendors.some(p => p.id === c.parent_vendor_id));
+  orphaned.forEach(c => displayVendors.push({ ...c, _isChild: true }));
   const fetchVendors = async () => {
     if (!orgId) return;
     setLoading(true);
@@ -266,14 +282,8 @@ export default function VendorRiskPage() {
       <div className={cn("flex-1 overflow-y-auto p-4 md:p-8 transition-all duration-300", inspectingVendor ? "md:mr-96" : "")}>
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-                <Building2 className="w-8 h-8 text-primary" />
-                Ecosystem Risk
-              </h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Track third-party supply chain risk, map partner technology stacks, and run AI threat predictive inspections.
-              </p>
+            <div className="hidden">
+               {/* Page Title moved to global AppHeader */}
             </div>
             
             <div className="flex flex-col md:flex-row flex-wrap items-start md:items-center justify-end gap-4 relative w-full xl:w-auto">
@@ -320,7 +330,8 @@ export default function VendorRiskPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-border bg-muted/30">
-                      <SortableHeader label="Vendor/Product" sortKey="name" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
+                      <SortableHeader label="Name" sortKey="name" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
+                      <SortableHeader label="Type" sortKey="vendor_type" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
                       <SortableHeader label="Status" sortKey="status" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
                       <SortableHeader label="Risk Score" sortKey="risk_score" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
                       <SortableHeader label="Tech Stack Mapping" sortKey="tech_stack" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
@@ -329,13 +340,22 @@ export default function VendorRiskPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {sortedVendors.map(vendor => (
-                      <tr key={vendor.id} className="hover:bg-muted/10 transition-colors group">
-                        <td className="py-4 px-6 font-medium text-foreground flex items-center gap-3">
-                           <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
-                              {vendor.name.substring(0,2).toUpperCase()}
-                           </div>
-                           <span className="truncate">{vendor.name}</span>
+                    {displayVendors.map(vendor => (
+                      <tr key={vendor.id} className={cn("hover:bg-muted/10 transition-colors group", vendor._isChild && "bg-muted/5")}>
+                        <td className={cn("py-4 px-6 font-medium text-foreground flex items-center gap-3", vendor._isChild && "pl-12")}>
+                           {vendor._isChild ? (
+                              <div className="w-4 h-4 border-b-2 border-l-2 border-muted-foreground/30 rounded-bl-sm shrink-0" />
+                           ) : (
+                              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
+                                 {vendor.name.substring(0,2).toUpperCase()}
+                              </div>
+                           )}
+                           <span className={cn("truncate", vendor._isChild && "text-sm text-muted-foreground")}>{vendor.name}</span>
+                        </td>
+                        <td className="py-4 px-6">
+                           <span className={cn("inline-flex items-center px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border", vendor.vendor_type === 'Product' ? "text-blue-500 bg-blue-500/10 border-blue-500/20" : "text-purple-500 bg-purple-500/10 border-purple-500/20")}>
+                              {vendor.vendor_type || 'Vendor'}
+                           </span>
                         </td>
                         <td className="py-4 px-6">
                           <span className={cn("inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border", getStatusColor(vendor.status))}>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { Activity, Power, RefreshCcw, Search, ExternalLink } from "lucide-react";
@@ -75,14 +75,8 @@ export default function WorkflowsPage() {
     <div className="flex-1 overflow-y-auto p-8 w-full bg-[#0a0f18] min-h-[calc(100vh-64px)]">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-end">
-          <div>
-             <h1 className="text-3xl font-bold flex items-center gap-3 text-slate-100">
-                <Activity className="h-8 w-8 text-indigo-400" />
-                Data Ingestion Workflows
-             </h1>
-             <p className="text-slate-400 mt-2">
-                Manage and monitor the automated connectors syncing data from your cloud and third-party security platforms.
-             </p>
+          <div className="hidden">
+             {/* Title moved to global AppHeader */}
           </div>
         </div>
 

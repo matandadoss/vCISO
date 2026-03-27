@@ -103,11 +103,8 @@ export default function AISettingsPage() {
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
       <div className="max-w-4xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">AI Configuration & Budgets</h1>
-          <p className="text-muted-foreground mt-1 text-lg">
-            Manage your Virtual CISO AI providers, track usage costs, configure auto-downgrade rules, and view ROI.
-          </p>
+        <div className="hidden">
+          {/* Title moved to global AppHeader */}
         </div>
 
         {/* ROI Metrics Top Banner */}

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { fetchWithAuth } from "@/lib/api";
 
 import { useState } from "react";
@@ -54,9 +54,8 @@ export default function OnboardPage() {
     <div className="w-full flex-1 min-h-[calc(100vh-4rem)] bg-background flex flex-col items-center justify-center p-4">
       
       <div className="w-full max-w-3xl">
-        <div className="flex items-center justify-center mb-8 gap-3">
-          <ShieldAlert className="w-10 h-10 text-primary" />
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Virtual CISO Setup</h1>
+        <div className="hidden">
+           {/* Title moved to global AppHeader */}
         </div>
 
         {/* Progress Bar */}

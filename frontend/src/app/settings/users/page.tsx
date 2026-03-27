@@ -136,14 +136,8 @@ export default function UsersSettingsPage() {
         
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-              <Users className="h-8 w-8 text-primary" />
-              User Management & RBAC
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Manage team access, assign roles, and enforce security boundaries.
-            </p>
+          <div className="hidden">
+            {/* Title moved to global AppHeader */}
           </div>
           <button 
             onClick={() => setShowInvite(!showInvite)}

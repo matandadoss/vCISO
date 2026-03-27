@@ -13,6 +13,17 @@ export const ROUTE_TITLES: Record<string, string> = {
   "/audit-trail": "Audit Trail",
   "/correlation": "Cyber Threat Analyzer",
   "/simulator": "Security Testing",
+  "/terms": "Terms of Service",
+  "/guide": "User Guide",
+  "/settings/security": "Security Settings",
+  "/settings/notifications": "Notifications",
+  "/settings/subscription": "Subscription & Billing",
+  "/settings/ai": "AI Budgets & Config",
+  "/settings/integrations": "Integrations",
+  "/settings/slas": "SLA Management",
+  "/settings/threat-feeds": "Threat Intel Feeds",
+  "/settings/users": "User Management",
+  "/settings/workflows": "Playbook Workflows",
 };
 
 export function getPageTitle(pathname: string): string {

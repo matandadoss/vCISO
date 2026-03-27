@@ -51,13 +51,8 @@ export default function RiskRegisterPage() {
     <div className="flex-1 overflow-y-auto bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-              <FolderCheck className="w-8 h-8 text-primary" /> Risk Register
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Centralized repository for acknowledged operational and security risks requiring ongoing management.
-            </p>
+          <div className="hidden">
+            {/* Title moved to global AppHeader */}
           </div>
           <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
              <select 

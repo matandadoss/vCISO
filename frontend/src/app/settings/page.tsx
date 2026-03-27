@@ -89,16 +89,8 @@ export default function SettingsHubPage() {
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Header Section */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-              <Settings className="h-8 w-8 text-primary" />
-              Control Panel
-            </h1>
-            <p className="text-muted-foreground mt-2 text-lg">
-              Central configuration and operations hub for the Virtual CISO platform.
-            </p>
-          </div>
+        <div className="hidden">
+          {/* Title moved to global AppHeader */}
         </div>
 
         {/* Settings Grid */}

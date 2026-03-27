@@ -90,12 +90,8 @@ export default function SLAConfigurationPage() {
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
       <div className="max-w-4xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-            <Settings className="w-8 h-8 text-primary" />
-            Remediation SLAs
-          </h1>
-          <p className="text-muted-foreground mt-2">Configure the organizational mandate for vulnerability and finding resolution deadlines. These constraints map dynamically into the Correlation Engine and Findings matrices.</p>
+        <div className="hidden">
+          {/* Title moved to global AppHeader */}
         </div>
 
         {message && (

@@ -4,9 +4,8 @@ export default function TermsOfServicePage() {
   return (
     <div className="flex-1 overflow-auto bg-background p-8">
       <div className="max-w-4xl mx-auto space-y-8 bg-card p-8 rounded-xl border border-border shadow-sm">
-        <div className="space-y-4">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground">Terms of Service</h1>
-          <p className="text-sm text-muted-foreground">Last Updated: March 24, 2026</p>
+        <div className="hidden">
+          {/* Title moved to global AppHeader */}
         </div>
 
         <div className="space-y-6 text-foreground/90 leading-relaxed">

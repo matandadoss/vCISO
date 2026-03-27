@@ -383,7 +383,7 @@ export default function CompanyPage() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
-      <div className="max-w-5xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto space-y-8">
         <div>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <p className="text-muted-foreground max-w-2xl">

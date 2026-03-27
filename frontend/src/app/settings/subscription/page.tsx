@@ -101,11 +101,8 @@ export default function SubscriptionPage() {
   return (
     <div className="flex-1 overflow-auto bg-background">
       <div className="p-8 max-w-6xl mx-auto space-y-6">
-        <div className="flex flex-col gap-2 mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Subscription & Service Tier</h1>
-          <p className="text-muted-foreground">
-            Manage your organization's subscription tier to unlock additional real-time capabilities across the platform.
-          </p>
+        <div className="hidden">
+           {/* Title moved to global AppHeader */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -4,7 +4,7 @@ import { fetchWithAuth } from "@/lib/api";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FlaskConical, Send, Bot, AlertTriangle, ShieldCheck, ShieldAlert, Zap, ArrowRight, ArrowDown, Activity, TrendingDown, TrendingUp, Network, BookOpen, Layers, Database, Terminal, Loader2, Upload, Cpu, Server } from "lucide-react";
 import { toast } from "sonner";
 
@@ -234,8 +234,18 @@ export default function SimulatorPage() {
                <p>Enter a query to run a proactive risk simulation.</p>
             </div>
          ) : (
-            <div className="p-8 max-w-5xl mx-auto space-y-6">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-8 max-w-5xl mx-auto">
+               <Tabs defaultValue="overview" className="space-y-6 w-full">
+                  <TabsList className="h-auto flex-wrap justify-start">
+                     <TabsTrigger value="overview" className="flex items-center gap-2"><Activity className="w-4 h-4" /> Assessment Overview</TabsTrigger>
+                     <TabsTrigger value="path" className="flex items-center gap-2"><Network className="w-4 h-4" /> Attack Path Topology</TabsTrigger>
+                     {result.findings && result.findings.length > 0 && (
+                        <TabsTrigger value="findings" className="flex items-center gap-2 text-rose-500 data-[state=active]:text-rose-500"><ShieldAlert className="w-4 h-4" /> Discoveries</TabsTrigger>
+                     )}
+                  </TabsList>
+                  
+                  <TabsContent value="overview" className="space-y-6 mt-2">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  {/* Risk Card */}
                  <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
                     <div>
@@ -289,8 +299,65 @@ export default function SimulatorPage() {
                  </div>
                </div>
 
+               {/* Agent Narrative */}
+               <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
+                 <div className="prose prose-invert max-w-none text-sm md:text-base leading-relaxed">
+                   {/* Poor man's markdown renderer for the narrative */}
+                   {result.assessment_narrative.split('\n\n').map((paragraph: string, i: number) => {
+                      // Special handling for the very first introductory section
+                      if (i === 0) {
+                          // Strip out all raw markdown bold asterisks and headers to make it clean UI text
+                          const cleanText = paragraph.replace(/\*\*(.*?)\*\*/g, '$1').replace('### ', '');
+                          return (
+                              <div key={i} className="bg-primary/5 border border-primary/20 p-6 rounded-lg mb-8 shadow-sm">
+                                 <div className="flex items-start gap-4">
+                                     <div className="bg-primary/10 p-3 rounded-full shrink-0">
+                                         <Bot className="w-6 h-6 text-primary" />
+                                     </div>
+                                     <div>
+                                         <h3 className="text-lg font-bold text-foreground mb-2">Simulation Summary</h3>
+                                         <p className="text-muted-foreground text-sm leading-relaxed">
+                                             {cleanText}
+                                         </p>
+                                     </div>
+                                 </div>
+                              </div>
+                          );
+                      }
+
+                      if (paragraph.startsWith('### ')) {
+                         return <h3 key={i} className="text-primary font-bold text-xl mb-4 mt-8 first:mt-0 flex items-center gap-2"><Bot className="w-6 h-6"/> {paragraph.replace('### ', '')}</h3>;
+                      }
+                      if (paragraph.startsWith('**Critical Findings:**')) {
+                         const lines = paragraph.split('\n');
+                         return (
+                            <div key={i} className="mb-6">
+                               <h4 className="font-bold text-lg text-foreground mb-3">{lines[0].replace(/\*\*/g, '')}</h4>
+                               <ul className="space-y-2 border-l-2 border-primary/50 pl-4 ml-2">
+                                 {lines.slice(1).map((li: string, j: number) => (
+                                   <li key={j} className="text-muted-foreground"><span dangerouslySetInnerHTML={{ __html: li.replace(/^\d+\.\s/, '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} /></li>
+                                 ))}
+                               </ul>
+                            </div>
+                         );
+                      }
+                      if (paragraph.startsWith('**Recommendation:**')) {
+                         return (
+                            <div key={i} className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg mt-6">
+                               <h4 className="font-bold text-destructive mb-2">{paragraph.split('\n')[0].replace(/\*\*/g, '')}</h4>
+                               <p className="text-destructive/90"><span dangerouslySetInnerHTML={{ __html: paragraph.split('\n').slice(1).join('\n').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} /></p>
+                            </div>
+                         );
+                      }
+                      return <p key={i} className="mb-4 text-muted-foreground"><span dangerouslySetInnerHTML={{ __html: paragraph.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} /></p>;
+                   })}
+                 </div>
+               </div>
+               </TabsContent>
+
+               <TabsContent value="path" className="mt-2 text-foreground">
                {/* Native Attack Path Timeline View */}
-               <div className="bg-[#0B1120] border border-border rounded-xl shadow-inner h-[400px] flex flex-col overflow-y-auto relative p-6">
+               <div className="bg-[#0B1120] border border-border rounded-xl shadow-inner h-[600px] flex flex-col overflow-y-auto relative p-6">
                  <div className="sticky top-0 z-10 w-fit bg-[#0B1120]/90 backdrop-blur px-3 py-1.5 rounded-md border border-border text-sm font-medium flex items-center gap-2 mb-6 shadow-sm">
                     <Network className="w-4 h-4 text-emerald-400" /> Attack Path Timeline
                  </div>
@@ -351,65 +418,12 @@ export default function SimulatorPage() {
                    })}
                  </div>
                </div>
-
-               {/* Agent Narrative */}
-               <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
-                 <div className="prose prose-invert max-w-none text-sm md:text-base leading-relaxed">
-                   {/* Poor man's markdown renderer for the narrative */}
-                   {result.assessment_narrative.split('\n\n').map((paragraph: string, i: number) => {
-                      // Special handling for the very first introductory section
-                      if (i === 0) {
-                          // Strip out all raw markdown bold asterisks and headers to make it clean UI text
-                          const cleanText = paragraph.replace(/\*\*(.*?)\*\*/g, '$1').replace('### ', '');
-                          return (
-                              <div key={i} className="bg-primary/5 border border-primary/20 p-6 rounded-lg mb-8 shadow-sm">
-                                 <div className="flex items-start gap-4">
-                                     <div className="bg-primary/10 p-3 rounded-full shrink-0">
-                                         <Bot className="w-6 h-6 text-primary" />
-                                     </div>
-                                     <div>
-                                         <h3 className="text-lg font-bold text-foreground mb-2">Simulation Summary</h3>
-                                         <p className="text-muted-foreground text-sm leading-relaxed">
-                                             {cleanText}
-                                         </p>
-                                     </div>
-                                 </div>
-                              </div>
-                          );
-                      }
-
-                      if (paragraph.startsWith('### ')) {
-                         return <h3 key={i} className="text-primary font-bold text-xl mb-4 mt-8 first:mt-0 flex items-center gap-2"><Bot className="w-6 h-6"/> {paragraph.replace('### ', '')}</h3>;
-                      }
-                      if (paragraph.startsWith('**Critical Findings:**')) {
-                         const lines = paragraph.split('\n');
-                         return (
-                            <div key={i} className="mb-6">
-                               <h4 className="font-bold text-lg text-foreground mb-3">{lines[0].replace(/\*\*/g, '')}</h4>
-                               <ul className="space-y-2 border-l-2 border-primary/50 pl-4 ml-2">
-                                 {lines.slice(1).map((li, j) => (
-                                   <li key={j} className="text-muted-foreground"><span dangerouslySetInnerHTML={{ __html: li.replace(/^\d+\.\s/, '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} /></li>
-                                 ))}
-                               </ul>
-                            </div>
-                         );
-                      }
-                      if (paragraph.startsWith('**Recommendation:**')) {
-                         return (
-                            <div key={i} className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg mt-6">
-                               <h4 className="font-bold text-destructive mb-2">{paragraph.split('\n')[0].replace(/\*\*/g, '')}</h4>
-                               <p className="text-destructive/90"><span dangerouslySetInnerHTML={{ __html: paragraph.split('\n').slice(1).join('\n').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} /></p>
-                            </div>
-                         );
-                      }
-                      return <p key={i} className="mb-4 text-muted-foreground"><span dangerouslySetInnerHTML={{ __html: paragraph.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} /></p>;
-                   })}
-                 </div>
-               </div>
+               </TabsContent>
 
                {/* Discovered Findings Cards Loop */}
                {result.findings && result.findings.length > 0 && (
-                 <div className="bg-card border border-border rounded-xl p-8 shadow-sm mt-6">
+                 <TabsContent value="findings" className="mt-2 text-foreground">
+                 <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
                    <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-rose-400">
                      <ShieldAlert className="w-5 h-5" /> Detailed Discoveries
                    </h3>
@@ -447,8 +461,9 @@ export default function SimulatorPage() {
                      </button>
                    </div>
                  </div>
+                 </TabsContent>
                )}
-
+               </Tabs>
             </div>
          )}
       </div>

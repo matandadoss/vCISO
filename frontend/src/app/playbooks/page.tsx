@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { ShieldAlert, Zap, AlertTriangle, Play, CheckCircle2 } from "lucide-react";
@@ -77,14 +77,8 @@ export default function PlaybooksPage() {
   return (
     <div className="flex-1 overflow-y-auto p-8 w-full bg-[#0a0f18] min-h-[calc(100vh-64px)]">
       <div className="max-w-7xl mx-auto space-y-8">
-        <div>
-           <h1 className="text-3xl font-bold flex items-center gap-3 text-slate-100">
-              <Zap className="h-8 w-8 text-rose-500" />
-              SOAR Automated Playbooks
-           </h1>
-           <p className="text-slate-400 mt-2">
-              Execute pre-configured incident response and containment actions instantly across your connected infrastructure.
-           </p>
+        <div className="hidden">
+           {/* Title moved to global AppHeader */}
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">

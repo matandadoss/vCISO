@@ -27,16 +27,8 @@ export default function Home() {
   return (
     <div className="flex-1 overflow-y-auto bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            {role === "BOARD_MEMBER" ? "Executive Dashboard" : 
-             role === "AUDITOR" ? "Compliance Overview" : 
-             role === "SOC_ANALYST" ? "Security Operations Center" : 
-             "Dashboard"}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-             {role === "BOARD_MEMBER" ? "High-level summary of organizational risk posture and mitigation efforts." : "Real-time overview of your organizational security posture."}
-          </p>
+        <div className="hidden">
+           {/* Page Title moved to global AppHeader */}
         </div>
         
         {/* Render for CISO generally sees everything, so we build it dynamically */}

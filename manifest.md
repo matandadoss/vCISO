@@ -2,7 +2,7 @@
 
 This document serves as the master tracking ledger for all features, capabilities, and the architectural blueprint required to reconstruct the Virtual CISO platform. It defines the explicit Features, Database Schemas, API Contracts, Frontend State Architecture, and Infrastructure configurations.
 
-*Note: All AI agents working in this repository are required to update this document whenever building a new feature or making structural/architectural changes to the codebase.*
+*Note: All AI agents working in this repository are required to update this document whenever building a new feature or making structural/architectural changes to the codebase. You MUST include the current date (e.g., `[2026-03-27]`) next to any new or modified entries so we can generate release notes.*
 
 ---
 
@@ -138,3 +138,17 @@ The CI/CD pipeline is strictly enforced via `cloudbuild.yaml` running on Google 
 6.  **Notification:** Dispatches deployment status to internal Slack channels.
 
 *End of Technical Specification.*
+
+---
+
+## 6. Changelog & Release Notes
+
+*Track significant feature additions, architectural changes, and bug fixes below, tagged with the date of the change.*
+
+*   **[2026-03-27]** Added "Intel Briefing" Report Tab to the Cyber Threat Analyzer, allowing executives to view an aggregated summary of active external threats correlated directly to their current tech stack.
+*   **[2026-03-27]** Refactored the Security Testing dashboard layout into a modular Tab component (Assessment Overview, Attack Path Topology, Discoveries) for cleaner threat path analysis.
+*   **[2026-03-27]** Rebranded "Vendor Risk" to "Ecosystem Risk" throughout the platform UI, navigating schema, and table nomenclatures to reflect broader supplier supply chain tracking.
+*   **[2026-03-27]** Implemented Ecosystem Risk hierarchical data modeling: Added `parent_vendor_id` and `vendor_type` to `Vendor` database model to distinguish Vendors from Products. Auto-assignment logic parses technical components (e.g. S3) and groups them visually under parent Vendors (e.g. AWS) on the frontend table layout.
+*   **[2026-03-27]** Increased the scrolling animation speed of the global Threat Intelligence News Ticker (`tailwind.config.ts`) to improve readability of streaming vulnerability telemetry.
+*   **[2026-03-27]** Standardized platform UI layout: Transitioned all main application modules and settings pages to utilize `AppHeader` as the single source of truth for page titles, stripping redundant local `<h1>` headers. Applied unified `max-w-7xl` or `max-w-6xl` containers across modules.
+*   **[2026-03-27]** Added Changelog section to track platform changes for release notes.

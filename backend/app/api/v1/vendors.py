@@ -7,7 +7,7 @@ import secrets
 import uuid
 import json
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from app.db.session import get_db
 from app.models.domain import Vendor as VendorModel
@@ -18,6 +18,8 @@ router = APIRouter(prefix="/vendors", tags=["vendors"])
 class VendorResponse(BaseModel):
     id: str
     name: str
+    vendor_type: str
+    parent_vendor_id: Optional[str] = None
     risk_score: int
     status: str
     tech_stack: List[str]
@@ -27,12 +29,16 @@ class VendorResponse(BaseModel):
 
 class VendorCreate(BaseModel):
     name: str
+    vendor_type: str = "Vendor"
+    parent_vendor_id: Optional[str] = None
     risk_score: Optional[int] = None
     status: Optional[str] = None
     tech_stack: List[str] = []
 
 class VendorUpdate(BaseModel):
     name: Optional[str] = None
+    vendor_type: Optional[str] = None
+    parent_vendor_id: Optional[str] = None
     risk_score: Optional[int] = None
     status: Optional[str] = None
     tech_stack: Optional[List[str]] = None
@@ -57,6 +63,8 @@ async def list_vendors(org_id: str, db: AsyncSession = Depends(get_db)):
         out.append({
             "id": str(v.id),
             "name": v.name,
+            "vendor_type": v.vendor_type or "Vendor",
+            "parent_vendor_id": str(v.parent_vendor_id) if v.parent_vendor_id else None,
             "risk_score": v.risk_score,
             "status": v.status or "Warning",
             "tech_stack": v.tech_stack if v.tech_stack is not None else [],
@@ -90,7 +98,8 @@ async def create_vendor(vendor: VendorCreate, org_id: str, db: AsyncSession = De
         risk_score=final_score,
         status=final_status,
         tech_stack=vendor.tech_stack,
-        vendor_type="software",
+        vendor_type=vendor.vendor_type,
+        parent_vendor_id=uuid.UUID(vendor.parent_vendor_id) if vendor.parent_vendor_id else None,
         tier="basic",
         data_access_level="low",
         assessment_status=final_status,
@@ -103,10 +112,12 @@ async def create_vendor(vendor: VendorCreate, org_id: str, db: AsyncSession = De
     return {
         "id": str(new_vendor.id),
         "name": new_vendor.name,
+        "vendor_type": new_vendor.vendor_type,
+        "parent_vendor_id": str(new_vendor.parent_vendor_id) if new_vendor.parent_vendor_id else None,
         "risk_score": new_vendor.risk_score,
         "status": new_vendor.status,
         "tech_stack": new_vendor.tech_stack or [],
-        "last_assessment": new_vendor.last_assessment_date.isoformat()
+        "last_assessment": new_vendor.last_assessment_date.isoformat() if new_vendor.last_assessment_date else datetime.datetime.utcnow().isoformat()
     }
 
 @router.put("/{vendor_id}", response_model=VendorResponse)
@@ -123,6 +134,10 @@ async def update_vendor(vendor_id: str, vendor_in: VendorUpdate, org_id: str, db
         
     if vendor_in.name is not None:
         db_vendor.name = vendor_in.name
+    if vendor_in.vendor_type is not None:
+        db_vendor.vendor_type = vendor_in.vendor_type
+    if vendor_in.parent_vendor_id is not None:
+        db_vendor.parent_vendor_id = uuid.UUID(vendor_in.parent_vendor_id) if vendor_in.parent_vendor_id else None
     if vendor_in.tech_stack is not None:
         db_vendor.tech_stack = vendor_in.tech_stack
         
@@ -150,6 +165,8 @@ async def update_vendor(vendor_id: str, vendor_in: VendorUpdate, org_id: str, db
     return {
         "id": str(db_vendor.id),
         "name": db_vendor.name,
+        "vendor_type": db_vendor.vendor_type,
+        "parent_vendor_id": str(db_vendor.parent_vendor_id) if db_vendor.parent_vendor_id else None,
         "risk_score": db_vendor.risk_score,
         "status": db_vendor.status,
         "tech_stack": db_vendor.tech_stack or [],
@@ -261,11 +278,13 @@ Determine their 'name', predict their associated 'tech_stack' (array of strings 
                         "type": "object",
                         "properties": {
                             "name": {"type": "string"},
+                            "vendor_type": {"type": "string", "description": "Vendor or Product"},
+                            "parent_vendor_name": {"type": "string", "description": "If Product, the name of the parent Vendor company (e.g. AWS). Otherwise leave blank."},
                             "tech_stack": {"type": "array", "items": {"type": "string"}},
                             "risk_score": {"type": "integer"},
                             "status": {"type": "string"}
                         },
-                        "required": ["name", "tech_stack", "risk_score", "status"]
+                        "required": ["name", "vendor_type", "tech_stack", "risk_score", "status"]
                     }
                 }
             },
@@ -282,17 +301,28 @@ Determine their 'name', predict their associated 'tech_stack' (array of strings 
     if not res or not res.structured_output or "vendors" not in res.structured_output:
         raise HTTPException(status_code=500, detail="AI Extraction failed to parse document boundaries.")
 
+    # First, gather existing vendors to link parents
+    result = await db.execute(select(VendorModel).where(VendorModel.org_id == org_uuid))
+    db_vendors_list = result.scalars().all()
+    vendor_name_map = {v.name.lower(): v for v in db_vendors_list}
+
     extracted_vendors = res.structured_output["vendors"]
     inserted_count = 0
     
     for ev in extracted_vendors:
+        parent_id = None
+        p_name = ev.get("parent_vendor_name")
+        if p_name and p_name.lower() in vendor_name_map:
+            parent_id = vendor_name_map[p_name.lower()].id
+            
         new_v = VendorModel(
             org_id=org_uuid,
             name=ev["name"],
             risk_score=ev["risk_score"],
             status=ev["status"],
             tech_stack=ev["tech_stack"],
-            vendor_type="software",
+            vendor_type=ev.get("vendor_type", "Vendor"),
+            parent_vendor_id=parent_id,
             tier="basic",
             data_access_level="low",
             assessment_status=ev["status"],
@@ -300,6 +330,7 @@ Determine their 'name', predict their associated 'tech_stack' (array of strings 
         )
         db.add(new_v)
         inserted_count += 1
+        vendor_name_map[new_v.name.lower()] = new_v
         
     await db.commit()
     
@@ -334,6 +365,68 @@ def infer_tech_stack(name: str) -> List[str]:
         
     return stack
 
+async def auto_assign_hierarchy(name: str, org_uuid: uuid.UUID, db: AsyncSession, vendor_name_map: dict):
+    name_l = name.lower()
+    product_map = {
+        "s3": "AWS", "ec2": "AWS", "rds": "AWS", "lambda": "AWS", "dynamodb": "AWS", "cloudfront": "AWS",
+        "mongodb": "MongoDB", "atlas": "MongoDB",
+        "azure ad": "Microsoft", "active directory": "Microsoft", "office 365": "Microsoft", "azure": "Microsoft",
+        "gcp": "Google", "g suite": "Google", "workspace": "Google", "bigquery": "Google", "cloud sql": "Google",
+        "cloudflare": "Cloudflare",
+        "salesforce": "Salesforce",
+        "github": "GitHub", "actions": "GitHub",
+        "gitlab": "GitLab",
+        "datadog": "Datadog",
+        "splunk": "Splunk",
+        "slack": "Slack",
+        "jira": "Atlassian", "confluence": "Atlassian", "bitbucket": "Atlassian",
+        "okta": "Okta", "auth0": "Okta",
+        "postgresql": "PostgreSQL",
+        "mysql": "Oracle"
+    }
+
+    # First check direct matches
+    parent_name = None
+    if name_l in product_map:
+        parent_name = product_map[name_l]
+    else:
+        for prod, p_name in product_map.items():
+            if prod in name_l.split() or f"{prod} " in name_l or f" {prod}" in name_l:
+                parent_name = p_name
+                break
+
+    if not parent_name:
+        return "Vendor", None
+
+    if parent_name.lower() == name_l:
+        return "Vendor", None
+
+    # Check if parent exists
+    parent_id = None
+    if parent_name.lower() in vendor_name_map:
+        parent_id = vendor_name_map[parent_name.lower()].id
+    else:
+        # Create parent
+        new_parent = VendorModel(
+            org_id=org_uuid,
+            name=parent_name,
+            risk_score=95,
+            status="Safe",
+            tech_stack=infer_tech_stack(parent_name),
+            vendor_type="Vendor",
+            tier="basic",
+            data_access_level="low",
+            assessment_status="Safe",
+            last_assessment_date=datetime.datetime.utcnow()
+        )
+        db.add(new_parent)
+        await db.flush()
+        vendor_name_map[parent_name.lower()] = new_parent
+        parent_id = new_parent.id
+
+    return "Product", parent_id
+
+
 @router.post("/sync", response_model=List[VendorResponse])
 async def sync_vendors(req: VendorSyncRequest, org_id: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -343,11 +436,14 @@ async def sync_vendors(req: VendorSyncRequest, org_id: str, db: AsyncSession = D
         
     result = await db.execute(select(VendorModel).where(VendorModel.org_id == org_uuid))
     db_vendors = result.scalars().all()
-    existing_names = {v.name.lower() for v in db_vendors}
+    vendor_name_map = {v.name.lower(): v for v in db_vendors}
     
     new_db_vendors = []
+    # Auto-assign hierarchy requires await inside loop
     for item in req.stack_items:
-        if item.lower() not in existing_names:
+        if item.lower() not in vendor_name_map:
+            v_type, p_id = await auto_assign_hierarchy(item, org_uuid, db, vendor_name_map)
+            
             inferred_stack = infer_tech_stack(item)
             new_v = VendorModel(
                 org_id=org_uuid,
@@ -355,7 +451,8 @@ async def sync_vendors(req: VendorSyncRequest, org_id: str, db: AsyncSession = D
                 risk_score=95,
                 status="Safe",
                 tech_stack=inferred_stack,
-                vendor_type="software",
+                vendor_type=v_type,
+                parent_vendor_id=p_id,
                 tier="basic",
                 data_access_level="low",
                 assessment_status="Safe",
@@ -363,20 +460,20 @@ async def sync_vendors(req: VendorSyncRequest, org_id: str, db: AsyncSession = D
             )
             db.add(new_v)
             new_db_vendors.append(new_v)
-            existing_names.add(item.lower())
+            vendor_name_map[item.lower()] = new_v
             
     if new_db_vendors:
         await db.commit()
         result = await db.execute(select(VendorModel).where(VendorModel.org_id == org_uuid))
         db_vendors = result.scalars().all()
         
-
-    
     out = []
     for v in db_vendors:
         out.append({
             "id": str(v.id),
             "name": v.name,
+            "vendor_type": v.vendor_type or "Vendor",
+            "parent_vendor_id": str(v.parent_vendor_id) if v.parent_vendor_id else None,
             "risk_score": v.risk_score,
             "status": v.status or "Warning",
             "tech_stack": v.tech_stack if v.tech_stack is not None else [],

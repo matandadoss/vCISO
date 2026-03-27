@@ -73,11 +73,8 @@ export default function FindingsPage() {
     <div className="flex-1 overflow-y-auto bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Findings & Alerts</h1>
-            <p className="text-muted-foreground mt-1">
-              Review and remediate security issues detected across all workflows.
-            </p>
+          <div className="hidden">
+            {/* Title moved to global AppHeader */}
           </div>
              <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
               <select 

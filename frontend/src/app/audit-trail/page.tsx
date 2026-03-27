@@ -42,14 +42,8 @@ export default function AuditTrailPage() {
     <div className="flex-1 overflow-y-auto bg-background p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex justify-between items-end">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-               <Terminal className="w-8 h-8 text-primary" />
-               Automated Remediation Audit Trail
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Immutable log of all automated playbooks, scripts, and containment actions executed by the vCISO platform or SOC analysts.
-            </p>
+          <div className="hidden">
+             {/* Title moved to global AppHeader */}
           </div>
           <div className="flex gap-2">
              <button className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-md text-sm font-medium hover:bg-muted transition-colors">

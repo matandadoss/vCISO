@@ -32,14 +32,8 @@ export default function NotificationsSettingsPage() {
       <div className="max-w-4xl mx-auto space-y-8">
         
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-            <Bell className="h-8 w-8 text-amber-500" />
-            Notifications & Alerts
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Set up how and where you receive critical platform alerts.
-          </p>
+        <div className="hidden">
+          {/* Title moved to global AppHeader */}
         </div>
 
         <div className="space-y-6">
