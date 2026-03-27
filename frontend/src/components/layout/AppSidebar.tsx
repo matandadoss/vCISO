@@ -49,7 +49,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/risk-register", label: "Risk Register", icon: Archive, roles: ["CISO", "AUDITOR", "BOARD_MEMBER"] },
       { href: "/findings", label: "Findings", icon: ShieldAlert, roles: ["CISO", "SOC_ANALYST", "AUDITOR"] },
       { href: "/compliance", label: "Compliance", icon: Activity, roles: ["CISO", "AUDITOR", "BOARD_MEMBER"] },
-      { href: "/vendor-risk", label: "Vendor Risk", icon: Building2, roles: ["CISO", "AUDITOR"] },
+      { href: "/vendor-risk", label: "Ecosystem Risk", icon: Building2, roles: ["CISO", "AUDITOR"] },
     ]
   },
   {

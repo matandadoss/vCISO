@@ -269,7 +269,7 @@ export default function VendorRiskPage() {
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
                 <Building2 className="w-8 h-8 text-primary" />
-                Vendor Risk Management
+                Ecosystem Risk
               </h1>
               <p className="text-muted-foreground mt-1 text-sm">
                 Track third-party supply chain risk, map partner technology stacks, and run AI threat predictive inspections.
@@ -320,7 +320,7 @@ export default function VendorRiskPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-border bg-muted/30">
-                      <SortableHeader label="Vendor Name" sortKey="name" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
+                      <SortableHeader label="Vendor/Product" sortKey="name" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
                       <SortableHeader label="Status" sortKey="status" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
                       <SortableHeader label="Risk Score" sortKey="risk_score" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
                       <SortableHeader label="Tech Stack Mapping" sortKey="tech_stack" currentSort={sortConfig} requestSort={requestSort} className="py-4 px-6 text-sm" />
@@ -514,7 +514,7 @@ export default function VendorRiskPage() {
                </div>
                <form onSubmit={handleFormSubmit} className="p-6 space-y-4">
                   <div>
-                     <label className="block text-sm font-medium text-foreground mb-1">Vendor Name</label>
+                     <label className="block text-sm font-medium text-foreground mb-1">Vendor/Product</label>
                      <input required autoFocus type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" placeholder="e.g. AWS Europe" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">

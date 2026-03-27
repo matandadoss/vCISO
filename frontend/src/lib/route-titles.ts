@@ -1,7 +1,7 @@
 export const ROUTE_TITLES: Record<string, string> = {
   "/": "Dashboard",
   "/threat-intel": "Threat Intelligence",
-  "/vendor-risk": "Vendor Risk Management",
+  "/vendor-risk": "Ecosystem Risk",
   "/risk-register": "Risk Register",
   "/compliance": "Compliance Status",
   "/company": "Company Setup",
