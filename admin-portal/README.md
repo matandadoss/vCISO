@@ -27,5 +27,5 @@ The Admin Portal is a Vite + React + TypeScript Single Page Application (SPA). T
 
 ```powershell
 # Compiles typescript artifacts into ./dist, maps internal API targets, and executes the formal Firebase release sequence.
-.\deploy.ps1
+..\deploy_admin.ps1
 ```

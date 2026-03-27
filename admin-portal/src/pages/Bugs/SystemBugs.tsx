@@ -115,8 +115,8 @@ const SystemBugs = () => {
     });
 
     result.sort((a, b) => {
-      let aVal = a[sortKey];
-      let bVal = b[sortKey];
+      let aVal: any = a[sortKey];
+      let bVal: any = b[sortKey];
 
       const pWeights: Record<string, number> = { P1: 4, P2: 3, P3: 2, P4: 1 };
       const sWeights: Record<string, number> = { Critical: 4, High: 3, Medium: 2, Low: 1 };
