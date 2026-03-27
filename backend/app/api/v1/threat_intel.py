@@ -22,6 +22,12 @@ class ThreatActorResponse(BaseModel):
     relevance_score: str = "Medium" # High, Medium, Low
     relevance_reasons: List[str] = []
     mitre_attack_techniques: List[dict] = []
+    aliases: Optional[list] = None
+    motivation: Optional[str] = None
+    target_industries: Optional[list] = None
+    target_regions: Optional[list] = None
+    source: Optional[str] = None
+    external_references: Optional[dict] = None
 
 class ThreatIndicatorResponse(BaseModel):
     id: str
@@ -67,20 +73,52 @@ async def list_threat_actors(
     existing_names = set(name for (name,) in existing_names_res.all())
     
     default_actors = [
-        ("Scattered Spider", "Financially motivated threat group known for social engineering attacks against IT helpdesks.", ThreatSophistication.advanced),
-        ("FIN7", "Cybercriminal group primarily targeting the retail and hospitality sectors to steal financial data.", ThreatSophistication.intermediate),
-        ("Lazarus Group", "State-sponsored actor associated with cyber espionage and financial theft.", ThreatSophistication.advanced)
+        {
+            "name": "Scattered Spider",
+            "desc": "Financially motivated threat group known for targeted social engineering attacks against IT helpdesks to circumvent MFA.",
+            "soph": ThreatSophistication.advanced,
+            "aliases": ["UNC3944", "0ktapus", "Scatter Swine", "Octo Tempest"],
+            "motivation": "Financial Gain",
+            "industries": ["Telecommunications", "BPO", "Hospitality", "Identity Providers"],
+            "regions": ["North America", "Europe"],
+            "source": "CrowdStrike Falcon Intel"
+        },
+        {
+            "name": "FIN7",
+            "desc": "Cybercriminal group primarily targeting the retail and hospitality sectors to steal financial data.",
+            "soph": ThreatSophistication.intermediate,
+            "aliases": ["Carbanak", "Navigator Group"],
+            "motivation": "Financial Gain",
+            "industries": ["Retail", "Hospitality", "Restaurant"],
+            "regions": ["Global"],
+            "source": "Mandiant"
+        },
+        {
+            "name": "Lazarus Group",
+            "desc": "State-sponsored actor associated with cyber espionage and financial theft.",
+            "soph": ThreatSophistication.advanced,
+            "aliases": ["HIDDEN COBRA", "Guardians of Peace", "Zinc"],
+            "motivation": "Espionage and Financial Gain",
+            "industries": ["Financial", "Cryptocurrency", "Defense", "Government"],
+            "regions": ["Global"],
+            "source": "CISA KEV"
+        }
     ]
     
     added_any = False
-    for name, desc, soph in default_actors:
-        if name not in existing_names:
+    for actor_data in default_actors:
+        if actor_data["name"] not in existing_names:
             new_actor = ThreatActor(
                 id=uuid.uuid4(),
                 org_id=org_uuid,
-                name=name,
-                description=desc,
-                sophistication=soph,
+                name=actor_data["name"],
+                description=actor_data["desc"],
+                sophistication=actor_data["soph"],
+                aliases=actor_data["aliases"],
+                motivation=actor_data["motivation"],
+                target_industries=actor_data["industries"],
+                target_regions=actor_data["regions"],
+                source=actor_data["source"],
                 active=True,
                 first_seen=datetime.utcnow()
             )
@@ -110,7 +148,13 @@ async def list_threat_actors(
             "active": a.active,
             "relevance_score": "High" if soph_val in ("nation_state", "advanced") else "Medium",
             "first_seen": a.first_seen.isoformat() if a.first_seen else None,
-            "last_updated": a.last_updated.isoformat() if a.last_updated else None
+            "last_updated": a.last_updated.isoformat() if a.last_updated else None,
+            "aliases": a.aliases,
+            "motivation": a.motivation,
+            "target_industries": a.target_industries,
+            "target_regions": a.target_regions,
+            "source": a.source,
+            "external_references": a.external_references
         })
 
     return {
@@ -169,7 +213,13 @@ async def create_threat_actor(
         "active": actor.active,
         "relevance_score": "High" if soph_val in ("nation_state", "advanced") else "Medium",
         "first_seen": actor.first_seen.isoformat() if actor.first_seen else None,
-        "last_updated": actor.last_updated.isoformat() if actor.last_updated else None
+        "last_updated": actor.last_updated.isoformat() if actor.last_updated else None,
+        "aliases": actor.aliases,
+        "motivation": actor.motivation,
+        "target_industries": actor.target_industries,
+        "target_regions": actor.target_regions,
+        "source": actor.source,
+        "external_references": actor.external_references
     }
 
 class ThreatActorUpdate(BaseModel):
@@ -223,7 +273,13 @@ async def update_threat_actor(
         "description": actor.description,
         "version": actor.version,
         "sophistication": soph_val,
-        "active": actor.active
+        "active": actor.active,
+        "aliases": actor.aliases,
+        "motivation": actor.motivation,
+        "target_industries": actor.target_industries,
+        "target_regions": actor.target_regions,
+        "source": actor.source,
+        "external_references": actor.external_references
     }
 
 @router.delete("/actors/{actor_id}")

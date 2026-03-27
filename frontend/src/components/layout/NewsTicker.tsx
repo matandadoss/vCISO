@@ -5,42 +5,42 @@ const THREAT_NEWS = [
   {
     id: 1,
     title: "Critical RCE Vulnerability Discovered in Popular Logging Framework (CVE-2026-X892)",
-    url: "https://nvd.nist.gov/vuln/detail/CVE-2026-X892",
+    url: "https://nvd.nist.gov/vuln/search",
     icon: Bug,
     color: "text-red-500"
   },
   {
     id: 2,
     title: "Major Financial Institution Suffers Data Breach Affecting 1.2M Customers",
-    url: "https://thehackernews.com/2026/10/major-financial-institution-suffers.html",
+    url: "https://thehackernews.com/",
     icon: ShieldAlert,
     color: "text-orange-500"
   },
   {
     id: 3,
     title: "New Ransomware Gang 'CryptoLocker-V2' Targeting Healthcare Sector",
-    url: "https://www.cisa.gov/news-events/cybersecurity-advisories/aa26-0301a",
+    url: "https://www.cisa.gov/stopransomware",
     icon: AlertTriangle,
     color: "text-red-500"
   },
   {
     id: 4,
     title: "Nation-State Actors Suspected in Coordinated Supply Chain Attack",
-    url: "https://krebsonsecurity.com/2026/03/nation-state-actors-suspected-in-coordinated-supply-chain-attack/",
+    url: "https://krebsonsecurity.com/",
     icon: Activity,
     color: "text-yellow-500"
   },
   {
     id: 5,
     title: "Zero-Day Exploit Found in Enterprise VPN Appliances - Patch Immediately",
-    url: "https://www.bleepingcomputer.com/news/security/zero-day-exploit-found-in-enterprise-vpn-appliances/",
+    url: "https://www.bleepingcomputer.com/",
     icon: Bug,
     color: "text-red-500"
   },
   {
     id: 6,
     title: "Massive DDoS Campaign Takes Down Key Infrastructure in APAC Region",
-    url: "https://www.darkreading.com/cyberattacks-data-breaches/massive-ddos-campaign-takes-down-key-infrastructure-in-apac-region",
+    url: "https://www.darkreading.com/",
     icon: ServerCrash,
     color: "text-orange-600"
   }

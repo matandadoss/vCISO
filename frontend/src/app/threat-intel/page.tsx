@@ -150,10 +150,10 @@ export default function ThreatIntelPage() {
         <Tabs defaultValue="summary" className="space-y-6">
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
             <TabsList>
+              <TabsTrigger value="summary">Intel Summary</TabsTrigger>
               <TabsTrigger value="actors">Threat Actors</TabsTrigger>
               <TabsTrigger value="indicators">Threat Signals</TabsTrigger>
               <TabsTrigger value="breaches">Hindsight</TabsTrigger>
-              <TabsTrigger value="summary">Intel Summary</TabsTrigger>
               <TabsTrigger value="darkweb">Dark Web</TabsTrigger>
             </TabsList>
             <div className="flex w-full xl:w-auto relative">

@@ -124,6 +124,11 @@ export default function ThreatActorProfile() {
 
                <div className="space-y-5">
                  <h2 className="text-2xl font-black text-white uppercase tracking-widest text-center">{actor.name}</h2>
+                 {actor.aliases && actor.aliases.length > 0 && (
+                   <p className="text-center text-[10px] text-slate-400 font-mono tracking-[0.2em] -mt-3 mb-2">
+                     AKA: {actor.aliases.join(' // ')}
+                   </p>
+                 )}
                  <div className="w-full h-px bg-slate-800"></div>
                  <div className="flex flex-col gap-4 text-xs">
                     <div className="flex flex-col">
@@ -165,6 +170,45 @@ export default function ThreatActorProfile() {
                <p className="text-sm text-slate-300 leading-relaxed font-medium">
                  {actor.description || 'No detailed abstract available.'}
                </p>
+
+               {/* Conditional Criminal Profile Blocks */}
+               {actor.motivation && (
+                 <div className="mt-6 border-t border-slate-800/50 pt-5">
+                    <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mb-2 block">Primary Motivation</span>
+                    <span className="text-slate-200 font-bold text-sm tracking-wide">{actor.motivation}</span>
+                 </div>
+               )}
+               
+               {actor.target_industries && actor.target_industries.length > 0 && (
+                 <div className="mt-5">
+                    <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mb-2 block">Targeted Industries</span>
+                    <div className="flex flex-wrap gap-2">
+                      {actor.target_industries.map((ind: string, idx: number) => (
+                        <span key={idx} className="px-2.5 py-1 bg-slate-950 border border-slate-700/50 rounded-sm text-[10px] uppercase font-bold tracking-widest text-slate-300">{ind}</span>
+                      ))}
+                    </div>
+                 </div>
+               )}
+               
+               {actor.target_regions && actor.target_regions.length > 0 && (
+                 <div className="mt-5">
+                    <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mb-2 block">Targeted Regions</span>
+                    <div className="flex flex-wrap gap-2">
+                      {actor.target_regions.map((reg: string, idx: number) => (
+                        <span key={idx} className="px-2.5 py-1 bg-slate-950 border border-slate-700/50 rounded-sm text-[10px] uppercase font-bold tracking-widest text-slate-300">{reg}</span>
+                      ))}
+                    </div>
+                 </div>
+               )}
+
+               {actor.source && (
+                 <div className="mt-6 border-t border-slate-800/50 pt-4 flex justify-end">
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <span className="font-mono text-[10px] uppercase tracking-widest">Intel Source:</span>
+                      <span className="font-mono font-bold text-[10px] text-slate-400">{actor.source}</span>
+                    </div>
+                 </div>
+               )}
             </div>
             
           </div>
