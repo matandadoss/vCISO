@@ -3,7 +3,7 @@ import { fetchWithAuth } from "@/lib/api";
 
 import React, { useEffect, useState } from "react";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
-import { Search, ShieldAlert, Activity, Users, BookOpen, FlaskConical } from "lucide-react";
+import { Search, ShieldAlert, Activity, Users, BookOpen, FlaskConical, Target } from "lucide-react";
 import Link from "next/link";
 import { useControlTower } from "@/contexts/ControlTowerContext";
 import { useSortableTable } from "@/hooks/useSortableTable";
@@ -154,12 +154,13 @@ export default function ThreatIntelPage() {
   return (
     <div className="flex-1 overflow-y-auto bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <Tabs defaultValue="actors" className="space-y-6">
+        <Tabs defaultValue="summary" className="space-y-6">
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
             <TabsList>
               <TabsTrigger value="actors">Threat Actors</TabsTrigger>
               <TabsTrigger value="indicators">Threat Signals</TabsTrigger>
               <TabsTrigger value="breaches">Hindsight</TabsTrigger>
+              <TabsTrigger value="summary">Intel Summary</TabsTrigger>
               <TabsTrigger value="darkweb">Dark Web</TabsTrigger>
             </TabsList>
             <div className="flex w-full xl:w-auto relative">
@@ -171,6 +172,132 @@ export default function ThreatIntelPage() {
                />
             </div>
           </div>
+
+          {/* Intel Summary Dashboard */}
+          <TabsContent value="summary" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
+              <Activity className="h-5 w-5 text-indigo-500" /> 
+              Intelligence Summary
+            </h2>
+            
+            {/* Top Level Metrics (Grid) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div className="bg-card border border-border rounded-lg p-5 flex flex-col justify-between hover:border-indigo-500/30 transition-colors shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-bl-full -z-10"></div>
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-sm font-medium text-muted-foreground flex items-center gap-1.5"><Users className="w-4 h-4 text-purple-500"/> Threat Actors</span>
+                </div>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <h3 className="text-3xl font-bold text-foreground">{actors?.length || 0}</h3>
+                  <span className="text-xs text-muted-foreground font-medium">Tracking</span>
+                </div>
+                <div className="mt-4 flex gap-2">
+                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-red-500/10 text-red-500 rounded border border-red-500/20 shadow-sm">
+                     {actors?.filter((a: any) => a.relevance_score === 'High').length || 0} High Relevance
+                   </span>
+                </div>
+              </div>
+
+              <div className="bg-card border border-border rounded-lg p-5 flex flex-col justify-between hover:border-blue-500/30 transition-colors shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-bl-full -z-10"></div>
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-sm font-medium text-muted-foreground flex items-center gap-1.5"><Activity className="w-4 h-4 text-blue-500"/> Threat Signals</span>
+                </div>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <h3 className="text-3xl font-bold text-foreground">{indicators?.length || 0}</h3>
+                  <span className="text-xs text-muted-foreground font-medium">Detected</span>
+                </div>
+                <div className="mt-4 flex gap-2">
+                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-destructive/10 text-destructive rounded border border-destructive/20 shadow-sm">
+                     {indicators?.filter((i: any) => i.severity === 'critical').length || 0} Critical
+                   </span>
+                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-orange-500/10 text-orange-500 rounded border border-orange-500/20 shadow-sm">
+                     {indicators?.filter((i: any) => i.severity === 'high').length || 0} High
+                   </span>
+                </div>
+              </div>
+
+              <div className="bg-card border border-border rounded-lg p-5 flex flex-col justify-between hover:border-yellow-500/30 transition-colors shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/5 rounded-bl-full -z-10"></div>
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-sm font-medium text-muted-foreground flex items-center gap-1.5"><BookOpen className="w-4 h-4 text-yellow-500"/> Hindsight</span>
+                </div>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <h3 className="text-3xl font-bold text-foreground">{breachReports?.length || 0}</h3>
+                  <span className="text-xs text-muted-foreground font-medium">Breaches Analyzed</span>
+                </div>
+                <div className="mt-4 flex flex-col gap-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                   <div className="flex items-center gap-1.5"><ShieldAlert className="w-3 h-3 text-emerald-500"/> Retrospective learning</div>
+                </div>
+              </div>
+
+              <div className="bg-card border border-border rounded-lg p-5 flex flex-col justify-between hover:border-slate-500/30 transition-colors shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-slate-500/5 rounded-bl-full -z-10"></div>
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-4.05 3.01-7.4 6.95-7.93v2.03C8.1 6.55 6 9.04 6 12c0 3.31 2.69 6 6 6s6-2.69 6-6c0-2.96-2.1-5.45-4.95-5.9v-2.03C16.99 4.6 20 7.95 20 12c0 4.41-3.59 8-8 8zm-1-6h2v2h-2v-2zm0-8h2v6h-2V6z"/></svg> 
+                    Dark Web
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <h3 className="text-3xl font-bold text-foreground">{darkWebAlerts?.length || 0}</h3>
+                  <span className="text-xs text-muted-foreground font-medium">Alerts</span>
+                </div>
+                <div className="mt-4 flex gap-2">
+                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-red-500/10 text-red-500 rounded border border-red-500/20 shadow-sm">
+                     {darkWebAlerts?.filter((a: any) => a.severity === 'critical').length || 0} Critical
+                   </span>
+                </div>
+              </div>
+            </div>
+
+            <h3 className="text-lg font-bold text-foreground mb-4 border-b border-border pb-2 flex items-center gap-2">
+              <Target className="w-5 h-5 text-destructive" /> Top Priority Intelligence
+            </h3>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                  <Activity className="w-4 h-4" /> Most Critical Signals
+                </h4>
+                {indicators?.filter((i: any) => i.severity === 'critical').slice(0, 3).map((ind: any) => (
+                  <div key={ind.id} onClick={() => toggleIoc(ind.id)} className="bg-card border border-destructive/30 rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-destructive transition-all group-hover:w-1.5"></div>
+                    <div className="flex justify-between items-start mb-2 pl-2">
+                      <span className="font-mono text-sm font-bold text-foreground">{ind.value}</span>
+                      <span className="px-2 py-0.5 bg-destructive/10 text-destructive text-[10px] uppercase font-bold rounded shadow-sm">Critical</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground flex justify-between pl-2">
+                      <span>Type: {ind.indicator_type?.toUpperCase()}</span>
+                      <span>Confidence: {ind.confidence}%</span>
+                    </div>
+                  </div>
+                ))}
+                {indicators?.filter((i: any) => i.severity === 'critical').length === 0 && (
+                  <div className="text-sm text-muted-foreground p-6 bg-muted/30 rounded-lg border border-dashed border-border text-center">No critical signals right now.</div>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                  <Users className="w-4 h-4" /> Highest Relevance Actors
+                </h4>
+                {actors?.filter((a: any) => a.relevance_score === 'High').slice(0, 3).map((actor: any) => (
+                  <div key={actor.id} onClick={() => handleActorClick(actor)} className="bg-card border border-red-500/30 rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-red-500 transition-all group-hover:w-1.5"></div>
+                    <div className="flex justify-between items-start mb-1 pl-2">
+                      <h5 className="font-bold text-foreground">{actor.name}</h5>
+                      <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[10px] uppercase font-bold rounded shadow-sm">High Relevance</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-2 pl-2">{actor.description}</p>
+                  </div>
+                ))}
+                {actors?.filter((a: any) => a.relevance_score === 'High').length === 0 && (
+                  <div className="text-sm text-muted-foreground p-6 bg-muted/30 rounded-lg border border-dashed border-border text-center">No high relevance actors tracked.</div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
 
           {/* Threat Actors Cards */}
           <TabsContent value="actors">
