@@ -19,7 +19,7 @@ export default function ThreatActorProfile() {
     const fetchData = async () => {
       try {
         // Fetch all actors and find the one that matches
-        const actorsRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/actors?org_id=default&limit=100`);
+        const actorsRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/actors?org_id=default&limit=100`, { cache: 'no-store' });
         const actorsData = await actorsRes.json();
         const found = actorsData.items?.find((a: any) => a.id === actorId);
         if (found) {
@@ -27,7 +27,7 @@ export default function ThreatActorProfile() {
         }
 
         // Fetch specific indicators for this actor
-        const indRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/indicators?org_id=default&threat_actor_id=${actorId}`);
+        const indRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/indicators?org_id=default&threat_actor_id=${actorId}`, { cache: 'no-store' });
         const indData = await indRes.json();
         setIndicators(indData.items || []);
 

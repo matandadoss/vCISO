@@ -124,6 +124,17 @@ async def list_threat_actors(
             )
             db.add(new_actor)
             added_any = True
+        else:
+            # Upsert missing fields for default mock actors if they were seeded in an older schema
+            stmt = select(ThreatActor).where(ThreatActor.name == actor_data["name"], ThreatActor.org_id == org_uuid)
+            existing_actor = (await db.execute(stmt)).scalar_one_or_none()
+            if existing_actor and (existing_actor.aliases is None or existing_actor.motivation is None):
+                existing_actor.aliases = actor_data["aliases"]
+                existing_actor.motivation = actor_data["motivation"]
+                existing_actor.target_industries = actor_data["industries"]
+                existing_actor.target_regions = actor_data["regions"]
+                existing_actor.source = actor_data["source"]
+                added_any = True
             
     if added_any:
         await db.commit()

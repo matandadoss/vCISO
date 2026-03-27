@@ -113,7 +113,7 @@ export default function ThreatIntelPage() {
 
   useEffect(() => {
     // Fetch Threat Actors
-    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/actors?org_id=default`)
+    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/actors?org_id=default`, { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         setActors(data.items || []);
@@ -121,7 +121,7 @@ export default function ThreatIntelPage() {
       .catch((err) => console.error("Error fetching actors:", err));
 
     // Fetch Threat Indicators
-    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/indicators?org_id=default`)
+    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/indicators?org_id=default`, { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         setIndicators(data.items || []);
