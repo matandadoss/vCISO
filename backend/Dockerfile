@@ -25,4 +25,4 @@ EXPOSE 8000
 USER appuser
 
 # Start the FastAPI server using Uvicorn, respecting the PORT env var
-CMD ["sh", "-c", "python scripts/init_db.py && python scripts/alter_vendors_hierarchy.py && python scripts/backfill_vendors.py && python scripts/seed_demo_data.py && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "python scripts/init_db.py && python scripts/alter_vendors_hierarchy.py && python scripts/alter_threat_actors.py && python scripts/backfill_vendors.py && python scripts/seed_demo_data.py && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

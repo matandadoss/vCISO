@@ -27,6 +27,7 @@ export default function ThreatIntelPage() {
   
   const [executingIoc, setExecutingIoc] = useState<string | null>(null);
   const [executionSuccess, setExecutionSuccess] = useState<Record<string, boolean>>({});
+  const [activeTab, setActiveTab] = useState("summary");
 
   const { setIsOpen, setPageContext } = useControlTower();
 
@@ -147,7 +148,7 @@ export default function ThreatIntelPage() {
   return (
     <div className="flex-1 overflow-y-auto bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <Tabs defaultValue="summary" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
             <TabsList>
               <TabsTrigger value="summary">Intel Summary</TabsTrigger>
@@ -175,13 +176,16 @@ export default function ThreatIntelPage() {
             
             {/* Top Level Metrics (Grid) */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div className="bg-card border border-border rounded-lg p-5 flex flex-col justify-between hover:border-indigo-500/30 transition-colors shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-bl-full -z-10"></div>
+              <div 
+                onClick={() => setActiveTab('actors')}
+                className="bg-card cursor-pointer border border-border rounded-lg p-5 flex flex-col justify-between hover:border-indigo-500/50 hover:bg-muted/30 transition-all shadow-sm relative overflow-hidden group"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-bl-full -z-10 group-hover:bg-purple-500/10 transition-colors"></div>
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-sm font-medium text-muted-foreground flex items-center gap-1.5"><Users className="w-4 h-4 text-purple-500"/> Threat Actors</span>
                 </div>
                 <div className="flex items-baseline gap-2 mt-2">
-                  <h3 className="text-3xl font-bold text-foreground">{actors?.length || 0}</h3>
+                  <h3 className="text-3xl font-bold text-foreground group-hover:text-primary transition-colors">{actors?.length || 0}</h3>
                   <span className="text-xs text-muted-foreground font-medium">Tracking</span>
                 </div>
                 <div className="mt-4 flex gap-2">
@@ -191,13 +195,16 @@ export default function ThreatIntelPage() {
                 </div>
               </div>
 
-              <div className="bg-card border border-border rounded-lg p-5 flex flex-col justify-between hover:border-blue-500/30 transition-colors shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-bl-full -z-10"></div>
+              <div 
+                onClick={() => setActiveTab('indicators')}
+                className="bg-card cursor-pointer border border-border rounded-lg p-5 flex flex-col justify-between hover:border-blue-500/50 hover:bg-muted/30 transition-all shadow-sm relative overflow-hidden group"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-bl-full -z-10 group-hover:bg-blue-500/10 transition-colors"></div>
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-sm font-medium text-muted-foreground flex items-center gap-1.5"><Activity className="w-4 h-4 text-blue-500"/> Threat Signals</span>
                 </div>
                 <div className="flex items-baseline gap-2 mt-2">
-                  <h3 className="text-3xl font-bold text-foreground">{indicators?.length || 0}</h3>
+                  <h3 className="text-3xl font-bold text-foreground group-hover:text-primary transition-colors">{indicators?.length || 0}</h3>
                   <span className="text-xs text-muted-foreground font-medium">Detected</span>
                 </div>
                 <div className="mt-4 flex gap-2">
@@ -210,13 +217,16 @@ export default function ThreatIntelPage() {
                 </div>
               </div>
 
-              <div className="bg-card border border-border rounded-lg p-5 flex flex-col justify-between hover:border-yellow-500/30 transition-colors shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/5 rounded-bl-full -z-10"></div>
+              <div 
+                onClick={() => setActiveTab('breaches')}
+                className="bg-card cursor-pointer border border-border rounded-lg p-5 flex flex-col justify-between hover:border-yellow-500/50 hover:bg-muted/30 transition-all shadow-sm relative overflow-hidden group"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/5 rounded-bl-full -z-10 group-hover:bg-yellow-500/10 transition-colors"></div>
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-sm font-medium text-muted-foreground flex items-center gap-1.5"><BookOpen className="w-4 h-4 text-yellow-500"/> Hindsight</span>
                 </div>
                 <div className="flex items-baseline gap-2 mt-2">
-                  <h3 className="text-3xl font-bold text-foreground">{breachReports?.length || 0}</h3>
+                  <h3 className="text-3xl font-bold text-foreground group-hover:text-primary transition-colors">{breachReports?.length || 0}</h3>
                   <span className="text-xs text-muted-foreground font-medium">Breaches Analyzed</span>
                 </div>
                 <div className="mt-4 flex flex-col gap-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
@@ -224,8 +234,11 @@ export default function ThreatIntelPage() {
                 </div>
               </div>
 
-              <div className="bg-card border border-border rounded-lg p-5 flex flex-col justify-between hover:border-slate-500/30 transition-colors shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-slate-500/5 rounded-bl-full -z-10"></div>
+              <div 
+                onClick={() => setActiveTab('darkweb')}
+                className="bg-card cursor-pointer border border-border rounded-lg p-5 flex flex-col justify-between hover:border-slate-500/50 hover:bg-muted/30 transition-all shadow-sm relative overflow-hidden group"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-slate-500/5 rounded-bl-full -z-10 group-hover:bg-slate-500/10 transition-colors"></div>
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-4.05 3.01-7.4 6.95-7.93v2.03C8.1 6.55 6 9.04 6 12c0 3.31 2.69 6 6 6s6-2.69 6-6c0-2.96-2.1-5.45-4.95-5.9v-2.03C16.99 4.6 20 7.95 20 12c0 4.41-3.59 8-8 8zm-1-6h2v2h-2v-2zm0-8h2v6h-2V6z"/></svg> 
@@ -233,7 +246,7 @@ export default function ThreatIntelPage() {
                   </span>
                 </div>
                 <div className="flex items-baseline gap-2 mt-2">
-                  <h3 className="text-3xl font-bold text-foreground">{darkWebAlerts?.length || 0}</h3>
+                  <h3 className="text-3xl font-bold text-foreground group-hover:text-primary transition-colors">{darkWebAlerts?.length || 0}</h3>
                   <span className="text-xs text-muted-foreground font-medium">Alerts</span>
                 </div>
                 <div className="mt-4 flex gap-2">

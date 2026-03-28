@@ -12,17 +12,19 @@ load_dotenv()
 
 from app.db.session import SessionLocal
 from app.models.domain import Vendor
-from app.api.v1.vendors import infer_tech_stack
+from app.core.context import org_id_ctx
 
 async def backfill():
     print("Starting vendor backfill...")
-    async with SessionLocal() as db:
-        result = await db.execute(select(Vendor))
-        db_vendors = result.scalars().all()
-        vendor_name_map = {v.name.lower(): v for v in db_vendors}
-        
-        product_map = {
-            "s3": "AWS", "ec2": "AWS", "rds": "AWS", "lambda": "AWS", "dynamodb": "AWS", "cloudfront": "AWS",
+    token = org_id_ctx.set("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+    try:
+        async with SessionLocal() as db:
+            result = await db.execute(select(Vendor))
+            db_vendors = result.scalars().all()
+            vendor_name_map = {v.name.lower(): v for v in db_vendors}
+            
+            product_map = {
+                "s3": "AWS", "ec2": "AWS", "rds": "AWS", "lambda": "AWS", "dynamodb": "AWS", "cloudfront": "AWS",
             "mongodb": "MongoDB", "atlas": "MongoDB",
             "azure ad": "Microsoft", "active directory": "Microsoft", "office 365": "Microsoft", "azure": "Microsoft",
             "gcp": "Google", "g suite": "Google", "workspace": "Google", "bigquery": "Google", "cloud sql": "Google", "google": "Google",
@@ -86,6 +88,8 @@ async def backfill():
             print(f"Successfully backfilled {updated_count} products with parent relationships.")
         else:
             print("No existing products needed backfilling.")
+    finally:
+        org_id_ctx.reset(token)
 
 if __name__ == "__main__":
     asyncio.run(backfill())
