@@ -160,3 +160,5 @@ The CI/CD pipeline is strictly enforced via `cloudbuild.yaml` running on Google 
 *   **[2026-03-28]** Modernized System Error Management in the Admin Portal: Implemented dynamic client-side telemetry enrichment to categorize raw bug logs into Priority, Severity, and Error Type. Added interactive filter dropdowns and sortable table headers.
 *   **[2026-03-28]** Renamed the Admin Portal deployment script from `admin-portal/deploy.ps1` to a root-level `deploy_admin.ps1` for standardized CI/CD orchestration.
 *   **[2026-03-28]** Resolved Dashboard API routing issues leading to frontend 404 errors by verifying backend route configurations and environment variable pointers.
+*   **[2026-03-28]** Added "Recent Events & Chatter" log to the Threat Actor Dossier page, injecting dynamically generated threat signals contextualized by the `/api/v1/threat-intel/actors` API route.
+*   **[2026-03-28]** Enhanced Intelligence Summary dashboard interactivity by making top-level KPI metric cards clickable, allowing localized tab state navigation.

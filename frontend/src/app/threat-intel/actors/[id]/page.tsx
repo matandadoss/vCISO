@@ -47,7 +47,7 @@ export default function ThreatActorProfile() {
     return (
       <div className="flex-1 flex flex-col items-center justify-center h-full text-muted-foreground animate-pulse p-8">
         <Activity className="w-10 h-10 mb-4 animate-spin text-red-500/50" /> 
-        <span className="font-mono text-xs uppercase tracking-widest text-red-500/70">Decrypting Classified Dossier...</span>
+        <span className="font-mono text-xs uppercase tracking-widest text-red-500/70">Decrypting Threat Actor Profile...</span>
       </div>
     );
   }
@@ -79,7 +79,7 @@ export default function ThreatActorProfile() {
             <div>
               <div className="flex items-center gap-2 text-red-500 text-[10px] md:text-xs font-mono font-bold tracking-[0.2em] uppercase mb-1">
                 <ShieldAlert className="w-3.5 h-3.5" /> 
-                Classified Dossier /// Eyes Only
+                Threat Actor Profile
               </div>
               <h1 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tight flex flex-wrap items-center gap-3">
                 Subject: {actor.name}
@@ -113,7 +113,7 @@ export default function ThreatActorProfile() {
                  <div className="absolute inset-x-0 top-1/2 h-px bg-red-500/10 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
                  <div className="absolute inset-y-0 left-1/2 w-px bg-red-500/10 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
 
-                 <UserX className="w-40 h-40 text-slate-800 relative z-10" />
+                 <img src="/images/hacker_hoodie.png" alt="Threat Actor" className="w-full h-full object-cover relative z-10 opacity-80 mix-blend-luminosity contrast-125 group-hover:opacity-100 transition-opacity" />
                  
                  <div className="absolute bottom-4 left-0 right-0 flex justify-center z-20">
                    <div className="bg-slate-950/80 backdrop-blur-sm border border-slate-700 font-mono text-slate-400 text-[10px] px-4 py-1.5 tracking-[0.3em] font-bold">
@@ -316,6 +316,33 @@ export default function ThreatActorProfile() {
                  <p className="text-sm text-slate-500 p-6 bg-slate-950 border border-dashed border-slate-800 rounded italic text-center font-mono">
                    No specific evidence or IoCs tracked for this subject in the active monitoring window.
                  </p>
+               )}
+             </div>
+
+             {/* Current Events */}
+             <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 lg:p-8 shadow-sm relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-bl-full pointer-events-none"></div>
+               <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-6 flex items-center gap-3 pb-3 border-b border-slate-800">
+                 <Activity className="w-5 h-5 text-emerald-500" /> Recent Events & Chatter
+               </h3>
+               {actor.recent_events && actor.recent_events.length > 0 ? (
+                 <div className="space-y-4">
+                   {actor.recent_events.map((event: any, i: number) => (
+                      <div key={i} className="flex flex-col gap-2 p-4 bg-slate-950 border border-slate-800 rounded group relative overflow-hidden transition-colors hover:border-slate-700 hover:bg-slate-900/50">
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-800 group-hover:bg-emerald-500 transition-colors"></div>
+                        <div className="flex items-center justify-between pl-3">
+                           <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">{formatDate(event.date)}</span>
+                           <span className="text-[9px] font-black tracking-widest uppercase text-emerald-500/80 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 shadow-sm">{event.source}</span>
+                        </div>
+                        <h4 className="text-sm font-medium text-slate-300 leading-snug pl-3">{event.title}</h4>
+                      </div>
+                   ))}
+                 </div>
+               ) : (
+                 <div className="text-sm text-slate-500 p-6 bg-slate-950 border border-dashed border-slate-800 rounded flex flex-col items-center justify-center gap-3">
+                   <Target className="w-8 h-8 text-slate-700/50" />
+                   <p className="italic text-center font-mono">No recent open-source or dark web events correlated.</p>
+                 </div>
                )}
              </div>
 

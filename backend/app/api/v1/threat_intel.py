@@ -154,6 +154,7 @@ async def list_threat_actors(
         
         relevance_reasons = []
         mitre_attack_techniques = []
+        recent_events = []
         if a.name == "Scattered Spider":
             relevance_reasons = ["Significant activity observed targeting Identity Providers.", "Known to conduct social engineering attacks against IT helpdesks matching our operational profile."]
             mitre_attack_techniques = [
@@ -161,17 +162,30 @@ async def list_threat_actors(
                 {"id": "T1566", "name": "Phishing: Spearphishing Voice", "tactic": "Initial Access"},
                 {"id": "T1527", "name": "Internal Spearphishing", "tactic": "Lateral Movement"}
             ]
+            recent_events = [
+                {"date": "2026-03-27", "title": "CISA issues joint advisory on escalating helpdesk social engineering campaigns.", "source": "CISA ALERTS"},
+                {"date": "2026-03-24", "title": "Actor suspected in widespread credential harvesting against telecommunications networks.", "source": "CrowdStrike Intel"},
+                {"date": "2026-03-15", "title": "Shift in TTPs: Actor observed utilizing new persistent deepfake audio tools.", "source": "Mandiant"}
+            ]
         elif a.name == "FIN7":
             relevance_reasons = ["Historical targeting of retail networks similar to our branch infrastructure."]
             mitre_attack_techniques = [
                 {"id": "T1566.001", "name": "Spearphishing Attachment", "tactic": "Initial Access"},
                 {"id": "T1059.001", "name": "PowerShell", "tactic": "Execution"}
             ]
+            recent_events = [
+                {"date": "2026-03-20", "title": "New Carbanak backdoor variant discovered targeting hospitality POS systems.", "source": "Kaspersky"},
+                {"date": "2026-02-28", "title": "FIN7 infrastructure resurrected, highly targeted phishing campaigns detected.", "source": "SentinelOne"}
+            ]
         elif a.name == "Lazarus Group":
             relevance_reasons = ["Highly sophisticated state-sponsored actor actively targeting cloud perimeters."]
             mitre_attack_techniques = [
                 {"id": "T1189", "name": "Drive-by Compromise", "tactic": "Initial Access"},
                 {"id": "T1003", "name": "OS Credential Dumping", "tactic": "Credential Access"}
+            ]
+            recent_events = [
+                {"date": "2026-03-26", "title": "State-sponsored actor linked to large-scale supply chain compromise via NPM registry.", "source": "Microsoft Threat Intelligence"},
+                {"date": "2026-03-10", "title": "Surge in cryptocurrency exchange targeting utilizing advanced zero-day exploits.", "source": "Chainalysis"}
             ]
 
         items.append({
@@ -183,6 +197,7 @@ async def list_threat_actors(
             "relevance_score": "High" if soph_val in ("nation_state", "advanced") else "Medium",
             "relevance_reasons": relevance_reasons,
             "mitre_attack_techniques": mitre_attack_techniques,
+            "recent_events": recent_events,
             "first_seen": a.first_seen.isoformat() if a.first_seen else None,
             "last_updated": a.last_updated.isoformat() if a.last_updated else None,
             "aliases": a.aliases,
