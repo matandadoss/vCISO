@@ -40,6 +40,59 @@ async def update_organization(org_id: str, request: OrgUpdateRequest):
     
     return MOCK_ORG_STATE
 
+class OrgProfileUpdate(BaseModel):
+    name: str = Field(..., min_length=1)
+    address: str = Field(..., min_length=1)
+    website_domain: str | None = None
+    phone_number: str | None = None
+    email_address: str | None = None
+
+@router.get("/me/profile")
+async def get_org_profile(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    org_id = current_user.get("org_id")
+    result = await db.execute(select(Organization).where(Organization.id == org_id))
+    org = result.scalar_one_or_none()
+    
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+        
+    return {
+        "id": str(org.id),
+        "name": org.name,
+        "address": org.address,
+        "website_domain": org.website_domain,
+        "phone_number": org.phone_number,
+        "email_address": org.email_address,
+        "industry": org.industry,
+        "size": org.size
+    }
+
+@router.patch("/me/profile")
+async def update_org_profile(
+    profile: OrgProfileUpdate,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    org_id = current_user.get("org_id")
+    result = await db.execute(select(Organization).where(Organization.id == org_id))
+    org = result.scalar_one_or_none()
+    
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+        
+    org.name = profile.name
+    org.address = profile.address
+    if profile.website_domain is not None: org.website_domain = profile.website_domain
+    if profile.phone_number is not None: org.phone_number = profile.phone_number
+    if profile.email_address is not None: org.email_address = profile.email_address
+    
+    await db.commit()
+    
+    return {"status": "success"}
+
 class SLASettingsUpdate(BaseModel):
     critical: int = Field(default=3, ge=1)
     high: int = Field(default=7, ge=1)

@@ -104,6 +104,10 @@ class Organization(BaseModel):
     industry: Mapped[str] = mapped_column(String(255), nullable=True)
     size: Mapped[str] = mapped_column(String(50), nullable=True)
     gcp_project_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    address: Mapped[str] = mapped_column(String(512), nullable=True)
+    website_domain: Mapped[str] = mapped_column(String(255), nullable=True)
+    phone_number: Mapped[str] = mapped_column(String(50), nullable=True)
+    email_address: Mapped[str] = mapped_column(String(255), nullable=True)
     subscription_tier: Mapped[ServiceTier] = mapped_column(SQLEnum(ServiceTier), default=ServiceTier.professional)
     sla_settings: Mapped[dict] = mapped_column(JSON, nullable=True)
 

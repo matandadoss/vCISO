@@ -54,6 +54,20 @@ export default function SetupPage() {
            const json = await res.json();
            console.log("Organization created:", json.org_id);
         }
+
+        // Patch extended profile fields explicitly
+        await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/organizations/me/profile`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: data.companyName || "Untitled Company",
+            address: data.address || "TBD",
+            website_domain: data.websiteDomain || null,
+            phone_number: data.phoneNumber || null,
+            email_address: data.emailAddress || null
+          })
+        });
+
       } catch (e) {
         console.warn("API unreachable. Continuing with local mock.", e);
       }

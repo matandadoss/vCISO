@@ -12,6 +12,10 @@ const TOOL_SUGGESTIONS = ["SentinelOne", "Datadog", "CrowdStrike Falcon", "Palo 
 export type SetupData = {
   companyName: string;
   fullName: string;
+  address: string;
+  websiteDomain: string;
+  phoneNumber: string;
+  emailAddress: string;
   infraStack: string[];
   techStack: string[];
   securityTools: string[];
@@ -42,6 +46,10 @@ export default function SetupWizard({ onComplete, uid }: SetupWizardProps) {
   const [data, setData] = useState<SetupData>({
     companyName: "",
     fullName: "",
+    address: "",
+    websiteDomain: "",
+    phoneNumber: "",
+    emailAddress: "",
     infraStack: [],
     techStack: [],
     securityTools: [],
@@ -55,8 +63,8 @@ export default function SetupWizard({ onComplete, uid }: SetupWizardProps) {
   const totalSteps = 5;
 
   const handleNext = () => {
-    if (step === 1 && (!data.companyName.trim() || !data.fullName.trim())) {
-       setError("Name and Company Name are required.");
+    if (step === 1 && (!data.companyName.trim() || !data.fullName.trim() || !data.address.trim())) {
+       setError("Name, Company Name, and Address are required.");
        return;
     }
     setError(null);
@@ -191,27 +199,71 @@ export default function SetupWizard({ onComplete, uid }: SetupWizardProps) {
                     <p className="text-muted-foreground">Let's set up your organization's security profile. We'll start with the basics.</p>
                   </div>
                   
-                  <div className="space-y-5 flex-1">
+                  <div className="space-y-4 flex-1 h-[400px] overflow-y-auto pr-2">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-1.5">Your Full Name <span className="text-red-500">*</span></label>
+                        <input 
+                          type="text" 
+                          value={data.fullName}
+                          onChange={(e) => setData({...data, fullName: e.target.value})}
+                          className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                          placeholder="Jane Doe"
+                          autoFocus
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-1.5">Company Name <span className="text-red-500">*</span></label>
+                        <input 
+                          type="text" 
+                          value={data.companyName}
+                          onChange={(e) => setData({...data, companyName: e.target.value})}
+                          className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                          placeholder="Acme Corp"
+                        />
+                      </div>
+                    </div>
                     <div>
-                      <label className="block text-sm font-medium text-foreground mb-1.5">Your Full Name *</label>
+                      <label className="block text-sm font-medium text-foreground mb-1.5">Address <span className="text-red-500">*</span></label>
                       <input 
                         type="text" 
-                        value={data.fullName}
-                        onChange={(e) => setData({...data, fullName: e.target.value})}
-                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-                        placeholder="Jane Doe"
-                        autoFocus
+                        value={data.address}
+                        onChange={(e) => setData({...data, address: e.target.value})}
+                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                        placeholder="123 Tech Lane, Suite 400"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-foreground mb-1.5">Company Name *</label>
+                      <label className="block text-sm font-medium text-foreground mb-1.5">Website Domain</label>
                       <input 
                         type="text" 
-                        value={data.companyName}
-                        onChange={(e) => setData({...data, companyName: e.target.value})}
-                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-                        placeholder="Acme Corp"
+                        value={data.websiteDomain}
+                        onChange={(e) => setData({...data, websiteDomain: e.target.value})}
+                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                        placeholder="acmecorp.com"
                       />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-1.5">Phone Number</label>
+                        <input 
+                          type="text" 
+                          value={data.phoneNumber}
+                          onChange={(e) => setData({...data, phoneNumber: e.target.value})}
+                          className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                          placeholder="+1 (555) 000-0000"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-1.5">Contact Email Address</label>
+                        <input 
+                          type="email" 
+                          value={data.emailAddress}
+                          onChange={(e) => setData({...data, emailAddress: e.target.value})}
+                          className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                          placeholder="security@acmecorp.com"
+                        />
+                      </div>
                     </div>
                   </div>
                 </motion.div>

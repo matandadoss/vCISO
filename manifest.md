@@ -42,7 +42,7 @@ This document serves as the master tracking ledger for all features, capabilitie
 The backend utilizes `SQLAlchemy` ORM. All models inherit from a common `BaseModel` featuring UUIDs and timestamps.
 
 ### Core Identity & Access
-*   **Organization:** `id`, `name`, `industry`, `gcp_project_id`, `subscription_tier`.
+*   **Organization:** `id`, `name`, `industry`, `gcp_project_id`, `subscription_tier`, `address`, `website_domain`, `phone_number`, `email_address`.
 *   **User:** `firebase_uid`, `email`, `role`, `org_id` (FK). Centralized identity mapped via Firebase.
 *   **OrgAIBudget:** Tracks LLM API spending (`daily_limit_usd`, `active_provider`, `alert_webhook_url`).
 
@@ -162,3 +162,7 @@ The CI/CD pipeline is strictly enforced via `cloudbuild.yaml` running on Google 
 *   **[2026-03-28]** Resolved Dashboard API routing issues leading to frontend 404 errors by verifying backend route configurations and environment variable pointers.
 *   **[2026-03-28]** Added "Recent Events & Chatter" log to the Threat Actor Dossier page, injecting dynamically generated threat signals contextualized by the `/api/v1/threat-intel/actors` API route.
 *   **[2026-03-28]** Enhanced Intelligence Summary dashboard interactivity by making top-level KPI metric cards clickable, allowing localized tab state navigation.
+*   **[2026-03-28]** Extended the `Organization` backend Database model to support comprehensive tenant profiling natively (`address`, `website_domain`, `phone_number`, `email_address`).
+*   **[2026-03-28]** Implemented real-time `/api/v1/organizations/me/profile` `GET` and `PATCH` endpoints mapped directly to the active Cloud SQL session to manage company data without dummy states.
+*   **[2026-03-28]** Augmented the interactive Setup Wizard (`/setup`) to block final onboarding generation until strict organizational identity fields (Name, Company, Address) are validated and saved to the backend.
+*   **[2026-03-28]** Added a dedicated "Profile" interface configuration tab natively within the `My Company` (`/company`) dashboard module to securely view and edit company demographics directly from the platform workspace.

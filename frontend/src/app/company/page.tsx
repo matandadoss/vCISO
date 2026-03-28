@@ -26,6 +26,12 @@ export default function CompanyPage() {
   const [threatActors, setThreatActors] = useState<any[]>([]);
   const [frameworks, setFrameworks] = useState<any[]>([]);
   const [loadingApi, setLoadingApi] = useState(true);
+  
+  // Profile State
+  const [profile, setProfile] = useState<any>({
+    name: "", address: "", website_domain: "", phone_number: "", email_address: ""
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
 
   // Edit State
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -55,9 +61,10 @@ export default function CompanyPage() {
 
     const fetchApiData = async () => {
       try {
-        const [actorsRes, fwRes] = await Promise.all([
+        const [actorsRes, fwRes, profileRes] = await Promise.all([
           fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/threat-intel/actors?org_id=default`),
-          fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/compliance/frameworks?org_id=default`)
+          fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/compliance/frameworks?org_id=default`),
+          fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/organizations/me/profile`).catch(() => null)
         ]);
         
         const actorsData = await actorsRes.json();
@@ -65,6 +72,11 @@ export default function CompanyPage() {
         
         setThreatActors(actorsData.items || []);
         setFrameworks(fwData.items || []);
+        
+        if (profileRes && profileRes.ok) {
+           const profileData = await profileRes.json();
+           setProfile(profileData);
+        }
       } catch (err) {
         console.error("Failed to fetch API data", err);
       } finally {
@@ -380,6 +392,23 @@ export default function CompanyPage() {
     
     setEditingId(null);
   };
+  
+  const saveProfile = async () => {
+     setSavingProfile(true);
+     try {
+        await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/organizations/me/profile`, {
+           method: "PATCH",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify(profile)
+        });
+        alert("Profile updated successfully!");
+     } catch (e) {
+        console.error(e);
+        alert("Failed to update profile.");
+     } finally {
+        setSavingProfile(false);
+     }
+  };
 
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
@@ -388,6 +417,7 @@ export default function CompanyPage() {
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
             <div className="overflow-x-auto pb-2 -mb-2 xl:pb-0 xl:mb-0">
               <TabsList className="w-full sm:w-auto flex justify-start h-auto flex-wrap">
+                <TabsTrigger value="profile" className="flex items-center gap-2"><Building className="w-4 h-4" /> Profile</TabsTrigger>
                 <TabsTrigger value="stack" className="flex items-center gap-2"><Layers className="w-4 h-4" /> Cloud Infra</TabsTrigger>
                 <TabsTrigger value="app" className="flex items-center gap-2"><Database className="w-4 h-4" /> App Stack</TabsTrigger>
                 <TabsTrigger value="tools" className="flex items-center gap-2"><ShieldCheck className="w-4 h-4" /> Security Tools</TabsTrigger>
@@ -428,6 +458,49 @@ export default function CompanyPage() {
                 Continuous Correlation Engine Active.
             </div>
           </div>
+
+        {/* PROFILE */}
+        <TabsContent value="profile">
+           <div className="grid gap-6 animate-in fade-in duration-300 mt-2">
+               <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+                  <div className="flex justify-between items-center mb-6">
+                      <div>
+                          <h2 className="text-xl font-bold text-foreground">Company Profile</h2>
+                          <p className="text-sm text-muted-foreground mt-1">General contact and organizational details.</p>
+                      </div>
+                      <button onClick={saveProfile} disabled={savingProfile} className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors">
+                          <Save className="w-4 h-4" /> {savingProfile ? "Saving..." : "Save Changes"}
+                      </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                         <div>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">Company Name <span className="text-red-500">*</span></label>
+                            <input type="text" value={profile.name || ""} onChange={e => setProfile({...profile, name: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none" />
+                         </div>
+                         <div>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">Address <span className="text-red-500">*</span></label>
+                            <input type="text" value={profile.address || ""} onChange={e => setProfile({...profile, address: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none" />
+                         </div>
+                         <div>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">Website Domain</label>
+                            <input type="text" value={profile.website_domain || ""} onChange={e => setProfile({...profile, website_domain: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none" />
+                         </div>
+                      </div>
+                      <div className="space-y-4">
+                         <div>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">Phone Number</label>
+                            <input type="text" value={profile.phone_number || ""} onChange={e => setProfile({...profile, phone_number: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none" />
+                         </div>
+                         <div>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">Contact Email Address</label>
+                            <input type="email" value={profile.email_address || ""} onChange={e => setProfile({...profile, email_address: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none" />
+                         </div>
+                      </div>
+                  </div>
+               </div>
+           </div>
+        </TabsContent>
 
         {/* CLOUD INFRA */}
         <TabsContent value="stack">
