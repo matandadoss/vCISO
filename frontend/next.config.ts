@@ -6,7 +6,7 @@ const cspHeader = `
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' data: https://fonts.gstatic.com;
   img-src 'self' data: blob: https://lh3.googleusercontent.com https://firebasestorage.googleapis.com https://api.dicebear.com;
-  connect-src 'self' https://*.run.app https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com;
+  connect-src 'self' http://localhost:8000 https://*.run.app https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com;
   frame-src 'self' https://challenges.cloudflare.com https://*.firebaseapp.com;
   object-src 'none';
   base-uri 'self';

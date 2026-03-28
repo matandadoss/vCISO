@@ -16,7 +16,7 @@ COPY . .
 RUN chown -R appuser:appgroup /app
 
 # DevSecOps Pillar 3: Export correct environment flag to trigger Tier 2 API JWT protections
-ENV ENVIRONMENT=production
+ENV ENV=production
 
 # Expose the standard port used by Cloud Run
 EXPOSE 8000
