@@ -128,7 +128,7 @@ async def list_threat_actors(
             # Upsert missing fields for default mock actors if they were seeded in an older schema
             stmt = select(ThreatActor).where(ThreatActor.name == actor_data["name"], ThreatActor.org_id == org_uuid)
             existing_actor = (await db.execute(stmt)).scalar_one_or_none()
-            if existing_actor and (existing_actor.aliases is None or existing_actor.motivation is None):
+            if existing_actor and (not existing_actor.aliases or not existing_actor.motivation):
                 existing_actor.aliases = actor_data["aliases"]
                 existing_actor.motivation = actor_data["motivation"]
                 existing_actor.target_industries = actor_data["industries"]
@@ -151,6 +151,29 @@ async def list_threat_actors(
     items = []
     for a in actors:
         soph_val = a.sophistication.value if hasattr(a.sophistication, 'value') else a.sophistication
+        
+        relevance_reasons = []
+        mitre_attack_techniques = []
+        if a.name == "Scattered Spider":
+            relevance_reasons = ["Significant activity observed targeting Identity Providers.", "Known to conduct social engineering attacks against IT helpdesks matching our operational profile."]
+            mitre_attack_techniques = [
+                {"id": "T1078", "name": "Valid Accounts", "tactic": "Initial Access"},
+                {"id": "T1566", "name": "Phishing: Spearphishing Voice", "tactic": "Initial Access"},
+                {"id": "T1527", "name": "Internal Spearphishing", "tactic": "Lateral Movement"}
+            ]
+        elif a.name == "FIN7":
+            relevance_reasons = ["Historical targeting of retail networks similar to our branch infrastructure."]
+            mitre_attack_techniques = [
+                {"id": "T1566.001", "name": "Spearphishing Attachment", "tactic": "Initial Access"},
+                {"id": "T1059.001", "name": "PowerShell", "tactic": "Execution"}
+            ]
+        elif a.name == "Lazarus Group":
+            relevance_reasons = ["Highly sophisticated state-sponsored actor actively targeting cloud perimeters."]
+            mitre_attack_techniques = [
+                {"id": "T1189", "name": "Drive-by Compromise", "tactic": "Initial Access"},
+                {"id": "T1003", "name": "OS Credential Dumping", "tactic": "Credential Access"}
+            ]
+
         items.append({
             "id": str(a.id),
             "name": a.name,
@@ -158,6 +181,8 @@ async def list_threat_actors(
             "sophistication": soph_val,
             "active": a.active,
             "relevance_score": "High" if soph_val in ("nation_state", "advanced") else "Medium",
+            "relevance_reasons": relevance_reasons,
+            "mitre_attack_techniques": mitre_attack_techniques,
             "first_seen": a.first_seen.isoformat() if a.first_seen else None,
             "last_updated": a.last_updated.isoformat() if a.last_updated else None,
             "aliases": a.aliases,

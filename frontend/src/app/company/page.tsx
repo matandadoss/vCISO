@@ -384,20 +384,26 @@ export default function CompanyPage() {
   return (
     <div className="flex-1 overflow-y-auto bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        <div>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <p className="text-muted-foreground max-w-2xl">
-              Define your organizational infrastructure and active security stack. Upload a diagram or SBOM for automatic AI population.
-            </p>
-            <div>
+        <Tabs defaultValue="stack" className="space-y-6 w-full">
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+            <div className="overflow-x-auto pb-2 -mb-2 xl:pb-0 xl:mb-0">
+              <TabsList className="w-full sm:w-auto flex justify-start h-auto flex-wrap">
+                <TabsTrigger value="stack" className="flex items-center gap-2"><Layers className="w-4 h-4" /> Cloud Infra</TabsTrigger>
+                <TabsTrigger value="app" className="flex items-center gap-2"><Database className="w-4 h-4" /> App Stack</TabsTrigger>
+                <TabsTrigger value="tools" className="flex items-center gap-2"><ShieldCheck className="w-4 h-4" /> Security Tools</TabsTrigger>
+                <TabsTrigger value="threat-actors" className="flex items-center gap-2"><Users className="w-4 h-4" /> Threat Actors</TabsTrigger>
+                <TabsTrigger value="frameworks" className="flex items-center gap-2"><FileCheck className="w-4 h-4" /> Frameworks</TabsTrigger>
+              </TabsList>
+            </div>
+            <div className="flex w-full xl:w-auto relative">
               <label 
                 className={cn(
-                  "px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium rounded-md shadow-sm transition-colors flex items-center gap-2 cursor-pointer",
+                  "px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium rounded-md shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer w-full md:w-64",
                   uploading ? "opacity-50 cursor-not-allowed" : ""
                 )}
               >
                 <Upload className="h-4 w-4" />
-                {uploading ? "Scanning & Analyzing..." : "Upload Architecture / SBOM"}
+                {uploading ? "Scanning..." : "Upload Architecture"}
                 <input 
                   type="file" 
                   accept=".pdf,image/png,image/jpeg,image/webp" 
@@ -408,26 +414,19 @@ export default function CompanyPage() {
               </label>
             </div>
           </div>
-        </div>
 
-        {/* Status Indicator */}
-        <div className="bg-green-500/10 border border-green-500/20 text-green-500 px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-medium">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-            </span>
-            Continuous Correlation Engine Active.
-        </div>
-
-        <Tabs defaultValue="stack" className="space-y-6 w-full">
-          <div className="overflow-x-auto pb-2 -mb-2">
-            <TabsList className="w-full sm:w-auto flex justify-start h-auto flex-wrap">
-              <TabsTrigger value="stack" className="flex items-center gap-2"><Layers className="w-4 h-4" /> Cloud Infra</TabsTrigger>
-              <TabsTrigger value="app" className="flex items-center gap-2"><Database className="w-4 h-4" /> App Stack</TabsTrigger>
-              <TabsTrigger value="tools" className="flex items-center gap-2"><ShieldCheck className="w-4 h-4" /> Security Tools</TabsTrigger>
-              <TabsTrigger value="threat-actors" className="flex items-center gap-2"><Users className="w-4 h-4" /> Threat Actors</TabsTrigger>
-              <TabsTrigger value="frameworks" className="flex items-center gap-2"><FileCheck className="w-4 h-4" /> Frameworks</TabsTrigger>
-            </TabsList>
+          <div>
+            <p className="text-muted-foreground max-w-2xl text-sm mb-4">
+              Define your organizational infrastructure and active security stack. Upload a diagram or SBOM for automatic AI population.
+            </p>
+            {/* Status Indicator */}
+            <div className="bg-green-500/10 border border-green-500/20 text-green-500 px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-medium">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+                Continuous Correlation Engine Active.
+            </div>
           </div>
 
         {/* CLOUD INFRA */}

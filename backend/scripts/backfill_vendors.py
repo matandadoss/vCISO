@@ -5,13 +5,13 @@ from sqlalchemy import select
 from dotenv import load_dotenv
 load_dotenv()
 
-from app.db.session import async_session
+from app.db.session import SessionLocal
 from app.models.domain import Vendor
 from app.api.v1.vendors import infer_tech_stack
 
 async def backfill():
     print("Starting vendor backfill...")
-    async with async_session() as db:
+    async with SessionLocal() as db:
         result = await db.execute(select(Vendor))
         db_vendors = result.scalars().all()
         vendor_name_map = {v.name.lower(): v for v in db_vendors}

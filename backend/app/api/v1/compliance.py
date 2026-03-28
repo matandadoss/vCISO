@@ -35,35 +35,7 @@ async def list_frameworks(
         
     stmt = select(ComplianceFramework).where(ComplianceFramework.org_id == org_uuid)
     
-    # Fetch all existing framework names for this org to allow dynamic upserting into existing accounts
-    existing_names_res = await db.execute(select(ComplianceFramework.framework_name).where(ComplianceFramework.org_id == org_uuid))
-    existing_names = set(fw_name for (fw_name,) in existing_names_res.all())
-    
-    default_fws = [
-        ("OWASP Top 10", "2021"),
-        ("CIS Controls", "v8"),
-        ("NIST CSF", "2.0"),
-        ("Top Monitor", "v1")
-    ]
-    
-    added_any = False
-    from datetime import datetime
-    for fw_name, fw_version in default_fws:
-        if fw_name not in existing_names:
-            new_fw = ComplianceFramework(
-                id=uuid.uuid4(),
-                org_id=org_uuid,
-                framework_name=fw_name,
-                version=fw_version,
-                applicable=True,
-                overall_compliance_pct=100.0,
-                last_assessed=datetime.utcnow()
-            )
-            db.add(new_fw)
-            added_any = True
-            
-    if added_any:
-        await db.commit()
+    # Auto-seed logic removed to allow users to permanently delete frameworks
 
     if applicable is not None:
         stmt = stmt.where(ComplianceFramework.applicable == applicable)
