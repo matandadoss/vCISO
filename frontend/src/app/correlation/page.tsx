@@ -146,7 +146,7 @@ export default function OSINTCorrelationPage() {
    useEffect(() => {
       async function loadCorrelations() {
          try {
-            const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/correlation/engine?org_id=default`);
+            const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/correlation/engine`);
             if (res.ok) {
                const data = await res.json();
                let baseCorrelations = data.correlations || [];

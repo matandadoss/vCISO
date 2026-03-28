@@ -4,8 +4,8 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from sqlalchemy import select, delete
-from app.models.domain import ComplianceFramework, Finding, Severity, FindingStatus, FindingType, WorkflowName, ServiceTier
-from app.core.auth import require_minimum_tier
+from app.models.domain import ComplianceFramework, Finding, Severity, FindingStatus, FindingType, WorkflowName, ServiceTier, User, Asset, Vendor
+from app.core.auth import require_minimum_tier, get_current_user
 import datetime
 from pydantic import BaseModel
 
@@ -132,156 +132,143 @@ async def recalculate_correlation(
 
 @router.get("/engine", response_model=Dict[str, Any])
 async def get_correlation_engine_insights(
-    org_id: str,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Returns mock AI Correlation Engine data combining multiple workflows into unified risk insights.
+    Returns dynamic AI Correlation Engine data combining findings into unified risk insights.
     """
+    result = await db.execute(
+        select(Finding).where(Finding.org_id == current_user.org_id)
+    )
+    findings = result.scalars().all()
     
-    correlations = [
-         {
-            "id": "corr-1",
-            "source_type": "Supply Chain + Dark Web + Vuln",
-            "source_name": "Supply Chain Cascade",
-            "published_date": "2026-03-15",
-            "external_signal": "Multiple indicators signal an active breach at CoreAxis your primary payment processor. Their credentials have appeared in fresh Dark Web logs from the Redline Stealer. Concurrently, CoreAxis utilizes an unpatched version of a payment module (CVE-2026-1044) that is actively being exploited for initial access.",
-            "target_type": "Payment processing",
-            "target_name": "CoreAxis Payments",
-            "tier": "Tier-1",
-            "correlation_confidence": "Critical",
-            "severity_tag": "CRITICAL",
-            "severity_bg": "var(--semantic-critical-soft)",
-            "severity_color": "var(--semantic-critical-text)",
-            "impact_summary": "Vendor breach detected + inherited SBOM vulns = compound exposure to customer payment data.",
-            "recommended_action": "Temporarily reroute payment processing to backup provider and trigger emergency incident response protocol with CoreAxis.",
-            "timeframe_label": "Active Exploit",
-            "progress_color": "#ef4444",
-            "progress_percent": 95,
-            "footer_stats": [
-                {"label": "3 distinct data sources", "tooltip": "Sources: OSINT Feeds, Dark Web Scanners, Internal Telemetry"},
-                {"label": "98% AI Confidence", "tooltip": "Confidence derived from Multi-LLM consensus"},
-                {"label": "Risk Score: 92/100", "tooltip": "Aggregate risk calculation"}
-            ]
-         },
-         {
-            "id": "corr-2",
-            "source_type": "Vuln + Infra + Controls",
-            "source_name": "Exploit Path Detection",
-            "published_date": "2026-03-15",
-            "external_signal": "A critical remote code execution vulnerability (CVE-2026-0992) exists on 4 public-facing instances in your AWS eu-west-2 region. Correlation analysis confirms these instances are NOT covered by your Cloudflare WAF policies and lack CrowdStrike Falcon active prevention modules.",
-            "target_type": "Infrastructure (AWS)",
-            "target_name": "API Gateway cluster",
-            "tier": "Tier-1",
-            "correlation_confidence": "High",
-            "severity_tag": "HIGH",
-            "severity_bg": "var(--semantic-warning-soft)",
-            "severity_color": "var(--semantic-warning-text)",
-            "impact_summary": "Vuln on public asset + no WAF/EDR coverage = unmitigated active exploit path.",
-            "recommended_action": "Immediately deploy WAF virtual patching rules and isolate the affected instances until patched.",
-            "timeframe_label": "Remediate < 24h",
-            "progress_color": "#eab308",
-            "progress_percent": 75,
-            "footer_stats": [
-                {"label": "CVE-2026-0992", "tooltip": "Critical CVSS severity"},
-                {"label": "WAF evasion path", "tooltip": "Exploit circumvents current Cloudflare boundaries"},
-                {"label": "Risk Score: 81/100", "tooltip": "Aggregate risk calculation"}
-            ]
-         },
-         {
-            "id": "corr-3",
-            "source_type": "Dark Web + OSINT + IAM",
-            "source_name": "Credential Access Chain",
-            "published_date": "2026-03-14",
-            "external_signal": "A fresh credential combo list on XSS.is contains valid credentials for a Senior DevOps Engineer. Correlation with IAM posture reveals this identity has 'AdministratorAccess' to production AWS accounts, and MFA is currently disabled for API access keys associated with the user.",
-            "target_type": "Identity (AWS IAM)",
-            "target_name": "DevOps Service Roots",
-            "tier": "Tier-1",
-            "correlation_confidence": "High",
-            "severity_tag": "HIGH",
-            "severity_bg": "var(--semantic-warning-soft)",
-            "severity_color": "var(--semantic-warning-text)",
-            "impact_summary": "Leaked credential + admin access + no MFA = immediate risk of environment takeover.",
-            "recommended_action": "Force password reset, rotate all associated AWS access keys, and enforce MFA on all API calls.",
-            "timeframe_label": "Immediate",
-            "progress_color": "#f97316",
-            "progress_percent": 88,
-            "footer_stats": [
-                {"label": "Admin privileges", "tooltip": "Identity grants AdministratorAccess"},
-                {"label": "MFA bypass config", "tooltip": "No MFA requirements detected for API usage"},
-                {"label": "Risk Score: 85/100", "tooltip": "Aggregate risk calculation"}
-            ]
-         }
-    ]
+    correlations = []
+    active_patterns = len([f for f in findings if f.status != FindingStatus.resolved])
+    critical_paths = len([f for f in findings if f.severity == Severity.critical and f.status != FindingStatus.resolved])
     
+    for f in findings:
+        if f.status == FindingStatus.resolved:
+            continue
+            
+        progress_pct = int(f.risk_score * 10)
+        
+        c_color = "#3b82f6"
+        c_bg = "var(--semantic-info-soft)"
+        c_text = "var(--semantic-info-text)"
+        if f.severity == Severity.critical:
+            c_color = "#ef4444"
+            c_bg = "var(--semantic-critical-soft)"
+            c_text = "var(--semantic-critical-text)"
+        elif f.severity == Severity.high:
+            c_color = "#f97316"
+            c_bg = "var(--semantic-warning-soft)"
+            c_text = "var(--semantic-warning-text)"
+        elif f.severity == Severity.medium:
+            c_color = "#eab308"
+            c_bg = "var(--semantic-caution-soft)"
+            c_text = "var(--semantic-caution-text)"
+            
+        target_name = "Generic Asset"
+        target_type = "Infrastructure"
+        
+        if f.affected_asset_ids and f.affected_asset_ids.get("ids"):
+            asset_id = str(f.affected_asset_ids["ids"][0])
+            try:
+                asset_res = await db.execute(select(Asset).where(Asset.id == uuid.UUID(asset_id)))
+                asset = asset_res.scalar_one_or_none()
+                if asset:
+                    target_name = asset.name
+                    target_type = asset.asset_type.value
+            except:
+                pass
+                
+        elif f.affected_vendor_ids and f.affected_vendor_ids.get("ids"):
+            vendor_id = str(f.affected_vendor_ids["ids"][0])
+            try:
+                ven_res = await db.execute(select(Vendor).where(Vendor.id == uuid.UUID(vendor_id)))
+                ven = ven_res.scalar_one_or_none()
+                if ven:
+                    target_name = ven.name
+                    target_type = ven.vendor_type
+            except:
+                pass
+            
+        correlations.append({
+            "id": str(f.id),
+            "source_type": f.source_workflow.value.replace("_", " ").title(),
+            "source_name": f.title,
+            "published_date": f.detected_at.strftime("%Y-%m-%d") if f.detected_at else datetime.datetime.utcnow().strftime("%Y-%m-%d"),
+            "external_signal": f.description or "Anomaly detected in monitored logs.",
+            "target_type": target_type,
+            "target_name": target_name,
+            "tier": "Tier-1",
+            "correlation_confidence": "High" if f.risk_score > 7 else "Medium",
+            "severity_tag": f.severity.value.upper(),
+            "severity_bg": c_bg,
+            "severity_color": c_text,
+            "impact_summary": f.title,
+            "recommended_action": f.remediation_notes or "Investigate and apply immediate mitigation protocols.",
+            "timeframe_label": "Immediate" if f.severity == Severity.critical else "Standard",
+            "progress_color": c_color,
+            "progress_percent": progress_pct,
+            "footer_stats": [
+                {"label": f"Finding Type: {f.finding_type.value.replace('_', ' ').title()}", "tooltip": "Auto-classified by correlation engine"},
+                {"label": f"Risk Score: {f.risk_score}/10.0", "tooltip": "Aggregate risk calculation"}
+            ]
+        })
+        
     return {
         "engine_metrics": {
-            "active_patterns": 14,
+            "active_patterns": active_patterns,
             "evaluated_workflows": 9,
             "avg_control_effectiveness": "68%",
-            "critical_risk_paths": 3
+            "critical_risk_paths": critical_paths
         },
-        "correlations": correlations
+        "correlations": sorted(correlations, key=lambda x: x['progress_percent'], reverse=True)
     }
 
 @router.get("/engine/{correlation_id}/graph", response_model=Dict[str, Any])
 async def get_correlation_graph(
     correlation_id: str,
-    org_id: str = "default",
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Returns the node and link structure for the interactive knowledge graph view.
+    Returns the node and link structure for the interactive knowledge graph view dynamically.
     """
-    if correlation_id == "corr-1":
-        nodes = [
-            {"id": "threat-1", "name": "Redline Stealer", "group": "threat", "val": 30},
-            {"id": "data-1", "name": "Dark Web Logs", "group": "evidence", "val": 20},
-            {"id": "identity-1", "name": "CoreAxis Credentials", "group": "identity", "val": 25},
-            {"id": "vendor-1", "name": "CoreAxis Payments", "group": "vendor", "val": 40},
-            {"id": "vuln-1", "name": "CVE-2026-1044", "group": "vuln", "val": 25},
-            {"id": "asset-1", "name": "Payment Module", "group": "asset", "val": 35},
-            {"id": "impact-1", "name": "Customer Data", "group": "impact", "val": 50}
-        ]
-        links = [
-            {"source": "threat-1", "target": "data-1", "label": "exfiltrated via"},
-            {"source": "data-1", "target": "identity-1", "label": "contains"},
-            {"source": "identity-1", "target": "vendor-1", "label": "provides access to"},
-            {"source": "vuln-1", "target": "asset-1", "label": "affects"},
-            {"source": "vendor-1", "target": "asset-1", "label": "owns"},
-            {"source": "asset-1", "target": "impact-1", "label": "exposes"}
-        ]
-    elif correlation_id == "corr-2":
-        nodes = [
-            {"id": "vuln-1", "name": "CVE-2026-0992 (RCE)", "group": "vuln", "val": 35},
-            {"id": "asset-1", "name": "AWS eu-west-2 Instances", "group": "asset", "val": 45},
-            {"id": "control-1", "name": "Cloudflare WAF (Bypassed)", "group": "control_failed", "val": 20},
-            {"id": "control-2", "name": "CrowdStrike Falcon (Missing)", "group": "control_failed", "val": 20},
-            {"id": "impact-1", "name": "API Gateway Exfiltration", "group": "impact", "val": 50}
-        ]
-        links = [
-            {"source": "vuln-1", "target": "asset-1", "label": "exists on"},
-            {"source": "control-1", "target": "asset-1", "label": "fails to protect"},
-            {"source": "control-2", "target": "asset-1", "label": "missing on"},
-            {"source": "asset-1", "target": "impact-1", "label": "leads to"}
-        ]
-    elif correlation_id == "corr-3":
-        nodes = [
-            {"id": "data-1", "name": "XSS.is Combo List", "group": "evidence", "val": 25},
-            {"id": "identity-1", "name": "DevOps Engineer Credentials", "group": "identity", "val": 30},
-            {"id": "priv-1", "name": "AdministratorAccess", "group": "privilege", "val": 40},
-            {"id": "control-1", "name": "MFA (Disabled)", "group": "control_failed", "val": 25},
-            {"id": "asset-1", "name": "AWS Production Account", "group": "asset", "val": 50}
-        ]
-        links = [
-            {"source": "data-1", "target": "identity-1", "label": "leaks"},
-            {"source": "identity-1", "target": "priv-1", "label": "has"},
-            {"source": "identity-1", "target": "control-1", "label": "lacks"},
-            {"source": "priv-1", "target": "asset-1", "label": "grants full control over"}
-        ]
-    else:
-        nodes = []
-        links = []
+    nodes = []
+    links = []
+    
+    try:
+        f_id = uuid.UUID(correlation_id)
+        result = await db.execute(select(Finding).where(Finding.id == f_id).where(Finding.org_id == current_user.org_id))
+        finding = result.scalar_one_or_none()
+        
+        if finding:
+            nodes.append({"id": "vuln-1", "name": finding.title, "group": "vuln", "val": 35})
+            
+            if finding.affected_asset_ids and finding.affected_asset_ids.get("ids"):
+                asset_id = str(finding.affected_asset_ids["ids"][0])
+                asset_res = await db.execute(select(Asset).where(Asset.id == uuid.UUID(asset_id)))
+                asset = asset_res.scalar_one_or_none()
+                if asset:
+                    nodes.append({"id": "asset-1", "name": asset.name, "group": "asset", "val": 45})
+                    links.append({"source": "vuln-1", "target": "asset-1", "label": "affects"})
+                    nodes.append({"id": "impact-1", "name": "Business Disruption", "group": "impact", "val": 50})
+                    links.append({"source": "asset-1", "target": "impact-1", "label": "leads to"})
+            
+            elif finding.affected_vendor_ids and finding.affected_vendor_ids.get("ids"):
+                vendor_id = str(finding.affected_vendor_ids["ids"][0])
+                ven_res = await db.execute(select(Vendor).where(Vendor.id == uuid.UUID(vendor_id)))
+                ven = ven_res.scalar_one_or_none()
+                if ven:
+                    nodes.append({"id": "vendor-1", "name": ven.name, "group": "vendor", "val": 45})
+                    links.append({"source": "vuln-1", "target": "vendor-1", "label": "leaks from"})
+                    nodes.append({"id": "impact-1", "name": "Supply Chain Breach", "group": "impact", "val": 50})
+                    links.append({"source": "vendor-1", "target": "impact-1", "label": "leads to"})
+    except:
+        pass
 
     return {
         "nodes": nodes,

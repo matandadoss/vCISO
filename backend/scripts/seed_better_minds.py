@@ -30,7 +30,11 @@ async def seed_better_minds():
                 id=org_id,
                 name="Better Minds Psychology",
                 industry="Healthcare/Psychology",
-                subscription_tier="enterprise"
+                subscription_tier="enterprise",
+                address="123 Psychology Way, Suite 400, Phoenix AZ",
+                website_domain="betterminds.com",
+                phone_number="555-019-3847",
+                email_address="admin@betterminds.com"
             )
             session.add(org)
 
