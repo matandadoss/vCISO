@@ -157,3 +157,6 @@ The CI/CD pipeline is strictly enforced via `cloudbuild.yaml` running on Google 
 *   **[2026-03-27]** Increased the scrolling animation speed of the global Threat Intelligence News Ticker (`tailwind.config.ts`) to improve readability of streaming vulnerability telemetry.
 *   **[2026-03-27]** Standardized platform UI layout: Transitioned all main application modules and settings pages to utilize `AppHeader` as the single source of truth for page titles, stripping redundant local `<h1>` headers. Applied unified `max-w-7xl` or `max-w-6xl` containers across modules.
 *   **[2026-03-27]** Added Changelog section to track platform changes for release notes.
+*   **[2026-03-28]** Modernized System Error Management in the Admin Portal: Implemented dynamic client-side telemetry enrichment to categorize raw bug logs into Priority, Severity, and Error Type. Added interactive filter dropdowns and sortable table headers.
+*   **[2026-03-28]** Renamed the Admin Portal deployment script from `admin-portal/deploy.ps1` to a root-level `deploy_admin.ps1` for standardized CI/CD orchestration.
+*   **[2026-03-28]** Resolved Dashboard API routing issues leading to frontend 404 errors by verifying backend route configurations and environment variable pointers.
