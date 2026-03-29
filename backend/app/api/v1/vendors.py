@@ -54,9 +54,9 @@ async def list_vendors(org_id: str, db: AsyncSession = Depends(get_db)):
         org_uuid = uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6")
         
     result = await db.execute(select(VendorModel).where(VendorModel.org_id == org_uuid))
-    db_vendors = result.scalars().all()
+    db_vendors = list(result.scalars().all())
     
-
+    db_vendors = await ensure_vendor_hierarchy(org_uuid, db_vendors, db)
     
     out = []
     for v in db_vendors:
@@ -365,6 +365,73 @@ def infer_tech_stack(name: str) -> List[str]:
         
     return stack
 
+async def ensure_vendor_hierarchy(org_uuid: uuid.UUID, db_vendors: list, db: AsyncSession) -> list:
+    vendor_name_map = {v.name.lower(): v for v in db_vendors}
+    product_map = {
+        "s3": "AWS", "ec2": "AWS", "rds": "AWS", "lambda": "AWS", "dynamodb": "AWS", "cloudfront": "AWS",
+        "mongodb": "MongoDB", "atlas": "MongoDB",
+        "azure ad": "Microsoft", "active directory": "Microsoft", "office 365": "Microsoft", "azure": "Microsoft",
+        "gcp": "Google", "g suite": "Google", "workspace": "Google", "bigquery": "Google", "cloud sql": "Google", "google": "Google",
+        "cloudflare": "Cloudflare",
+        "salesforce": "Salesforce",
+        "github": "GitHub", "actions": "GitHub",
+        "gitlab": "GitLab",
+        "datadog": "Datadog",
+        "splunk": "Splunk",
+        "slack": "Slack",
+        "jira": "Atlassian", "confluence": "Atlassian", "bitbucket": "Atlassian",
+        "okta": "Okta", "auth0": "Okta",
+        "postgresql": "PostgreSQL",
+        "mysql": "Oracle"
+    }
+
+    updated_count = 0
+    # Create a copy so we can append to the list without infinite looping
+    for v in list(db_vendors):
+        if v.parent_vendor_id is not None:
+            continue
+            
+        name_l = v.name.lower()
+        parent_name = None
+        if name_l in product_map:
+            parent_name = product_map[name_l]
+        else:
+            for prod, p_name in product_map.items():
+                if prod == name_l or prod in name_l.split() or f"{prod} " in name_l or f" {prod}" in name_l:
+                    parent_name = p_name
+                    break
+        
+        if parent_name and parent_name.lower() != name_l:
+            if parent_name.lower() in vendor_name_map:
+                v.parent_vendor_id = vendor_name_map[parent_name.lower()].id
+                v.vendor_type = "Product"
+                updated_count += 1
+            else:
+                new_parent = VendorModel(
+                    org_id=org_uuid,
+                    name=parent_name,
+                    risk_score=95,
+                    status="Safe",
+                    tech_stack=infer_tech_stack(parent_name),
+                    vendor_type="Vendor",
+                    tier="basic",
+                    data_access_level="low",
+                    assessment_status="Safe",
+                    last_assessment_date=datetime.datetime.utcnow()
+                )
+                db.add(new_parent)
+                await db.flush() 
+                vendor_name_map[parent_name.lower()] = new_parent
+                db_vendors.append(new_parent)
+                v.parent_vendor_id = new_parent.id
+                v.vendor_type = "Product"
+                updated_count += 1
+                
+    if updated_count > 0:
+        await db.commit()
+    
+    return db_vendors
+
 async def auto_assign_hierarchy(name: str, org_uuid: uuid.UUID, db: AsyncSession, vendor_name_map: dict):
     name_l = name.lower()
     product_map = {
@@ -465,7 +532,9 @@ async def sync_vendors(req: VendorSyncRequest, org_id: str, db: AsyncSession = D
     if new_db_vendors:
         await db.commit()
         result = await db.execute(select(VendorModel).where(VendorModel.org_id == org_uuid))
-        db_vendors = result.scalars().all()
+        db_vendors = list(result.scalars().all())
+        
+    db_vendors = await ensure_vendor_hierarchy(org_uuid, db_vendors, db)
         
     out = []
     for v in db_vendors:

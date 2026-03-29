@@ -28,6 +28,7 @@ class ThreatActorResponse(BaseModel):
     target_regions: Optional[list] = None
     source: Optional[str] = None
     external_references: Optional[dict] = None
+    stolen_funds: Optional[str] = None
 
 class ThreatIndicatorResponse(BaseModel):
     id: str
@@ -155,37 +156,41 @@ async def list_threat_actors(
         relevance_reasons = []
         mitre_attack_techniques = []
         recent_events = []
+        stolen_funds = None
         if a.name == "Scattered Spider":
+            stolen_funds = "$150M+ (Estimated Ransomware/Extortion Payments)"
             relevance_reasons = ["Significant activity observed targeting Identity Providers.", "Known to conduct social engineering attacks against IT helpdesks matching our operational profile."]
             mitre_attack_techniques = [
-                {"id": "T1078", "name": "Valid Accounts", "tactic": "Initial Access"},
-                {"id": "T1566", "name": "Phishing: Spearphishing Voice", "tactic": "Initial Access"},
-                {"id": "T1527", "name": "Internal Spearphishing", "tactic": "Lateral Movement"}
+                {"id": "T1078", "name": "Valid Accounts", "tactic": "Initial Access", "description": "Compromises legitimate credentials via social engineering to bypass perimeter defenses and blend into normal telemetry traffic."},
+                {"id": "T1566", "name": "Phishing: Spearphishing Voice", "tactic": "Initial Access", "description": "Utilizes convincing vishing (voice phishing) targeting IT helpdesk staff to bypass MFA using social pressure and fabricated identity verification."},
+                {"id": "T1527", "name": "Internal Spearphishing", "tactic": "Lateral Movement", "description": "Leverages already compromised internal communications tools (e.g., Slack, Teams) to laterally deploy malicious payloads across adjacent departments."}
             ]
             recent_events = [
-                {"date": "2026-03-27", "title": "CISA issues joint advisory on escalating helpdesk social engineering campaigns.", "source": "CISA ALERTS"},
-                {"date": "2026-03-24", "title": "Actor suspected in widespread credential harvesting against telecommunications networks.", "source": "CrowdStrike Intel"},
-                {"date": "2026-03-15", "title": "Shift in TTPs: Actor observed utilizing new persistent deepfake audio tools.", "source": "Mandiant"}
+                {"date": "2026-03-27", "title": "CISA issues joint advisory on escalating helpdesk social engineering campaigns.", "source": "CISA ALERTS", "summary": "Alert warns critical infrastructure providers of heightened sophisticated vishing mimicking internal IT troubleshooting."},
+                {"date": "2026-03-24", "title": "Actor suspected in widespread credential harvesting against telecommunications networks.", "source": "CrowdStrike Intel", "summary": "Cluster of intrusions observed targeting Tier 1 internet service providers to directly access wholesale routing infrastructure."},
+                {"date": "2026-03-15", "title": "Shift in TTPs: Actor observed utilizing new persistent deepfake audio tools.", "source": "Mandiant", "summary": "Attackers deployed AI-generated voice cloning of actual company executives to authorize emergency MFA resets during crisis response simulations."}
             ]
         elif a.name == "FIN7":
+            stolen_funds = "$1.2B+ (Global Payment Card & Extortion Thefts)"
             relevance_reasons = ["Historical targeting of retail networks similar to our branch infrastructure."]
             mitre_attack_techniques = [
-                {"id": "T1566.001", "name": "Spearphishing Attachment", "tactic": "Initial Access"},
-                {"id": "T1059.001", "name": "PowerShell", "tactic": "Execution"}
+                {"id": "T1566.001", "name": "Spearphishing Attachment", "tactic": "Initial Access", "description": "Sends highly tailored emails containing trojanized Microsoft Office documents or USB drops designed to exploit client-side macro vulnerabilities."},
+                {"id": "T1059.001", "name": "PowerShell", "tactic": "Execution", "description": "Executes obfuscated fileless PowerShell scripts directly within memory to evade signature-based antivirus scanning."}
             ]
             recent_events = [
-                {"date": "2026-03-20", "title": "New Carbanak backdoor variant discovered targeting hospitality POS systems.", "source": "Kaspersky"},
-                {"date": "2026-02-28", "title": "FIN7 infrastructure resurrected, highly targeted phishing campaigns detected.", "source": "SentinelOne"}
+                {"date": "2026-03-20", "title": "New Carbanak backdoor variant discovered targeting hospitality POS systems.", "source": "Kaspersky", "summary": "Analysis of hospitality breaches reveals an iteration of the Carbanak malware specifically optimized to evade modern EDR heuristics."},
+                {"date": "2026-02-28", "title": "FIN7 infrastructure resurrected, highly targeted phishing campaigns detected.", "source": "SentinelOne", "summary": "Defunct command-and-control IP ranges associated with legacy campaigns have rapidly spun back up targeting North American logistics."}
             ]
         elif a.name == "Lazarus Group":
+            stolen_funds = "$3.0B+ (Global Crypto & Financial Institution Theft)"
             relevance_reasons = ["Highly sophisticated state-sponsored actor actively targeting cloud perimeters."]
             mitre_attack_techniques = [
-                {"id": "T1189", "name": "Drive-by Compromise", "tactic": "Initial Access"},
-                {"id": "T1003", "name": "OS Credential Dumping", "tactic": "Credential Access"}
+                {"id": "T1189", "name": "Drive-by Compromise", "tactic": "Initial Access", "description": "Infects legitimate websites with malicious exploitation code that automatically compromises visitors utilizing vulnerable browser engines."},
+                {"id": "T1003", "name": "OS Credential Dumping", "tactic": "Credential Access", "description": "Abuses LSASS manipulation techniques to dump plaintext passwords and Windows authentication hashes from deep system memory."}
             ]
             recent_events = [
-                {"date": "2026-03-26", "title": "State-sponsored actor linked to large-scale supply chain compromise via NPM registry.", "source": "Microsoft Threat Intelligence"},
-                {"date": "2026-03-10", "title": "Surge in cryptocurrency exchange targeting utilizing advanced zero-day exploits.", "source": "Chainalysis"}
+                {"date": "2026-03-26", "title": "State-sponsored actor linked to large-scale supply chain compromise via NPM registry.", "source": "Microsoft Threat Intelligence", "summary": "Developers globally targeted via typo-squatted malicious NPM packages containing stealthy Node.js reverse shells."},
+                {"date": "2026-03-10", "title": "Surge in cryptocurrency exchange targeting utilizing advanced zero-day exploits.", "source": "Chainalysis", "summary": "Multiple decentralized finance hubs lost significant treasury reserves to highly orchestrated cross-chain smart contract exploits."}
             ]
 
         items.append({
@@ -193,6 +198,7 @@ async def list_threat_actors(
             "name": a.name,
             "description": a.description,
             "sophistication": soph_val,
+            "stolen_funds": stolen_funds,
             "active": a.active,
             "relevance_score": "High" if soph_val in ("nation_state", "advanced") else "Medium",
             "relevance_reasons": relevance_reasons,

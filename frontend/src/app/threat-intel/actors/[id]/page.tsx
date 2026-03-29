@@ -161,80 +161,90 @@ export default function ThreatActorProfile() {
                </div>
             </div>
 
-            {/* Motives & Intel Summary */}
-            <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 shadow-sm relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 rounded-bl-full pointer-events-none"></div>
-               <h3 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                 <Target className="w-3.5 h-3.5" /> Analyst Synopsis
-               </h3>
-               <p className="text-sm text-slate-300 leading-relaxed font-medium">
-                 {actor.description || 'No detailed abstract available.'}
-               </p>
 
-               {/* Conditional Criminal Profile Blocks */}
-               {actor.motivation && (
-                 <div className="mt-6 border-t border-slate-800/50 pt-5">
-                    <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mb-2 block">Primary Motivation</span>
-                    <span className="text-slate-200 font-bold text-sm tracking-wide">{actor.motivation}</span>
-                 </div>
-               )}
-               
-               {actor.target_industries && actor.target_industries.length > 0 && (
-                 <div className="mt-5">
-                    <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mb-2 block">Targeted Industries</span>
-                    <div className="flex flex-wrap gap-2">
-                      {actor.target_industries.map((ind: string, idx: number) => (
-                        <span key={idx} className="px-2.5 py-1 bg-slate-950 border border-slate-700/50 rounded-sm text-[10px] uppercase font-bold tracking-widest text-slate-300">{ind}</span>
-                      ))}
-                    </div>
-                 </div>
-               )}
-               
-               {actor.target_regions && actor.target_regions.length > 0 && (
-                 <div className="mt-5">
-                    <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mb-2 block">Targeted Regions</span>
-                    <div className="flex flex-wrap gap-2">
-                      {actor.target_regions.map((reg: string, idx: number) => (
-                        <span key={idx} className="px-2.5 py-1 bg-slate-950 border border-slate-700/50 rounded-sm text-[10px] uppercase font-bold tracking-widest text-slate-300">{reg}</span>
-                      ))}
-                    </div>
-                 </div>
-               )}
-
-               {actor.source && (
-                 <div className="mt-6 border-t border-slate-800/50 pt-4 flex justify-end">
-                    <div className="flex items-center gap-2 text-slate-500">
-                      <span className="font-mono text-[10px] uppercase tracking-widest">Intel Source:</span>
-                      <span className="font-mono font-bold text-[10px] text-slate-400">{actor.source}</span>
-                    </div>
-                 </div>
-               )}
-            </div>
             
           </div>
 
           {/* Right Column: Rap Sheet Details */}
           <div className="lg:col-span-8 space-y-6">
              
-             {/* The "Charges" (Relevance Reasons) */}
+             {/* Analyst Synopsis & Warrants (Combined) */}
              <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 lg:p-8 shadow-sm relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-48 h-48 bg-red-500/5 rounded-bl-full pointer-events-none"></div>
+               <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 rounded-bl-full pointer-events-none"></div>
                <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-6 flex items-center gap-3 pb-3 border-b border-slate-800">
-                 <AlertTriangle className="w-5 h-5 text-red-500" /> Warrants & Risk Factors
+                 <Target className="w-5 h-5 text-blue-500" /> Analyst Synopsis
                </h3>
-               {actor.relevance_reasons && actor.relevance_reasons.length > 0 ? (
-                 <ul className="space-y-4">
-                   {actor.relevance_reasons.map((reason: string, i: number) => (
-                     <li key={i} className="flex items-start gap-4 bg-slate-950 border border-slate-800 rounded p-4 text-sm text-slate-200">
-                        <Crosshair className="w-5 h-5 text-red-500/70 shrink-0 mt-0.5" />
-                        <span className="leading-relaxed">{reason}</span>
-                     </li>
-                   ))}
-                 </ul>
-               ) : (
-                 <p className="text-sm text-slate-500 p-6 bg-slate-950 border border-dashed border-slate-800 rounded italic text-center font-mono">
-                   No specific organizational warrants logged for this entity.
-                 </p>
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                 <div>
+                   <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mb-2 block">Operational Profile</span>
+                   <p className="text-sm text-slate-300 leading-relaxed font-medium">
+                     {actor.description || 'No detailed abstract available.'}
+                   </p>
+                   
+                   {actor.stolen_funds && (
+                     <div className="mt-4 p-3 bg-slate-950 border border-slate-800/50 rounded-md">
+                       <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest block mb-1">Estimated Stolen Funds / Data Limit</span>
+                       <span className="text-red-400 font-bold tracking-widest text-sm">{actor.stolen_funds}</span>
+                     </div>
+                   )}
+                 </div>
+                 
+                 <div className="space-y-4">
+                   {actor.motivation && (
+                     <div>
+                        <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mb-1 block">Primary Motivation</span>
+                        <span className="text-slate-200 font-bold text-sm tracking-wide">{actor.motivation}</span>
+                     </div>
+                   )}
+                   {actor.target_industries && actor.target_industries.length > 0 && (
+                     <div>
+                        <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mb-1 block">Targeted Industries</span>
+                        <div className="flex flex-wrap gap-2">
+                          {actor.target_industries.map((ind: string, idx: number) => (
+                            <span key={idx} className="px-2.5 py-1 bg-slate-950 border border-slate-700/50 rounded-sm text-[10px] uppercase font-bold tracking-widest text-slate-300">{ind}</span>
+                          ))}
+                        </div>
+                     </div>
+                   )}
+                   {actor.target_regions && actor.target_regions.length > 0 && (
+                     <div>
+                        <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mb-1 block">Targeted Regions</span>
+                        <div className="flex flex-wrap gap-2">
+                          {actor.target_regions.map((reg: string, idx: number) => (
+                            <span key={idx} className="px-2.5 py-1 bg-slate-950 border border-slate-700/50 rounded-sm text-[10px] uppercase font-bold tracking-widest text-slate-300">{reg}</span>
+                          ))}
+                        </div>
+                     </div>
+                   )}
+                 </div>
+               </div>
+
+               <div className="border-t border-slate-800 pt-5">
+                 <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mb-4 block flex items-center gap-2"><AlertTriangle className="w-3.5 h-3.5 text-red-500/70" /> Warrants & Risk Factors</span>
+                 {actor.relevance_reasons && actor.relevance_reasons.length > 0 ? (
+                   <ul className="space-y-3">
+                     {actor.relevance_reasons.map((reason: string, i: number) => (
+                       <li key={i} className="flex items-start gap-3 bg-slate-950 border border-slate-800 rounded p-3 text-sm text-slate-200">
+                          <Crosshair className="w-4 h-4 text-red-500/70 shrink-0 mt-0.5" />
+                          <span className="leading-relaxed">{reason}</span>
+                       </li>
+                     ))}
+                   </ul>
+                 ) : (
+                   <p className="text-sm text-slate-500 p-4 bg-slate-950 border border-dashed border-slate-800 rounded italic font-mono">
+                     No specific organizational warrants logged for this entity.
+                   </p>
+                 )}
+               </div>
+               
+               {actor.source && (
+                 <div className="mt-6 pt-4 flex justify-end">
+                    <div className="flex items-center gap-2 text-slate-500 bg-slate-950 px-3 py-1.5 rounded-full border border-slate-800">
+                      <span className="font-mono text-[9px] uppercase tracking-widest">Intel Source:</span>
+                      <span className="font-mono font-bold text-[9px] text-slate-400">{actor.source}</span>
+                    </div>
+                 </div>
                )}
              </div>
 
@@ -245,15 +255,20 @@ export default function ThreatActorProfile() {
                  <Activity className="w-5 h-5 text-blue-500" /> Modus Operandi
                </h3>
                {actor.mitre_attack_techniques && actor.mitre_attack_techniques.length > 0 ? (
-                 <div className="flex flex-wrap gap-3">
+                 <div className="flex flex-col gap-4">
                    {actor.mitre_attack_techniques.map((ttp: any, i: number) => (
-                      <div key={i} className="flex flex-col gap-1.5 p-4 bg-slate-950 border border-slate-800 rounded-md hover:bg-slate-800 transition-colors w-full sm:w-[calc(50%-0.75rem)] text-sm group cursor-help relative overflow-hidden">
+                      <div key={i} className="flex flex-col gap-2 p-4 bg-slate-950 border border-slate-800 rounded-md hover:bg-slate-800 transition-colors w-full text-sm group cursor-help relative overflow-hidden">
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-800 group-hover:bg-blue-500 transition-colors"></div>
-                        <div className="flex justify-between items-center pl-2">
-                          <span className="font-mono font-bold text-blue-400 group-hover:text-blue-300 transition-colors">{ttp.id}</span>
-                          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">{ttp.tactic}</span>
+                        <div className="flex justify-between items-center pl-3 border-b border-slate-800/50 pb-2">
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono font-bold text-blue-400 group-hover:text-blue-300 transition-colors">{ttp.id}</span>
+                            <span className="text-slate-300 font-bold">{ttp.name}</span>
+                          </div>
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 bg-slate-900 border border-slate-800 px-2 py-1 rounded">{ttp.tactic}</span>
                         </div>
-                        <span className="text-slate-300 pl-2 mt-1">{ttp.name}</span>
+                        <p className="text-slate-400 text-xs leading-relaxed pl-3 pt-1">
+                          {ttp.description || "TTP mechanism explanation currently unavailable in intel feed."}
+                        </p>
                       </div>
                    ))}
                  </div>
@@ -268,7 +283,7 @@ export default function ThreatActorProfile() {
              {/* Evidence Log (Indicators) */}
              <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 lg:p-8 shadow-sm">
                <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-6 flex items-center gap-3 pb-3 border-b border-slate-800">
-                 <ShieldAlert className="w-5 h-5 text-orange-500" /> Confirmed Evidence Evidence Log
+                 <ShieldAlert className="w-5 h-5 text-orange-500" /> Verified Threat Indicators
                </h3>
                {indicators.length > 0 ? (
                  <div className="overflow-x-auto rounded border border-slate-800">
@@ -330,11 +345,16 @@ export default function ThreatActorProfile() {
                    {actor.recent_events.map((event: any, i: number) => (
                       <div key={i} className="flex flex-col gap-2 p-4 bg-slate-950 border border-slate-800 rounded group relative overflow-hidden transition-colors hover:border-slate-700 hover:bg-slate-900/50">
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-800 group-hover:bg-emerald-500 transition-colors"></div>
-                        <div className="flex items-center justify-between pl-3">
+                        <div className="flex items-center justify-between pl-3 border-b border-slate-800/50 pb-2 mb-1">
                            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">{formatDate(event.date)}</span>
                            <span className="text-[9px] font-black tracking-widest uppercase text-emerald-500/80 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 shadow-sm">{event.source}</span>
                         </div>
-                        <h4 className="text-sm font-medium text-slate-300 leading-snug pl-3">{event.title}</h4>
+                        <h4 className="text-sm font-bold text-slate-200 leading-snug pl-3 mt-1">{event.title}</h4>
+                        {event.summary && (
+                          <p className="text-xs text-slate-400 leading-relaxed pl-3 mt-1">
+                            {event.summary}
+                          </p>
+                        )}
                       </div>
                    ))}
                  </div>
